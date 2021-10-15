@@ -1,0 +1,22 @@
+QScrollArea{
+	margin-left: 240px;
+	margin-right: 240px;
+	background-color: rgb(227, 227, 227);
+}
+
+QScrollBar:vertical{
+     background-color: white;
+ }
+
+CCommandButton{
+	background-color: rgb(255, 255, 255);
+	border: 1px solid black;
+}
+
+CCommandButton:hover{
+	background-color: rgb(230, 230, 230);
+}
+
+CCommandButton:pressed{
+	background-color: rgb(200, 200, 200);
+}

@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1400</width>
+    <height>700</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0_FFT">
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0_FFT">
+        <property name="minimumSize">
+         <size>
+          <width>500</width>
+          <height>200</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="backgroundBrush">
+         <brush brushstyle="SolidPattern">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </property>
+        <property name="foregroundBrush">
+         <brush brushstyle="NoBrush">
+          <color alpha="255">
+           <red>0</red>
+           <green>0</green>
+           <blue>0</blue>
+          </color>
+         </brush>
+        </property>
+        <property name="interactive">
+         <bool>true</bool>
+        </property>
+        <property name="renderHints">
+         <set>QPainter::TextAntialiasing</set>
+        </property>
+        <property name="dragMode">
+         <enum>QGraphicsView::NoDrag</enum>
+        </property>
+        <property name="cacheMode">
+         <set>QGraphicsView::CacheBackground</set>
+        </property>
+        <property name="transformationAnchor">
+         <enum>QGraphicsView::NoAnchor</enum>
+        </property>
+        <property name="plotTitle" stdset="0">
+         <string notr="true">rawBuf0_FFT</string>
+        </property>
+        <property name="gridOrientation" stdset="0">
+         <enum>StaticPlotWidget::Both</enum>
+        </property>
+        <property name="showLegend" stdset="0">
+         <bool>false</bool>
+        </property>
+        <property name="layerIDs" stdset="0">
+         <stringlist/>
+        </property>
+        <property name="axisLabels" stdset="0">
+         <string>{&quot;top&quot;: &quot;frequency (kHz)&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;frequency (kHz)&quot;, &quot;left&quot;: &quot;amplitude&quot;}</string>
+        </property>
+        <property name="axisRanges" stdset="0">
+         <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
+        </property>
+        <property name="replaceDataItemPenColor" stdset="0">
+         <color>
+          <red>255</red>
+          <green>255</green>
+          <blue>255</blue>
+         </color>
+        </property>
+        <property name="replaceDataItemPenWidth" stdset="0">
+         <number>1</number>
+        </property>
+        <property name="replaceDataItemSymbol" stdset="0">
+         <enum>StaticPlotWidget::NoSymbol</enum>
+        </property>
+        <property name="curves" stdset="0">
+         <stringlist/>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <widget class="QCheckBox" name="checkBox_one">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="text">
+           <string>Peaks</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>StaticPlotWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>accwidgets.graph</header>
+  </customwidget>
+  <customwidget>
+   <class>CContextFrame</class>
+   <extends>QFrame</extends>
+   <header>comrad.widgets.containers</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CStaticPlot</class>
+   <extends>StaticPlotWidget</extends>
+   <header>comrad.widgets.graphs</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

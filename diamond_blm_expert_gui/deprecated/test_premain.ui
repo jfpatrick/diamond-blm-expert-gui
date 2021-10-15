@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>865</width>
+    <height>702</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QPushButton" name="pushButton_device1">
+     <property name="text">
+      <string>push for open device 1</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="pushButton_device2">
+     <property name="text">
+      <string>push for open device 2</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="CEmbeddedDisplay" name="CEmbeddedDisplay">
+     <property name="filename" stdset="0">
+      <string>main_1.py</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMEmbeddedDisplay</class>
+   <extends>QFrame</extends>
+   <header>pydm.widgets.embedded_display</header>
+  </customwidget>
+  <customwidget>
+   <class>CEmbeddedDisplay</class>
+   <extends>PyDMEmbeddedDisplay</extends>
+   <header>comrad.widgets.containers</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>pushButton_device1</sender>
+   <signal>clicked()</signal>
+   <receiver>CEmbeddedDisplay</receiver>
+   <slot>hide()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>432</x>
+     <y>20</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>432</x>
+     <y>379</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

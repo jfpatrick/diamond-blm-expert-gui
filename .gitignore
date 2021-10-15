@@ -1,0 +1,5 @@
+venv/*
+diamond_blm_expert_gui/__pycache__/*
+diamond_blm_expert_gui/.idea/*
+diamond_blm_expert_gui/aux_txts/*
+diamond_blm_expert_gui/aux_jsons/*

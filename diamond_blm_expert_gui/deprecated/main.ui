@@ -1,0 +1,2739 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1320</width>
+    <height>620</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>0</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>../icons/icon_logo_b_2.png</normaloff>../icons/icon_logo_b_2.png</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_Form">
+     <item>
+      <widget class="QTabWidget" name="tabWidget">
+       <property name="styleSheet">
+        <string notr="true">QTabWidget::tab-bar {
+	alignment: center;
+}
+
+QTabWidget{
+	background-color: rgb(227, 227, 227);
+	font-weight: bold;
+}</string>
+       </property>
+       <property name="currentIndex">
+        <number>0</number>
+       </property>
+       <property name="tabBarAutoHide">
+        <bool>false</bool>
+       </property>
+       <widget class="QWidget" name="AcqHistogramTab">
+        <property name="font">
+         <font>
+          <weight>50</weight>
+          <bold>false</bold>
+         </font>
+        </property>
+        <attribute name="title">
+         <string>AcqHistogram</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_13">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_AcqHistogramTab">
+           <layout class="QGridLayout" name="gridLayout_16" columnstretch="45,45,10">
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_AcqHistogramTab_info">
+              <layout class="QVBoxLayout" name="verticalLayout_31">
+               <item>
+                <widget class="QWidget" name="gridWidget_AcqHistogramTab" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_15" columnstretch="0">
+                  <property name="topMargin">
+                   <number>100</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>100</number>
+                  </property>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_AcqHistogramTab_Nturns">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_AcqHistogramTab_Nsamples">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_AcqHistogramTab_BlmThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_AcqHistogramTab_BlmThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqHistogramTab_Nturns">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Nturns</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqHistogramTab_NSamples">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Nsamples</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqHistogramTab_BlmThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>BlmThr0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqHistogramTab_BlmThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>BlmThr1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_AcqHistogramTab_blmBuf0">
+              <layout class="QVBoxLayout" name="verticalLayout_33">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqHistogramTab_blmBuf0">
+                 <property name="plotTitle" stdset="0">
+                  <string>blmBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="curves" stdset="0">
+                  <stringlist/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_AcqHistogramTab_blmBuf1">
+              <layout class="QVBoxLayout" name="verticalLayout_32">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqHistogramTab_blmBuf1">
+                 <property name="plotTitle" stdset="0">
+                  <string>blmBuf1</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="AcqIntegralTab">
+        <attribute name="title">
+         <string>AcqIntegral</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_12">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_AcqIntegralTab">
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_4" columnstretch="45,45,10" columnminimumwidth="0,0,0">
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralTab_intSumBuf0">
+              <layout class="QVBoxLayout" name="verticalLayout_16">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqIntegralTab_intSumBuf0">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string>intSumBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="showLegend" stdset="0">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralTab_intSumBuf1">
+              <layout class="QVBoxLayout" name="verticalLayout_17">
+               <property name="topMargin">
+                <number>9</number>
+               </property>
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqIntegralTab_intSumBuf1">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>400</height>
+                  </size>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string>intSumBuf1</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralTab_info">
+              <layout class="QVBoxLayout" name="verticalLayout_18">
+               <item>
+                <widget class="QWidget" name="gridWidget_AcqIntegralTab" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_5" columnstretch="0">
+                  <property name="topMargin">
+                   <number>100</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>100</number>
+                  </property>
+                  <item row="8" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_ZeroSuppThrAve0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThrAve0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_ZeroSuppThrAve0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_BaselineSub">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_ZeroSuppThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_ZeroSuppThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThr0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_ZeroSuppThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_BaselineSub">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>BaselineSub</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="11" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_ZeroSuppThrAve1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_ZeroSuppThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThr1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="10" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_ZeroSuppThrAve1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThrAve1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>TurnAvgCnt</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="AcqIntegralDistTab">
+        <attribute name="title">
+         <string>AcqIntegralDist</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_11">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_AcqIntegralDistTab">
+           <layout class="QGridLayout" name="gridLayout_6" columnstretch="45,45,10">
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralDistTab_intDistBuf0">
+              <layout class="QVBoxLayout" name="verticalLayout_19">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqIntegralDistTab_intDistBuf0">
+                 <property name="plotTitle" stdset="0">
+                  <string>intDistBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralDistTab_intDistBuf1">
+              <layout class="QVBoxLayout" name="verticalLayout_20">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqIntegralDistTab_intDistBuf1">
+                 <property name="plotTitle" stdset="0">
+                  <string>intDistBuf1</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_AcqIntegralDistTab_info">
+              <layout class="QVBoxLayout" name="verticalLayout_21">
+               <item>
+                <widget class="QWidget" name="gridWidget_AcqIntegralDistTab" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_8" columnstretch="0">
+                  <property name="topMargin">
+                   <number>100</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>100</number>
+                  </property>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralDistTab_IntDistOffset0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>IntDistOffset0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralDistTab_IntDistOffset0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralDistTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralDistTab_IntDistLsbCut1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralDistTab_IntDistLsbCut0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>IntDistLsbCut0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralDistTab_IntDistLsbCut1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>IntDistLsbCut1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralDistTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>TurnAvgCnt</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralDistTab_IntDistLsbCut0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_AcqIntegralDistTab_IntDistOffset1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqIntegralDistTab_IntDistOffset1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>IntDistOffset1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="AcqRawDistTab">
+        <attribute name="title">
+         <string>AcqRawDist</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_14">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_AcqRawDistTab">
+           <layout class="QGridLayout" name="gridLayout_12" columnstretch="45,45,10">
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_AcqRawDistTab_rawDistBuf0">
+              <layout class="QVBoxLayout" name="verticalLayout_25">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqRawDistTab_rawDistBuf0">
+                 <property name="plotTitle" stdset="0">
+                  <string>rawDistBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_AcqRawDistTab_rawDistBuf1">
+              <layout class="QVBoxLayout" name="verticalLayout_27">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqRawDistTab_rawDistBuf1">
+                 <property name="plotTitle" stdset="0">
+                  <string>rawDistBuf1</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_AcqRawDistTab_info">
+              <layout class="QVBoxLayout" name="verticalLayout_26">
+               <item>
+                <widget class="QWidget" name="gridWidget_AcqRawDistTab" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_11" columnstretch="0">
+                  <property name="topMargin">
+                   <number>100</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>100</number>
+                  </property>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqRawDistTab_RawDistOffset0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>RawDistOffset0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_AcqRawDistTab_RawDistOffset0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="9" column="0">
+                   <widget class="CLabel" name="CLabel_AcqRawDistTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_AcqRawDistTab_RawDistLsbCut1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqRawDistTab_RawDistLsbCut0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>RawDistLsbCut0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqRawDistTab_RawDistLsbCut1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>RawDistLsbCut1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="8" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqRawDistTab_TurnAvgCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>TurnAvgCnt</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_AcqRawDistTab_RawDistLsbCut0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_AcqRawDistTab_RawDistOffset1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqRawDistTab_RawDistOffset1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>RawDistOffset1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="AcqTurnLossTab">
+        <attribute name="title">
+         <string>AcqTurnLoss</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_15">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_AcqTurnLossTab">
+           <layout class="QGridLayout" name="gridLayout_14" columnstretch="45,45,10">
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_AcqTurnLossTab_turnLossBuf0">
+              <layout class="QVBoxLayout" name="verticalLayout_28">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqTurnLossTab_turnLossBuf0">
+                 <property name="plotTitle" stdset="0">
+                  <string>turnLossBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_AcqTurnLossTab_turnLossBuf1">
+              <layout class="QVBoxLayout" name="verticalLayout_30">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_AcqTurnLossTab_turnLossBuf1">
+                 <property name="plotTitle" stdset="0">
+                  <string>turnLossBuf1</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_AcqTurnLossTab_info">
+              <layout class="QVBoxLayout" name="verticalLayout_29">
+               <item>
+                <widget class="QWidget" name="gridWidget_AcqTurnLossTab" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_13" columnstretch="0">
+                  <property name="topMargin">
+                   <number>100</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>100</number>
+                  </property>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_AcqTurnLossTab_ZeroSuppThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_AcqTurnLossTab_ZeroSuppThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_AcqTurnLossTab_BaselineSub">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_AcqTurnLossTab_TurnTrackCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqTurnLossTab_ZeroSuppThr1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThr1</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqTurnLossTab_ZeroSuppThr0">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>ZeroSuppThr0</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqTurnLossTab_BaselineSub">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>BaselineSub</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_AcqTurnLossTab_TurnTrackCnt">
+                    <property name="minimumSize">
+                     <size>
+                      <width>125</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>TurnTrackCnt</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="CaptureTab">
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <attribute name="title">
+         <string>Capture</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_CaptureTab">
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="inheritSelector" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="inheritDataFilters" stdset="0">
+            <bool>true</bool>
+           </property>
+           <property name="selector" stdset="0">
+            <string notr="true"/>
+           </property>
+           <layout class="QGridLayout" name="gridLayout">
+            <item row="0" column="2">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT0">
+              <property name="styleSheet">
+               <string notr="true">b</string>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
+               <item>
+                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT0" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_3" rowstretch="90,100,100,100,100,100,100,100">
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_5">
+                    <property name="text">
+                     <string>5th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_6">
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>6th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_2">
+                    <property name="text">
+                     <string>2nd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_overtones0">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Overtones</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_5">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 5:
+    output('{0:.2f} kHz'.format(new_val[4]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_6">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 6:
+    output('{0:.2f} kHz'.format(new_val[5]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_3">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 3:
+    output('{0:.2f} kHz'.format(new_val[2]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_1">
+                    <property name="text">
+                     <string>1st</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_3">
+                    <property name="text">
+                     <string>3rd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_4">
+                    <property name="text">
+                     <string>4th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_4">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 4:
+    output('{0:.2f} kHz'.format(new_val[3]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_7">
+                    <property name="text">
+                     <string>7th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_7">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 7:
+    output('{0:.2f} kHz'.format(new_val[6]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_2">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 2:
+    output('{0:.2f} kHz'.format(new_val[1]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_1">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 1:
+    output('{0:.2f} kHz'.format(new_val[0]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_frequency0">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Frequency</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_invisible_0">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="text">
+                  <string>PushButton</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0_FFT">
+              <property name="inheritSelector" stdset="0">
+               <bool>false</bool>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_2">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0_FFT">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string>rawBuf0_FFT</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="layerIDs" stdset="0">
+                  <stringlist/>
+                 </property>
+                 <property name="axisLabels" stdset="0">
+                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;frequency (kHz)&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;top&quot;: &quot;frequency (kHz)&quot;}</string>
+                 </property>
+                 <property name="axisRanges" stdset="0">
+                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
+                 </property>
+                 <property name="curves" stdset="0">
+                  <stringlist>
+                   <string>{&quot;channel&quot;: null, &quot;style&quot;: &quot;Line Graph&quot;, &quot;layer&quot;: &quot;&quot;, &quot;name&quot;: &quot;&quot;, &quot;color&quot;: &quot;white&quot;, &quot;line_style&quot;: 1, &quot;line_width&quot;: 1, &quot;symbol&quot;: null, &quot;symbol_size&quot;: 10}</string>
+                  </stringlist>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf0_FFT">
+                 <item>
+                  <widget class="QCheckBox" name="checkBox_peaks_0">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="text">
+                    <string>Peaks</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_rawBuf0_FFT">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf0_FFT">
+                   <property name="text">
+                    <string> Fullscreen</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                   </property>
+                   <property name="filenames" stdset="0">
+                    <stringlist>
+                     <string>fullscreen_rawbuf0_fft.py</string>
+                    </stringlist>
+                   </property>
+                   <property name="titles" stdset="0">
+                    <stringlist>
+                     <string>rawBuf0_FFT (Fullscreen)</string>
+                    </stringlist>
+                   </property>
+                   <property name="openInNewWindow" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT1">
+              <layout class="QVBoxLayout" name="verticalLayout_10">
+               <item>
+                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT1" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_7" rowstretch="90,100,100,100,100,100,100,100" columnminimumwidth="80,80">
+                  <item row="4" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_4">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 4:
+    output('{0:.2f} kHz'.format(new_val[3]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_2">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 2:
+    output('{0:.2f} kHz'.format(new_val[1]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_1">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 1:
+    output('{0:.2f} kHz'.format(new_val[0]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_3">
+                    <property name="text">
+                     <string>3rd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_4">
+                    <property name="text">
+                     <string>4th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="rules" stdset="0">
+                     <string>[]</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_overtones1">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Overtones</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_6">
+                    <property name="text">
+                     <string>6th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_frequency1">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(220, 220, 220);</string>
+                    </property>
+                    <property name="text">
+                     <string>Frequency</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_2">
+                    <property name="text">
+                     <string>2nd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_6">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 6:
+    output('{0:.2f} kHz'.format(new_val[5]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_1">
+                    <property name="text">
+                     <string>1st</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_5">
+                    <property name="text">
+                     <string>5th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_5">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 5:
+    output('{0:.2f} kHz'.format(new_val[4]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_3">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 3:
+    output('{0:.2f} kHz'.format(new_val[2]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_7">
+                    <property name="text">
+                     <string>7th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_7">
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 7:
+    output('{0:.2f} kHz'.format(new_val[6]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_invisible_1">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>PushButton</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf1">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_6">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf1">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string notr="true">rawBuf1</string>
+                 </property>
+                 <property name="defaultYAxisSide" stdset="0">
+                  <enum>StaticPlotWidget::Left</enum>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="layerIDs" stdset="0">
+                  <stringlist/>
+                 </property>
+                 <property name="axisLabels" stdset="0">
+                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;time (microseconds)&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;top&quot;: &quot;time (microseconds)&quot;}</string>
+                 </property>
+                 <property name="axisRanges" stdset="0">
+                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
+                 </property>
+                 <property name="curves" stdset="0">
+                  <stringlist/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf1">
+                 <item>
+                  <widget class="QCheckBox" name="checkBox_turns_1">
+                   <property name="text">
+                    <string>Turns</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_rawBuf1">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf1">
+                   <property name="text">
+                    <string> Fullscreen</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                   </property>
+                   <property name="filenames" stdset="0">
+                    <stringlist>
+                     <string>fullscreen_rawbuf1.py</string>
+                    </stringlist>
+                   </property>
+                   <property name="titles" stdset="0">
+                    <stringlist>
+                     <string>rawBuf1 (Fullscreen)</string>
+                    </stringlist>
+                   </property>
+                   <property name="openInNewWindow" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_7">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
+                 </property>
+                 <property name="backgroundBrush">
+                  <brush brushstyle="SolidPattern">
+                   <color alpha="255">
+                    <red>0</red>
+                    <green>0</green>
+                    <blue>0</blue>
+                   </color>
+                  </brush>
+                 </property>
+                 <property name="foregroundBrush">
+                  <brush brushstyle="NoBrush">
+                   <color alpha="255">
+                    <red>0</red>
+                    <green>0</green>
+                    <blue>0</blue>
+                   </color>
+                  </brush>
+                 </property>
+                 <property name="interactive">
+                  <bool>true</bool>
+                 </property>
+                 <property name="renderHints">
+                  <set>QPainter::TextAntialiasing</set>
+                 </property>
+                 <property name="dragMode">
+                  <enum>QGraphicsView::NoDrag</enum>
+                 </property>
+                 <property name="cacheMode">
+                  <set>QGraphicsView::CacheBackground</set>
+                 </property>
+                 <property name="transformationAnchor">
+                  <enum>QGraphicsView::NoAnchor</enum>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string notr="true">rawBuf0</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="showLegend" stdset="0">
+                  <bool>false</bool>
+                 </property>
+                 <property name="layerIDs" stdset="0">
+                  <stringlist/>
+                 </property>
+                 <property name="axisLabels" stdset="0">
+                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;time (microseconds)&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;top&quot;: &quot;time (microseconds)&quot;}</string>
+                 </property>
+                 <property name="axisRanges" stdset="0">
+                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
+                 </property>
+                 <property name="replaceDataItemPenColor" stdset="0">
+                  <color>
+                   <red>255</red>
+                   <green>255</green>
+                   <blue>255</blue>
+                  </color>
+                 </property>
+                 <property name="replaceDataItemPenWidth" stdset="0">
+                  <number>1</number>
+                 </property>
+                 <property name="replaceDataItemSymbol" stdset="0">
+                  <enum>StaticPlotWidget::NoSymbol</enum>
+                 </property>
+                 <property name="curves" stdset="0">
+                  <stringlist/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf0">
+                 <item>
+                  <widget class="QCheckBox" name="checkBox_turns_0">
+                   <property name="text">
+                    <string>Turns</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_rawBuf0">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf0">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="text">
+                    <string> Fullscreen</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                   </property>
+                   <property name="filenames" stdset="0">
+                    <stringlist>
+                     <string>fullscreen_rawbuf0.py</string>
+                    </stringlist>
+                   </property>
+                   <property name="titles" stdset="0">
+                    <stringlist>
+                     <string>rawBuf0 (Fullscreen)</string>
+                    </stringlist>
+                   </property>
+                   <property name="macros" stdset="0">
+                    <stringlist/>
+                   </property>
+                   <property name="openInNewWindow" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf1_FFT">
+              <property name="inheritSelector" stdset="0">
+               <bool>false</bool>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_8">
+               <item>
+                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf1_FFT">
+                 <property name="minimumSize">
+                  <size>
+                   <width>500</width>
+                   <height>200</height>
+                  </size>
+                 </property>
+                 <property name="plotTitle" stdset="0">
+                  <string>rawBuf1_FFT</string>
+                 </property>
+                 <property name="gridOrientation" stdset="0">
+                  <enum>StaticPlotWidget::Both</enum>
+                 </property>
+                 <property name="layerIDs" stdset="0">
+                  <stringlist/>
+                 </property>
+                 <property name="axisLabels" stdset="0">
+                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;frequency (kHz)&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;top&quot;: &quot;frequency (kHz)&quot;}</string>
+                 </property>
+                 <property name="axisRanges" stdset="0">
+                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf1_FFT">
+                 <item>
+                  <widget class="QCheckBox" name="checkBox_peaks_1">
+                   <property name="text">
+                    <string>Peaks</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_rawBuf1_FFT">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf1_FFT">
+                   <property name="text">
+                    <string> Fullscreen</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                   </property>
+                   <property name="filenames" stdset="0">
+                    <stringlist>
+                     <string>fullscreen_rawbuf1_fft.py</string>
+                    </stringlist>
+                   </property>
+                   <property name="titles" stdset="0">
+                    <stringlist>
+                     <string>rawBuf1_FFT (Fullscreen)</string>
+                    </stringlist>
+                   </property>
+                   <property name="openInNewWindow" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="GeneralInformationTab">
+        <attribute name="title">
+         <string>GeneralInformation</string>
+        </attribute>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <widget class="CContextFrame" name="CContextFrame_GeneralInformationTab">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="inheritSelector" stdset="0">
+            <bool>false</bool>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <item>
+             <spacer name="verticalSpacer_GeneralInformationTab_2">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QWidget" name="widget_GeneralInformationTab" native="true">
+              <property name="styleSheet">
+               <string notr="true">QWidget.CLabel{
+	border: 2px solid black;
+}
+
+QWidget.QLabel{
+	border: 2px solid black;
+}</string>
+              </property>
+              <layout class="QGridLayout" name="gridLayout_2">
+               <property name="leftMargin">
+                <number>350</number>
+               </property>
+               <property name="topMargin">
+                <number>50</number>
+               </property>
+               <property name="rightMargin">
+                <number>350</number>
+               </property>
+               <property name="bottomMargin">
+                <number>50</number>
+               </property>
+               <item row="4" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_BeamMomentum">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="15" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_TurnSample">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="11" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_MachineId">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_BstShift">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_FpgaCompilation">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_Fields">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(220, 220, 220);</string>
+                 </property>
+                 <property name="text">
+                  <string>Fields</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="14" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_TurnDropped">
+                 <property name="text">
+                  <string>TurnDropped</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="9" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_FpgaFirmware">
+                 <property name="text">
+                  <string>FpgaFirmware</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_AcqStamp">
+                 <property name="text">
+                  <string>AcqStamp</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="6" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_BstShift">
+                 <property name="text">
+                  <string>BstShift</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="13" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_TurnBc">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_AutoGain">
+                 <property name="text">
+                  <string>AutoGain</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_BunchSample">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="12" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_MonitorNames">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                 <property name="valueTransformation">
+                  <string notr="true"># init final_string
+final_string = &quot;&quot;
+
+# remove duplicated monitor names
+new_val = list(dict.fromkeys(new_val))
+
+# arrange the string with commas
+for i in range(0, len(new_val)):
+    string  = new_val[i]
+    if i &gt; 0:
+        final_string = final_string + &quot;, &quot; + string
+    else:
+        final_string = string
+
+# output the final_string
+output(str(final_string))
+    </string>
+                 </property>
+                </widget>
+               </item>
+               <item row="11" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_MachineId">
+                 <property name="text">
+                  <string>MachineId</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_BoardId">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_BeamMomentum">
+                 <property name="text">
+                  <string>BeamMomentum</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="12" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_MonitorNames">
+                 <property name="text">
+                  <string>MonitorNames</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="9" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_FpgaFirmware">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="3" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_AutoGain">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_BoardId">
+                 <property name="text">
+                  <string>BoardId</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QLabel" name="label_GeneralInformation_Values">
+                 <property name="styleSheet">
+                  <string notr="true">background-color: rgb(220, 220, 220);</string>
+                 </property>
+                 <property name="text">
+                  <string>Values</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_FpgaStatus">
+                 <property name="text">
+                  <string>FpgaStatus</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="13" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_TurnBc">
+                 <property name="text">
+                  <string>TurnBc</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="8" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_Compilation">
+                 <property name="text">
+                  <string>FpgaCompilation</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="10" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_FpgaStatus">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="7" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_BunchSample">
+                 <property name="text">
+                  <string>BunchSample</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_AcqStamp">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="wordWrap">
+                  <bool>false</bool>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="15" column="0">
+                <widget class="QLabel" name="label_GeneralInformation_TurnSample">
+                 <property name="text">
+                  <string>TurnSample</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item row="14" column="1">
+                <widget class="CLabel" name="CLabel_GeneralInformation_TurnDropped">
+                 <property name="text">
+                  <string>Null</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                 <property name="channel" stdset="0">
+                  <string notr="true"/>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <spacer name="verticalSpacer_GeneralInformationTab_1">
+              <property name="orientation">
+               <enum>Qt::Vertical</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>20</width>
+                <height>40</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
+  </customwidget>
+  <customwidget>
+   <class>PyDMRelatedDisplayButton</class>
+   <extends>QPushButton</extends>
+   <header>pydm.widgets.related_display_button</header>
+  </customwidget>
+  <customwidget>
+   <class>StaticPlotWidget</class>
+   <extends>QGraphicsView</extends>
+   <header>accwidgets.graph</header>
+  </customwidget>
+  <customwidget>
+   <class>CRelatedDisplayButton</class>
+   <extends>PyDMRelatedDisplayButton</extends>
+   <header>comrad.widgets.buttons</header>
+  </customwidget>
+  <customwidget>
+   <class>CContextFrame</class>
+   <extends>QFrame</extends>
+   <header>comrad.widgets.containers</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>CLabel</class>
+   <extends>PyDMLabel</extends>
+   <header>comrad.widgets.indicators</header>
+  </customwidget>
+  <customwidget>
+   <class>CStaticPlot</class>
+   <extends>StaticPlotWidget</extends>
+   <header>comrad.widgets.graphs</header>
+  </customwidget>
+ </customwidgets>
+ <resources/>
+ <connections/>
+</ui>

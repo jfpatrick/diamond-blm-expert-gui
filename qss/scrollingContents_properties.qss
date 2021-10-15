@@ -1,0 +1,28 @@
+QLabel[type="1"]{
+	border: 1px solid black;
+	background-color: rgb(236, 236, 236);
+}
+
+QLabel[type="2"]{
+	border: 1px solid black;
+	background-color: rgb(210, 210, 210);
+}
+
+CLabel[type="1"]{
+	border: 1px solid black;
+	background-color: rgb(236, 236, 236);
+}
+
+CLabel[type="2"]{
+	border: 1px solid black;
+	background-color: rgb(210, 210, 210);
+}
+
+QLineEdit{
+	border: 1px solid black;
+	background-color: white;
+}
+
+QGroupBox{
+	background-color: rgb(232, 232, 232);
+}
