@@ -20,6 +20,7 @@ import sys
 import os
 from time import sleep
 import pyjapc
+import numpy as np
 
 ########################################################
 ########################################################
@@ -140,9 +141,11 @@ class MyDisplay(CDisplay):
                 column = 0
                 self.labelDict["{}_{}".format("main_widget", device)] = QLabel(self.main_widget)
                 self.labelDict["{}_{}".format("main_widget", device)].setObjectName("label_{}_{}".format("main_widget", "title_device"))
-                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
+                # self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
                 self.labelDict["{}_{}".format("main_widget", device)].setAlignment(Qt.AlignCenter)
                 self.labelDict["{}_{}".format("main_widget", device)].setText("{}".format(device))
+                minWidth = self.labelDict["{}_{}".format("main_widget", device)].fontMetrics().boundingRect(self.labelDict["{}_{}".format("main_widget", device)].text()).width()
+                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(np.abs(minWidth - round(minWidth*0.3)), 32))
                 self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["{}_{}".format("main_widget", device)], row, column, 1, 1)
 
                 # iterate over the rest of fields
@@ -171,7 +174,7 @@ class MyDisplay(CDisplay):
                     self.labelDict["label_value_{}_{}".format("main_widget", field)].setAlignment(Qt.AlignCenter)
                     self.labelDict["label_value_{}_{}".format("main_widget", field)].setText("{}".format(final_field_value))
                     minWidth = self.labelDict["label_value_{}_{}".format("main_widget", field)].fontMetrics().boundingRect(self.labelDict["label_value_{}_{}".format("main_widget", field)].text()).width()
-                    self.labelDict["label_value_{}_{}".format("main_widget", field)].setMinimumSize(QSize(minWidth, 32))
+                    self.labelDict["label_value_{}_{}".format("main_widget", field)].setMinimumSize(QSize(np.abs(minWidth), 32))
                     self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["label_value_{}_{}".format("main_widget", field)], row, column, 1, 1)
 
                     # go for the next column (field)
@@ -184,11 +187,13 @@ class MyDisplay(CDisplay):
                 column = 0
                 self.labelDict["{}_{}".format("main_widget", device)] = QLabel(self.main_widget)
                 self.labelDict["{}_{}".format("main_widget", device)].setObjectName("label_{}_{}".format("main_widget", "title_device"))
-                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
+                # self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
                 self.labelDict["{}_{}".format("main_widget", device)].setAlignment(Qt.AlignCenter)
                 self.labelDict["{}_{}".format("main_widget", device)].setTextFormat(Qt.RichText)
                 self.labelDict["{}_{}".format("main_widget", device)].setText("<font color=red>{}</font>".format(device))
                 self.labelDict["{}_{}".format("main_widget", device)].setStyleSheet("background-color: #ffebeb;")
+                minWidth = self.labelDict["{}_{}".format("main_widget", device)].fontMetrics().boundingRect(self.labelDict["{}_{}".format("main_widget", device)].text()).width()
+                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(np.abs(minWidth - round(minWidth*0.3)), 32))
                 self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["{}_{}".format("main_widget", device)], row, column, 1, 1)
 
                 # iterate over the rest of fields
@@ -206,7 +211,7 @@ class MyDisplay(CDisplay):
                     self.labelDict["label_value_{}_{}".format("main_widget", field)].setText("<font color=red>{}</font>".format(final_field_value))
                     self.labelDict["label_value_{}_{}".format("main_widget", field)].setStyleSheet("background-color: #ffebeb;")
                     minWidth = self.labelDict["label_value_{}_{}".format("main_widget", field)].fontMetrics().boundingRect(self.labelDict["label_value_{}_{}".format("main_widget", field)].text()).width()
-                    self.labelDict["label_value_{}_{}".format("main_widget", field)].setMinimumSize(QSize(minWidth, 32))
+                    self.labelDict["label_value_{}_{}".format("main_widget", field)].setMinimumSize(QSize(np.abs(minWidth), 32))
                     self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["label_value_{}_{}".format("main_widget", field)], row, column, 1, 1)
 
                     # go for the next column (field)

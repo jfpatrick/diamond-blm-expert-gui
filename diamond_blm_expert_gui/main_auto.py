@@ -9,7 +9,7 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, CContextFrame, CStaticPlot, CLabel, CCommandButton)
+from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, CContextFrame, CStaticPlot, CLabel, CCommandButton, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QBrush)
 from PyQt5.QtCore import (QSize, Qt)
 from PyQt5.QtWidgets import (QSizePolicy, QWidget, QHBoxLayout, QHBoxLayout, QVBoxLayout, QSpacerItem, QFrame, QGridLayout, QLabel, QTabWidget)
@@ -63,14 +63,19 @@ class MyDisplay(CDisplay):
         self.current_accelerator = "LHC"
         self.LoadDeviceFromTxtPremain()
 
-        # set current selector
+        # get the property list
+        self.property_list = list(self.pyccda_dictionary[self.current_accelerator][self.current_device]["acquisition"].keys())
+        self.pyccda_dictionary[self.current_accelerator][self.current_device]["cycle_bound"]
+
+        # set current selector (check that the device is not the test device)
         if "dBLM.TEST" not in self.current_device:
             self.current_selector = self.app.main_window.window_context.selector
         else:
             self.current_selector = ""
 
-        # get the property list
-        self.property_list = list(self.pyccda_dictionary[self.current_accelerator][self.current_device]["acquisition"].keys())
+        # do not use a selector if the cycle bound is set to false
+        if self.pyccda_dictionary[self.current_accelerator][self.current_device]["cycle_bound"] == "False":
+            self.current_selector = ""
 
         # order the property list
         self.property_list.sort()
@@ -507,6 +512,38 @@ class MyDisplay(CDisplay):
         # selector signal
         self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
 
+        # rbac login signal
+        self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
+
+        # dunno if it works
+        self.app._rbac._model.token_expired.connect(self.rbacLoginSucceeded)
+
+        # rbac logout signal
+        self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that handles japc and UI stuff when rbac is disconnected
+    def rbacLogoutSucceeded(self):
+
+        # print message
+        print("{} - RBAC logout succeeded...".format(UI_FILENAME))
+
+        return
+
+    #----------------------------------------------#
+
+    # this function gets activated whenever RBAC logins successfully
+    def rbacLoginSucceeded(self):
+
+        # print message
+        print("{} - RBAC login succeeded...".format(UI_FILENAME))
+
+        # save the token into the environmental variable so that we can read it with pyjapc
+        os.environ["RBAC_TOKEN_SERIALIZED"] = self.app._rbac.serialized_token
+
         return
 
     #----------------------------------------------#
@@ -519,6 +556,12 @@ class MyDisplay(CDisplay):
             self.current_selector = self.app.main_window.window_context.selector
         else:
             self.current_selector = ""
+
+        # do not use a selector if the cycle bound is set to false
+        if self.pyccda_dictionary[self.current_accelerator][self.current_device]["cycle_bound"] == "False":
+            self.current_selector = ""
+
+        # print the selector
         print("{} - New selector is: {}".format(UI_FILENAME, self.current_selector))
 
         # iterate over the property tabs

@@ -56,6 +56,13 @@ def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", v
         dict_device_info["acquisition"] = {}
         dict_device_info["command"] = {}
         dict_device_info["setting"] = {}
+        dict_device_info["cycle_bound"] = ""
+
+        # check cycle bound (e.g. LHC devices usually have no cycle data)
+        if device.is_cycle_bound:
+            dict_device_info["cycle_bound"] = "True"
+        else:
+            dict_device_info["cycle_bound"] = "False"
 
         # iterate over all properties
         for property in fesa_class_property:
@@ -78,6 +85,7 @@ def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", v
             dict_device_info[property_type][property.name]["array"] = {}
             dict_device_info[property_type][property.name]["scalar"] = {}
             dict_device_info[property_type][property.name]["other"] = {}
+            dict_device_info[property_type][property.name]["mux"] = ""
 
             # check if the property is multiplexed
             if property.is_multiplexed:

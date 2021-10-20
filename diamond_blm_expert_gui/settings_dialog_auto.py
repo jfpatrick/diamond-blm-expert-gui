@@ -344,7 +344,46 @@ class DialogThreeColumnSet(QDialog):
         # selector signal
         self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
 
+        # rbac login signal
+        self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
+
+        # dunno if it works
+        self.app._rbac._model.token_expired.connect(self.rbacLoginSucceeded)
+
+        # rbac logout signal
+        self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
+
         return
+
+    #----------------------------------------------#
+
+    # function that handles japc and UI stuff when rbac is disconnected
+    def rbacLogoutSucceeded(self):
+
+        # print message
+        print("{} - RBAC logout succeeded...".format(UI_FILENAME))
+
+        # end pyjapc rbac connection
+        self.japc.rbacLogout()
+
+        return
+
+    #----------------------------------------------#
+
+    # this function gets activated whenever RBAC logins successfully
+    def rbacLoginSucceeded(self):
+
+        # print message
+        print("{} - RBAC login succeeded...".format(UI_FILENAME))
+
+        # save the token into the environmental variable so that we can read it with pyjapc
+        os.environ["RBAC_TOKEN_SERIALIZED"] = self.app._rbac.serialized_token
+
+        # now that we have a token try to login with japc too
+        self.japc.rbacLogin(readEnv=True)
+
+        return
+
     #----------------------------------------------#
 
     # function that changes the current selector
@@ -355,6 +394,8 @@ class DialogThreeColumnSet(QDialog):
             self.current_selector = self.app.main_window.window_context.selector
         else:
             self.current_selector = ""
+
+        # print
         print("{} - New selector is: {}".format(UI_FILENAME, self.current_selector))
 
         # update japc selector
@@ -713,6 +754,44 @@ class MyDisplay(CDisplay):
 
         # selector signal
         self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
+
+        # rbac login signal
+        self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
+
+        # dunno if it works
+        self.app._rbac._model.token_expired.connect(self.rbacLoginSucceeded)
+
+        # rbac logout signal
+        self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that handles japc and UI stuff when rbac is disconnected
+    def rbacLogoutSucceeded(self):
+
+        # print message
+        print("{} - RBAC logout succeeded...".format(UI_FILENAME))
+
+        # end pyjapc rbac connection
+        self.japc.rbacLogout()
+
+        return
+
+    #----------------------------------------------#
+
+    # this function gets activated whenever RBAC logins successfully
+    def rbacLoginSucceeded(self):
+
+        # print message
+        print("{} - RBAC login succeeded...".format(UI_FILENAME))
+
+        # save the token into the environmental variable so that we can read it with pyjapc
+        os.environ["RBAC_TOKEN_SERIALIZED"] = self.app._rbac.serialized_token
+
+        # now that we have a token try to login with japc too
+        self.japc.rbacLogin(readEnv=True)
 
         return
 

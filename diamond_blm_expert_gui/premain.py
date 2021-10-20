@@ -9,9 +9,9 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
+from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QTimer)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject)
 from PyQt5.QtWidgets import (QSizePolicy)
 from PyQt5.Qt import QItemSelectionModel
 
@@ -34,6 +34,131 @@ import numpy as np
 
 UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
+RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
+
+########################################################
+########################################################
+
+class GetWorkingDevicesThreadWorker(QObject):
+
+    #----------------------------------------------#
+
+    # signals
+    finished = pyqtSignal()
+    processed = pyqtSignal(list, dict)
+
+    #----------------------------------------------#
+
+    # init function
+    def __init__(self, device_list, acc_dev_list, japc, cern, old_working_devices, old_exception_dict):
+
+        # inherit from QObject
+        QObject.__init__(self)
+
+        # declare attributes
+        self.device_list = device_list
+        self.acc_dev_list = acc_dev_list
+        self.japc = japc
+        self.cern = cern
+        self.old_working_devices = old_working_devices
+        self.old_exception_dict = old_exception_dict
+
+        return
+
+    #----------------------------------------------#
+
+    # start function
+    def start(self):
+
+        # init the timer in terms of the RECHECK_DEVICES_PERIOD input variable (in seconds)
+        self._timer = QTimer(self)
+        self._timer.timeout.connect(self.getWorkingDevices)
+        self._timer.start(RECHECK_DEVICES_PERIOD * 1000)
+
+        return
+
+    #----------------------------------------------#
+
+    # stop function
+    def stop(self):
+
+        # stop and emit the finish signal
+        self._timer.stop()
+        self.finished.emit()
+
+        return
+
+    #----------------------------------------------#
+
+    # processing function
+    def getWorkingDevices(self, verbose = False):
+
+        # print thread address
+        if verbose:
+            print("{} - Processing thread: {}".format(UI_FILENAME, QThread.currentThread()))
+
+        # declare the working devices list
+        self.working_devices = []
+
+        # save the exceptions in a dict
+        self.exception_dict = {}
+
+        # iterate over the devices
+        for index_device, device in enumerate(self.device_list):
+
+            # print the device for logging and debugging
+            if verbose:
+                print("{} - Checking the availability of {}".format(UI_FILENAME, device))
+
+            # use an empty selector for LHC devices
+            if self.acc_dev_list[index_device] == "LHC":
+                selectorOverride = ""
+            # use SPS.USER.ALL for SPS devices
+            elif self.acc_dev_list[index_device] == "SPS":
+                selectorOverride = "SPS.USER.SFTPRO1"
+            # use an empty selector for the others
+            else:
+                selectorOverride = ""
+
+            # try out if japc returns an error or not
+            try:
+
+                # try to acquire the data from pyjapc
+                all_data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(device, "Capture", "rawBuf0"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
+
+            # in case we get an exception, don't add the device to the working list
+            except self.cern.japc.core.ParameterException as xcp:
+
+                # ignore in case that the exception was caused by the test device
+                if str(device) != "dBLM.TEST4":
+
+                    # print the exception
+                    if verbose:
+                        print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
+                        print("{} - Device {} is not working...".format(UI_FILENAME, device))
+
+                    # save the exception as xcp
+                    self.exception_dict[str(device)] = xcp
+
+                    # continue to the next device
+                    continue
+
+            # append the device
+            self.working_devices.append(device)
+
+            # save the exception as empty
+            self.exception_dict[str(device)] = ""
+
+        # sleep the thread a bit
+        QThread.sleep(5)
+
+        # emit the signal that stores the working devices ONLY IF there were any changes
+        if self.working_devices != self.old_working_devices:
+            self.processed.emit(self.working_devices, self.exception_dict)
+
+        return
+
+    #----------------------------------------------#
 
 ########################################################
 ########################################################
@@ -58,11 +183,18 @@ class MyDisplay(CDisplay):
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
 
+        # this is not implemented yet in ComRAD
+        # self.app._rbac._startup_login_policy = rbac.CRbaStartupLoginPolicy.LOGIN_EXPLICIT
+        # self.app._rbac.startup_login()
+
         # aux variable for the after-fully-loaded-comrad operations
         self.is_comrad_fully_loaded = False
 
         # import cern package for handling exceptions
         self.cern = jp.JPackage("cern")
+
+        # set current accelerator
+        self.current_accelerator = "SPS"
 
         # get the device list and the accelerator-device relation list
         self.device_list = []
@@ -89,7 +221,11 @@ class MyDisplay(CDisplay):
         self.japc = pyjapc.PyJapc()
 
         # get the devices that work
-        self.getWorkingDevices()
+        self.getWorkingDevices(verbose = True)
+
+        # remove the open device aux txt at startup
+        if os.path.exists("aux_txts/open_new_device.txt"):
+            os.remove("aux_txts/open_new_device.txt")
 
         # load the gui and set the title,
         print("{} - Loading the GUI file...".format(UI_FILENAME))
@@ -160,6 +296,98 @@ class MyDisplay(CDisplay):
         # selector signal
         self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
 
+        # rbac login signal
+        self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
+
+        # dunno if it works
+        self.app._rbac._model.token_expired.connect(self.rbacLoginSucceeded)
+
+        # rbac logout signal
+        self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
+
+        # recheck if the devices keep working in another thread
+        self.aux_thread = QThread()
+        self.aux_worker = GetWorkingDevicesThreadWorker(self.device_list, self.acc_dev_list, self.japc, self.cern, self.working_devices, self.exception_dict)
+        self.aux_worker.moveToThread(self.aux_thread)
+        self.aux_worker.finished.connect(self.finishThread)
+        self.aux_thread.started.connect(self.aux_worker.start)
+        self.aux_thread.start()
+
+        # update the devices once the thread outputs the results
+        self.aux_worker.processed.connect(self.updateWorkingDevices)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to handle thread stops
+    def finishThread(self):
+
+        # quit the thread
+        self.aux_thread.quit()
+        self.aux_thread.wait()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that handles japc and UI stuff when rbac is disconnected
+    def rbacLogoutSucceeded(self):
+
+        # print message
+        print("{} - RBAC logout succeeded...".format(UI_FILENAME))
+
+        # end pyjapc rbac connection
+        self.japc.rbacLogout()
+
+        # get working devices again
+        self.getWorkingDevices(verbose = False)
+
+        # update UI (tree icons and stuff like that)
+        for item in self.iterItems(self.model.invisibleRootItem()):
+            if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setIcon(QIcon("../icons/green_tick.png"))
+            else:
+                item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
+                item.setIcon(QIcon("../icons/red_cross.png"))
+
+        # update UI
+        if self.current_window == "preview" or self.current_window == "premain":
+            if self.last_index_tree_view != 0:
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
+
+        return
+
+    #----------------------------------------------#
+
+    # this function gets activated whenever RBAC logins successfully
+    def rbacLoginSucceeded(self):
+
+        # print message
+        print("{} - RBAC login succeeded...".format(UI_FILENAME))
+
+        # save the token into the environmental variable so that we can read it with pyjapc
+        os.environ["RBAC_TOKEN_SERIALIZED"] = self.app._rbac.serialized_token
+
+        # now that we have a token try to login with japc too
+        self.japc.rbacLogin(readEnv=True)
+
+        # get working devices again
+        self.getWorkingDevices(verbose = False)
+
+        # update UI (tree icons and stuff like that)
+        for item in self.iterItems(self.model.invisibleRootItem()):
+            if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setIcon(QIcon("../icons/green_tick.png"))
+            else:
+                item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
+                item.setIcon(QIcon("../icons/red_cross.png"))
+
+        # update UI (the preview panels)
+        if self.current_window == "preview" or self.current_window == "premain":
+            if self.last_index_tree_view != 0:
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
+
         return
 
     #----------------------------------------------#
@@ -179,9 +407,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that checks which devices are properly working and which are not
-    def getWorkingDevices(self):
-
-        self.exceptions_from_subscriptions = []
+    def getWorkingDevices(self, verbose = True):
 
         # declare the working devices list
         self.working_devices = []
@@ -193,7 +419,8 @@ class MyDisplay(CDisplay):
         for index_device, device in enumerate(self.device_list):
 
             # print the device for logging and debugging
-            print("{} - Checking the availability of {}".format(UI_FILENAME, device))
+            if verbose:
+                print("{} - Checking the availability of {}".format(UI_FILENAME, device))
 
             # use an empty selector for LHC devices
             if self.acc_dev_list[index_device] == "LHC":
@@ -218,8 +445,9 @@ class MyDisplay(CDisplay):
                 if str(device) != "dBLM.TEST4":
 
                     # print the exception
-                    print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
-                    print("{} - Device {} is not working...".format(UI_FILENAME, device))
+                    if verbose:
+                        print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
+                        print("{} - Device {} is not working...".format(UI_FILENAME, device))
 
                     # save the exception as xcp
                     self.exception_dict[str(device)] = xcp
@@ -232,6 +460,33 @@ class MyDisplay(CDisplay):
 
             # save the exception as empty
             self.exception_dict[str(device)] = ""
+
+        return
+
+    #----------------------------------------------#
+
+    # function that updates the working devices (remember signal is only emitted when there are changes in the list)
+    def updateWorkingDevices(self, working_devices, exception_dict):
+
+        # print message
+        print("{} - Uploading working devices!".format(UI_FILENAME))
+
+        # update variables
+        self.working_devices = working_devices
+        self.exception_dict = exception_dict
+
+        # update UI (tree icons and stuff like that)
+        for item in self.iterItems(self.model.invisibleRootItem()):
+            if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setIcon(QIcon("../icons/green_tick.png"))
+            else:
+                item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
+                item.setIcon(QIcon("../icons/red_cross.png"))
+
+        # update UI (the preview panels)
+        if self.current_window == "preview" or self.current_window == "premain":
+            if self.last_index_tree_view != 0:
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
 
         return
 
@@ -294,6 +549,9 @@ class MyDisplay(CDisplay):
     # function that shows the device preview when a device is clicked
     def itemFromTreeviewClicked(self, index):
 
+        # store last index
+        self.last_index_tree_view = index
+
         # read the name of the device
         item = self.treeView.selectedIndexes()[0]
         selected_text = str(item.model().itemFromIndex(index).text())
@@ -313,7 +571,8 @@ class MyDisplay(CDisplay):
 
             # update the current device
             self.current_device = selected_text
-            self.writeDeviceIntoTxtForMainScreen(parent_text)
+            self.current_accelerator = parent_text
+            self.writeDeviceIntoTxtForMainScreen(self.current_accelerator)
 
             # update text label
             if self.current_device in self.working_devices:
@@ -346,7 +605,8 @@ class MyDisplay(CDisplay):
                 self.app.main_window.window_context.selector = 'LHC.USER.ALL'
 
             # send and write the device list
-            self.writeDeviceListIntoTxtForSummary(selected_text)
+            self.current_accelerator = selected_text
+            self.writeDeviceListIntoTxtForSummary(self.current_accelerator)
 
             # update text label
             self.label_device_panel.setText("DEVICE PANEL <font color=black>{}</font> : <font color=black>{}</font>".format(selected_text, "SUMMARY"))
@@ -392,6 +652,9 @@ class MyDisplay(CDisplay):
 
             # update the current window
             self.current_window = "premain"
+
+            # reset last index
+            self.last_index_tree_view = 0
 
         return
 
@@ -478,34 +741,38 @@ class MyDisplay(CDisplay):
     # function that checks if the OPEN DEVICE button was pressed and open the device in case it was
     def isOpenDevicePushButtonPressed(self):
 
-        # init the boolean
-        wasTheButtonPressed = "False"
-
-        # read the txt file
+        # check if txt exists
         if os.path.exists("aux_txts/open_new_device.txt"):
+
+            # init the boolean
+            wasTheButtonPressed = "False"
+
+            # open it
             with open("aux_txts/open_new_device.txt", "r") as f:
+
+                # read it
                 wasTheButtonPressed = f.read()
-                if wasTheButtonPressed == "True":
-                    with open("aux_txts/open_new_device.txt", "w") as f:
-                        f.write("False")
 
-        # if the button was pressed then open the device panel
-        if wasTheButtonPressed == "True":
+            # if the button was pressed then open the device panel
+            if wasTheButtonPressed == "True":
 
-            # open main container
-            self.CEmbeddedDisplay.filename = ""
-            self.CEmbeddedDisplay.hide()
-            self.CEmbeddedDisplay.show()
-            self.CEmbeddedDisplay.filename = "main_auto.py"
-            self.CEmbeddedDisplay.open_file(force=True)
+                # remove the file because we already know we have to open the device
+                os.remove("aux_txts/open_new_device.txt")
 
-            # enable tool buttons
-            self.toolButton_main_settings.setEnabled(True)
-            self.toolButton_main_close.setEnabled(True)
-            self.toolButton_main_back.setEnabled(True)
+                # open main container
+                self.CEmbeddedDisplay.filename = ""
+                self.CEmbeddedDisplay.hide()
+                self.CEmbeddedDisplay.show()
+                self.CEmbeddedDisplay.filename = "main_auto.py"
+                self.CEmbeddedDisplay.open_file(force=True)
 
-            # update the current window
-            self.current_window = "main"
+                # enable tool buttons
+                self.toolButton_main_settings.setEnabled(True)
+                self.toolButton_main_close.setEnabled(True)
+                self.toolButton_main_back.setEnabled(True)
+
+                # update the current window
+                self.current_window = "main"
 
         return
 
@@ -580,6 +847,18 @@ class MyDisplay(CDisplay):
             self.timer_hack_operations_after_comrad_is_fully_loaded.stop()
 
         return
+
+    #----------------------------------------------#
+
+    # iterator function to iterate over treeview rows
+    def iterItems(self, root):
+        if root is not None:
+            for row in range(root.rowCount()):
+                row_item = root.child(row, 0)
+                if row_item.hasChildren():
+                    for childIndex in range(row_item.rowCount()):
+                        child = row_item.child(childIndex, 0)
+                        yield child
 
     #----------------------------------------------#
 
