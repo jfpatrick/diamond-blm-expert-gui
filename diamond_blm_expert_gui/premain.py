@@ -12,8 +12,8 @@
 from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush)
 from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject)
-from PyQt5.QtWidgets import (QSizePolicy)
-from PyQt5.Qt import QItemSelectionModel
+from PyQt5.QtWidgets import (QSizePolicy, QMessageBox)
+from PyQt5.Qt import QItemSelectionModel, QMenu
 
 # OTHER IMPORTS
 
@@ -26,6 +26,7 @@ import jpype as jp
 from create_pyccda_json_file import create_pyccda_json_file
 import json
 import numpy as np
+import shutil
 
 ########################################################
 ########################################################
@@ -129,19 +130,16 @@ class GetWorkingDevicesThreadWorker(QObject):
             # in case we get an exception, don't add the device to the working list
             except self.cern.japc.core.ParameterException as xcp:
 
-                # ignore in case that the exception was caused by the test device
-                if str(device) != "dBLM.TEST4":
+                # print the exception
+                if verbose:
+                    print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
+                    print("{} - Device {} is not working...".format(UI_FILENAME, device))
 
-                    # print the exception
-                    if verbose:
-                        print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
-                        print("{} - Device {} is not working...".format(UI_FILENAME, device))
+                # save the exception as xcp
+                self.exception_dict[str(device)] = xcp
 
-                    # save the exception as xcp
-                    self.exception_dict[str(device)] = xcp
-
-                    # continue to the next device
-                    continue
+                # continue to the next device
+                continue
 
             # append the device
             self.working_devices.append(device)
@@ -183,6 +181,10 @@ class MyDisplay(CDisplay):
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
 
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Loading main application window...", 0)
+        self.app.main_window.statusBar().repaint()
+
         # this is not implemented yet in ComRAD
         # self.app._rbac._startup_login_policy = rbac.CRbaStartupLoginPolicy.LOGIN_EXPLICIT
         # self.app._rbac.startup_login()
@@ -212,7 +214,7 @@ class MyDisplay(CDisplay):
         self.device_list.sort()
 
         # set current device
-        self.current_device = ""
+        self.current_device = "SP.BA1.BLMDIAMOND.2"
 
         # set the current window
         self.current_window = "premain"
@@ -226,6 +228,10 @@ class MyDisplay(CDisplay):
         # remove the open device aux txt at startup
         if os.path.exists("aux_txts/open_new_device.txt"):
             os.remove("aux_txts/open_new_device.txt")
+
+        # remove the freeze txt at startup
+        if os.path.exists("aux_txts/freeze.txt"):
+            os.remove("aux_txts/freeze.txt")
 
         # load the gui and set the title,
         print("{} - Loading the GUI file...".format(UI_FILENAME))
@@ -247,6 +253,10 @@ class MyDisplay(CDisplay):
         # at this point comrad should be fully loaded
         self.is_comrad_fully_loaded = True
 
+        # status bar message
+        self.app.main_window.statusBar().clearMessage()
+        self.app.main_window.statusBar().repaint()
+
         return
 
     #----------------------------------------------#
@@ -261,6 +271,158 @@ class MyDisplay(CDisplay):
         self.treeView.header().hide()
         self.treeView.setUniformRowHeights(True)
         self.treeView.expandAll()
+
+        # set up the right-click menu handler
+        self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.treeView.customContextMenuRequested.connect(self.openRightClickTreeMenu)
+
+        return
+
+    #----------------------------------------------#
+
+    # this function sets up the menu that is opened when right-clicking the tree
+    def openRightClickTreeMenu(self, position):
+
+        # get the clicked element
+        indexes = self.treeView.selectedIndexes()
+        if len(indexes) > 0:
+            level = 0
+            index = indexes[0]
+            item = self.treeView.selectedIndexes()[0]
+            selected_device = str(item.model().itemFromIndex(index).text())
+            if selected_device != "SPS" and selected_device != "LHC" and selected_device != "NONE":
+                selected_accelerator = str(item.model().itemFromIndex(index).parent().text())
+            else:
+                first_device = str(item.model().itemFromIndex(index).child(0,0).text())
+                selected_accelerator = selected_device
+                selected_device = ""
+            while index.parent().isValid():
+                index = index.parent()
+                level += 1
+
+        # create the menu
+        menu = QMenu()
+
+        # if the accelerator was selected get the commands of the first device
+        if selected_device == "":
+            command_list = list(self.pyccda_dictionary[selected_accelerator][first_device]["command"].keys())
+        else:
+            command_list = list(self.pyccda_dictionary[selected_accelerator][selected_device]["command"].keys())
+
+        # init dict
+        self.command_dict = {}
+
+        # level 0 is either LHC or SPS (or NONE)
+        if level == 0:
+            for command in command_list:
+                self.command_dict[command] = menu.addAction(self.tr("Run {} on all {} devices".format(command, selected_accelerator)))
+                self.command_dict[command].triggered.connect(lambda: self.commandActionAll(selected_accelerator))
+
+        # level 1 are individual devices
+        elif level == 1:
+            for command in command_list:
+                self.command_dict[command] = menu.addAction(self.tr("Run {} on {}".format(command, selected_device)))
+                self.command_dict[command].triggered.connect(lambda: self.commandAction(selected_device))
+
+        # update view
+        menu.exec_(self.treeView.viewport().mapToGlobal(position))
+
+        return
+
+    #----------------------------------------------#
+
+    # function that runs the selected command on all the acc devices
+    def commandActionAll(self, selected_accelerator):
+
+        # get command name
+        command = self.sender().text().split(" ")[1]
+
+        # print
+        print("{} - Running command {} on all {} devices...".format(UI_FILENAME, command, selected_accelerator))
+
+        # get device list
+        acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == selected_accelerator])
+
+        # save exceptions here
+        exception_dev_list = []
+        exception = ""
+
+        # iterate over devices
+        for counter_device, selected_device in enumerate(acc_device_list):
+
+            # status bar message
+            self.app.main_window.statusBar().showMessage("Running command {} on all {} devices ({}/{})...".format(command, selected_accelerator, counter_device+1, len(acc_device_list)), 0)
+            self.app.main_window.statusBar().repaint()
+
+            # send an empty dict to perform a COMMAND operation via pyjapc
+            try:
+                self.japc.setParam("{}/{}".format(selected_device, command), {}, timingSelectorOverride="")
+            except Exception as xcp:
+                exception = xcp
+                print("{} - Unable to run the command: {}".format(UI_FILENAME, exception))
+                exception_dev_list.append(selected_device)
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Finished running command {} on all {} devices!".format(command, selected_accelerator), 10*1000)
+        self.app.main_window.statusBar().repaint()
+
+        # show finish message
+        if not exception_dev_list:
+            message_title = "Command {}".format(command)
+            message_text = "Command {} ran successfully on all {} devices.".format(command, selected_accelerator)
+            self.message_box = QMessageBox.information(self, message_title, message_text)
+        else:
+            if len(exception_dev_list) == len(acc_device_list):
+                message_title = "Command {}".format(command)
+                message_text = "Unable to run command {} on any of the {} devices.".format(command, selected_accelerator)
+                self.message_box = QMessageBox.critical(self, message_title, message_text)
+            else:
+                message_title = "Command {}".format(command)
+                message_text = "Unable to run command {} on the following devices: {}. Command ran successfully in the others though.".format(command, ', '.join(exception_dev_list))
+                self.message_box = QMessageBox.critical(self, message_title, message_text)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that runs the selected command on the selected device
+    def commandAction(self, selected_device):
+
+        # get command name
+        command = self.sender().text().split(" ")[1]
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Running command {} on {}...".format(command, selected_device), 0)
+        self.app.main_window.statusBar().repaint()
+
+        # print
+        print("{} - Running command {} on {}...".format(UI_FILENAME, command, selected_device))
+
+        # save exceptions here
+        exception_dev_list = []
+        exception = ""
+
+        # send an empty dict to perform a COMMAND operation via pyjapc
+        try:
+            self.japc.setParam("{}/{}".format(selected_device, command), {}, timingSelectorOverride="")
+        except Exception as xcp:
+            exception = xcp
+            print("{} - Unable to run the command: {}".format(UI_FILENAME, exception))
+            exception_dev_list.append(selected_device)
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Finished running command {} on {}!".format(command, selected_device), 10*1000)
+        self.app.main_window.statusBar().repaint()
+
+        # show finish message
+        if not exception_dev_list:
+            message_title = "Command {}".format(command)
+            message_text = "Command {} ran successfully on {}.".format(command, selected_device)
+            self.message_box = QMessageBox.information(self, message_title, message_text)
+        else:
+            message_title = "Command {}".format(command)
+            message_text = "Unable to run command {} on {} due to the following exception: {}".format(command, selected_device, exception)
+            self.message_box = QMessageBox.critical(self, message_title, message_text)
 
         return
 
@@ -280,6 +442,9 @@ class MyDisplay(CDisplay):
 
         # back to the last window (which can be preview or main)
         self.toolButton_main_back.clicked.connect(self.backToLastWindow)
+
+        # send freeze information when pressing the freeze toolbutton
+        self.toolButton_freeze.toggled.connect(self.sendFreezeText)
 
         # set up a timer to open the devices when the OPEN DEVICE button is pressed
         self.timer_open_device = QTimer(self)
@@ -346,13 +511,14 @@ class MyDisplay(CDisplay):
         # update UI (tree icons and stuff like that)
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/red_cross.png"))
 
         # update UI
-        if self.current_window == "preview" or self.current_window == "premain":
+        if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
             if self.last_index_tree_view != 0:
                 self.itemFromTreeviewClicked(index=self.last_index_tree_view)
 
@@ -373,18 +539,19 @@ class MyDisplay(CDisplay):
         self.japc.rbacLogin(readEnv=True)
 
         # get working devices again
-        self.getWorkingDevices(verbose = False)
+        self.getWorkingDevices(verbose = False, from_rbac = True)
 
         # update UI (tree icons and stuff like that)
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/red_cross.png"))
 
         # update UI (the preview panels)
-        if self.current_window == "preview" or self.current_window == "premain":
+        if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
             if self.last_index_tree_view != 0:
                 self.itemFromTreeviewClicked(index=self.last_index_tree_view)
 
@@ -407,7 +574,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that checks which devices are properly working and which are not
-    def getWorkingDevices(self, verbose = True):
+    def getWorkingDevices(self, verbose = True, from_rbac = False):
 
         # declare the working devices list
         self.working_devices = []
@@ -417,6 +584,11 @@ class MyDisplay(CDisplay):
 
         # iterate over the devices
         for index_device, device in enumerate(self.device_list):
+
+            # status bar message
+            if from_rbac:
+                self.app.main_window.statusBar().showMessage("Successful RBAC login! Checking availability of new devices ({}/{})...".format(index_device+1, len(self.device_list)), 0)
+                self.app.main_window.statusBar().repaint()
 
             # print the device for logging and debugging
             if verbose:
@@ -441,19 +613,16 @@ class MyDisplay(CDisplay):
             # in case we get an exception, don't add the device to the working list
             except self.cern.japc.core.ParameterException as xcp:
 
-                # ignore in case that the exception was caused by the test device
-                if str(device) != "dBLM.TEST4":
+                # print the exception
+                if verbose:
+                    print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
+                    print("{} - Device {} is not working...".format(UI_FILENAME, device))
 
-                    # print the exception
-                    if verbose:
-                        print("{} - Exception: cern.japc.core.ParameterException - {}".format(UI_FILENAME, xcp))
-                        print("{} - Device {} is not working...".format(UI_FILENAME, device))
+                # save the exception as xcp
+                self.exception_dict[str(device)] = xcp
 
-                    # save the exception as xcp
-                    self.exception_dict[str(device)] = xcp
-
-                    # continue to the next device
-                    continue
+                # continue to the next device
+                continue
 
             # append the device
             self.working_devices.append(device)
@@ -461,15 +630,21 @@ class MyDisplay(CDisplay):
             # save the exception as empty
             self.exception_dict[str(device)] = ""
 
+        # status bar message
+        if from_rbac:
+            self.app.main_window.statusBar().showMessage("Device availability check finished! Number of working devices: {}/{}.".format(len(self.working_devices), len(self.device_list)), 10*1000)
+            self.app.main_window.statusBar().repaint()
+
         return
 
     #----------------------------------------------#
 
     # function that updates the working devices (remember signal is only emitted when there are changes in the list)
-    def updateWorkingDevices(self, working_devices, exception_dict):
+    def updateWorkingDevices(self, working_devices, exception_dict, verbose = False):
 
         # print message
-        print("{} - Uploading working devices!".format(UI_FILENAME))
+        if verbose:
+            print("{} - Updating working devices!".format(UI_FILENAME))
 
         # update variables
         self.working_devices = working_devices
@@ -478,6 +653,7 @@ class MyDisplay(CDisplay):
         # update UI (tree icons and stuff like that)
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
@@ -516,6 +692,7 @@ class MyDisplay(CDisplay):
 
                 # determine the icon (working or not)
                 if device in self.working_devices:
+                    itemToAppend.setForeground(QBrush(Qt.black, Qt.SolidPattern))
                     itemToAppend.setIcon(QIcon("../icons/green_tick.png"))
                 else:
                     itemToAppend.setForeground(QBrush(Qt.red, Qt.SolidPattern))
@@ -558,7 +735,7 @@ class MyDisplay(CDisplay):
         print("{} - Clicked from treeView: {}".format(UI_FILENAME, selected_text))
 
         # if the item IS NOT the root, then show the preview
-        if selected_text != "SPS" and selected_text != "LHC":
+        if selected_text != "SPS" and selected_text != "LHC" and selected_text != "NONE":
 
             # get the parent (cycle) text (e.g. LHC or SPS)
             parent_text = str(item.model().itemFromIndex(index).parent().text())
@@ -567,18 +744,24 @@ class MyDisplay(CDisplay):
             if parent_text == "SPS":
                 self.app.main_window.window_context.selector = 'SPS.USER.ALL'
             elif parent_text == "LHC":
-                self.app.main_window.window_context.selector = 'LHC.USER.ALL'
+                self.app.main_window.window_context.selector = ''
+            elif parent_text == "NONE":
+                self.app.main_window.window_context.selector = ''
 
             # update the current device
             self.current_device = selected_text
             self.current_accelerator = parent_text
-            self.writeDeviceIntoTxtForMainScreen(self.current_accelerator)
+            self.writeDeviceIntoTxtForSubWindows(self.current_accelerator)
 
             # update text label
             if self.current_device in self.working_devices:
                 self.label_device_panel.setText("DEVICE PANEL <font color=green>{}</font> : <font color=green>{}</font>".format(parent_text, self.current_device))
             else:
                 self.label_device_panel.setText( "DEVICE PANEL <font color=red>{}</font> : <font color=red>{}</font>".format(parent_text, self.current_device))
+
+            # status bar message
+            self.app.main_window.statusBar().showMessage("Loading device preview...", 0)
+            self.app.main_window.statusBar().repaint()
 
             # open main container
             self.CEmbeddedDisplay.filename = ""
@@ -589,6 +772,7 @@ class MyDisplay(CDisplay):
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
+            self.toolButton_freeze.setEnabled(False)
             self.toolButton_main_close.setEnabled(True)
             self.toolButton_main_back.setEnabled(False)
 
@@ -602,14 +786,20 @@ class MyDisplay(CDisplay):
             if selected_text == "SPS":
                 self.app.main_window.window_context.selector = 'SPS.USER.ALL'
             elif selected_text == "LHC":
-                self.app.main_window.window_context.selector = 'LHC.USER.ALL'
+                self.app.main_window.window_context.selector = ''
+            elif selected_text == "NONE":
+                self.app.main_window.window_context.selector = ''
 
             # send and write the device list
             self.current_accelerator = selected_text
-            self.writeDeviceListIntoTxtForSummary(self.current_accelerator)
+            self.writeDeviceIntoTxtForSubWindows(self.current_accelerator)
 
             # update text label
             self.label_device_panel.setText("DEVICE PANEL <font color=black>{}</font> : <font color=black>{}</font>".format(selected_text, "SUMMARY"))
+
+            # status bar message
+            self.app.main_window.statusBar().showMessage("Loading {} summary preview...".format(self.current_accelerator), 0)
+            self.app.main_window.statusBar().repaint()
 
             # open main container
             self.CEmbeddedDisplay.filename = ""
@@ -620,6 +810,7 @@ class MyDisplay(CDisplay):
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
+            self.toolButton_freeze.setEnabled(False)
             self.toolButton_main_close.setEnabled(True)
             self.toolButton_main_back.setEnabled(False)
 
@@ -637,6 +828,10 @@ class MyDisplay(CDisplay):
         # close main container
         if self.CEmbeddedDisplay.filename != "":
 
+            # status bar message
+            self.app.main_window.statusBar().showMessage("Main window closed!", 5*1000)
+            self.app.main_window.statusBar().repaint()
+
             # update main panel
             self.CEmbeddedDisplay.filename = ""
             self.CEmbeddedDisplay.hide()
@@ -647,6 +842,7 @@ class MyDisplay(CDisplay):
 
             # disable tool buttons
             self.toolButton_main_settings.setEnabled(False)
+            self.toolButton_freeze.setEnabled(False)
             self.toolButton_main_close.setEnabled(False)
             self.toolButton_main_back.setEnabled(False)
 
@@ -666,8 +862,15 @@ class MyDisplay(CDisplay):
         # print the action
         print("{} - Button SETTINGS pressed".format(UI_FILENAME))
 
+        # write the selector
+        self.writeSelectorIntoTxt()
+
         # open settings window
         if self.CEmbeddedDisplay.filename != "":
+
+            # status bar message
+            self.app.main_window.statusBar().showMessage("Loading settings...", 0)
+            self.app.main_window.statusBar().repaint()
 
             # update main panel
             self.CEmbeddedDisplay.filename = ""
@@ -678,6 +881,7 @@ class MyDisplay(CDisplay):
 
             # disable and enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
+            self.toolButton_freeze.setEnabled(False)
             self.toolButton_main_close.setEnabled(True)
             self.toolButton_main_back.setEnabled(True)
 
@@ -698,6 +902,10 @@ class MyDisplay(CDisplay):
             # check you are not in premain
             if self.CEmbeddedDisplay.filename != "":
 
+                # status bar message
+                self.app.main_window.statusBar().showMessage("Loading device window...", 0)
+                self.app.main_window.statusBar().repaint()
+
                 # update main panel
                 self.CEmbeddedDisplay.filename = ""
                 self.CEmbeddedDisplay.hide()
@@ -707,6 +915,7 @@ class MyDisplay(CDisplay):
 
                 # disable and enable tool buttons
                 self.toolButton_main_settings.setEnabled(True)
+                self.toolButton_freeze.setEnabled(True)
                 self.toolButton_main_close.setEnabled(True)
                 self.toolButton_main_back.setEnabled(True)
 
@@ -719,6 +928,10 @@ class MyDisplay(CDisplay):
             # check you are not in premain
             if self.CEmbeddedDisplay.filename != "":
 
+                # status bar message
+                self.app.main_window.statusBar().showMessage("Loading device preview...", 0)
+                self.app.main_window.statusBar().repaint()
+
                 # update main panel
                 self.CEmbeddedDisplay.filename = ""
                 self.CEmbeddedDisplay.hide()
@@ -728,6 +941,7 @@ class MyDisplay(CDisplay):
 
                 # disable and enable tool buttons
                 self.toolButton_main_settings.setEnabled(False)
+                self.toolButton_freeze.setEnabled(False)
                 self.toolButton_main_close.setEnabled(True)
                 self.toolButton_main_back.setEnabled(False)
 
@@ -759,6 +973,10 @@ class MyDisplay(CDisplay):
                 # remove the file because we already know we have to open the device
                 os.remove("aux_txts/open_new_device.txt")
 
+                # status bar message
+                self.app.main_window.statusBar().showMessage("Loading device window...", 0)
+                self.app.main_window.statusBar().repaint()
+
                 # open main container
                 self.CEmbeddedDisplay.filename = ""
                 self.CEmbeddedDisplay.hide()
@@ -768,6 +986,7 @@ class MyDisplay(CDisplay):
 
                 # enable tool buttons
                 self.toolButton_main_settings.setEnabled(True)
+                self.toolButton_freeze.setEnabled(True)
                 self.toolButton_main_close.setEnabled(True)
                 self.toolButton_main_back.setEnabled(True)
 
@@ -778,8 +997,26 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
+    # function that writes the selector (for Settings)
+    def writeSelectorIntoTxt(self):
+
+        # create the dir in case it does not exist
+        if not os.path.exists("aux_txts"):
+            os.mkdir("aux_txts")
+
+        # write the selector
+        with open("aux_txts/current_selector.txt", "w") as f:
+            f.write(str(self.current_selector))
+
+        return
+
+    #----------------------------------------------#
+
     # function that writes the device name into a txt file
-    def writeDeviceIntoTxtForMainScreen(self, acc_name):
+    def writeDeviceIntoTxtForSubWindows(self, acc_name):
+
+        # get accelerator specific devices
+        acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == acc_name])
 
         # create the dir in case it does not exist
         if not os.path.exists("aux_txts"):
@@ -797,20 +1034,6 @@ class MyDisplay(CDisplay):
         with open("aux_txts/exception_premain.txt", "w") as f:
             f.write("{}\n".format(self.exception_dict[str(self.current_device)]))
 
-        return
-
-    #----------------------------------------------#
-
-    # function that writes the device list into a txt so that the summary python file can read it
-    def writeDeviceListIntoTxtForSummary(self, acc_name):
-
-        # get accelerator specific devices
-        acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == acc_name])
-
-        # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
-
         # write the file: device_list_premain
         with open("aux_txts/device_list_premain.txt", "w") as f:
             for dev in acc_device_list:
@@ -820,6 +1043,31 @@ class MyDisplay(CDisplay):
         with open("aux_txts/working_devices_premain.txt", "w") as f:
             for dev in self.working_devices:
                 f.write("{}\n".format(dev))
+
+        return
+
+    #----------------------------------------------#
+
+    # function that writes a file whenever the freeze button is pressed
+    def sendFreezeText(self):
+
+        # create the dir in case it does not exist
+        if not os.path.exists("aux_txts"):
+            os.mkdir("aux_txts")
+
+        # if it is pressed
+        if self.toolButton_freeze.isChecked():
+
+            # write the file
+            with open("aux_txts/freeze.txt", "w") as f:
+                f.write("True")
+
+        # if it is not pressed
+        else:
+
+            # remove the freeze txt
+            if os.path.exists("aux_txts/freeze.txt"):
+                os.remove("aux_txts/freeze.txt")
 
         return
 

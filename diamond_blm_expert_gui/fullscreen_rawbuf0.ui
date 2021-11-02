@@ -10,91 +10,75 @@
     <height>700</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>1000</width>
+    <height>500</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0">
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_Capture">
       <item>
-       <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0">
-        <property name="minimumSize">
-         <size>
-          <width>500</width>
-          <height>200</height>
-         </size>
-        </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="backgroundBrush">
-         <brush brushstyle="SolidPattern">
-          <color alpha="255">
-           <red>0</red>
-           <green>0</green>
-           <blue>0</blue>
-          </color>
-         </brush>
-        </property>
-        <property name="foregroundBrush">
-         <brush brushstyle="NoBrush">
-          <color alpha="255">
-           <red>0</red>
-           <green>0</green>
-           <blue>0</blue>
-          </color>
-         </brush>
-        </property>
-        <property name="interactive">
-         <bool>true</bool>
-        </property>
-        <property name="renderHints">
-         <set>QPainter::TextAntialiasing</set>
-        </property>
-        <property name="dragMode">
-         <enum>QGraphicsView::NoDrag</enum>
-        </property>
-        <property name="cacheMode">
-         <set>QGraphicsView::CacheBackground</set>
-        </property>
-        <property name="transformationAnchor">
-         <enum>QGraphicsView::NoAnchor</enum>
-        </property>
-        <property name="plotTitle" stdset="0">
-         <string notr="true">rawBuf0</string>
-        </property>
-        <property name="gridOrientation" stdset="0">
-         <enum>StaticPlotWidget::Both</enum>
-        </property>
-        <property name="showLegend" stdset="0">
-         <bool>false</bool>
-        </property>
-        <property name="layerIDs" stdset="0">
-         <stringlist/>
-        </property>
-        <property name="axisLabels" stdset="0">
-         <string>{&quot;right&quot;: &quot;amplitude&quot;, &quot;left&quot;: &quot;amplitude&quot;, &quot;top&quot;: &quot;time (microseconds)&quot;, &quot;bottom&quot;: &quot;time (microseconds)&quot;}</string>
-        </property>
-        <property name="axisRanges" stdset="0">
-         <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
-        </property>
-        <property name="replaceDataItemPenColor" stdset="0">
-         <color>
-          <red>255</red>
-          <green>255</green>
-          <blue>255</blue>
-         </color>
-        </property>
-        <property name="replaceDataItemPenWidth" stdset="0">
-         <number>1</number>
-        </property>
-        <property name="replaceDataItemSymbol" stdset="0">
-         <enum>StaticPlotWidget::NoSymbol</enum>
-        </property>
-        <property name="curves" stdset="0">
-         <stringlist/>
-        </property>
+       <widget class="CContextFrame" name="CContextFrame_Stamps">
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <spacer name="horizontalSpacer_stamps_0">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="CLabel" name="CLabel_acqStamp_Capture">
+           <property name="text">
+            <string>&lt;b&gt;acqStamp:&lt;/b&gt; Null  </string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="CLabel" name="CLabel_cycleName_Capture">
+           <property name="text">
+            <string>&lt;b&gt;cycleName:&lt;/b&gt; Null</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::RichText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_stamps_1">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
        </widget>
       </item>
       <item>
@@ -118,7 +102,7 @@
            <string>Bunchs</string>
           </property>
           <property name="checked">
-           <bool>true</bool>
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -140,13 +124,20 @@
      </layout>
     </widget>
    </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_CValueAggregators">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
   <customwidget>
-   <class>StaticPlotWidget</class>
-   <extends>QGraphicsView</extends>
-   <header>accwidgets.graph</header>
+   <class>PyDMLabel</class>
+   <extends>QLabel</extends>
+   <header>pydm.widgets.label</header>
   </customwidget>
   <customwidget>
    <class>CContextFrame</class>
@@ -155,9 +146,9 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>CStaticPlot</class>
-   <extends>StaticPlotWidget</extends>
-   <header>comrad.widgets.graphs</header>
+   <class>CLabel</class>
+   <extends>PyDMLabel</extends>
+   <header>comrad.widgets.indicators</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -9,7 +9,7 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
+from comrad import (CApplication, CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont)
 from PyQt5.QtCore import (QSize, Qt, QRect)
 from PyQt5.QtWidgets import (QSizePolicy, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QFrame, QWidget)
@@ -45,6 +45,9 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # retrieve the app CApplication variable
+        self.app = CApplication.instance()
+
         # set the device
         self.current_device = "dBLM.TEST4"
         self.LoadDeviceFromTxtPremain()
@@ -70,6 +73,10 @@ class MyDisplay(CDisplay):
         self.buildCodeWidgets()
         print("{} - Handling signals and slots...".format(UI_FILENAME))
         self.bindWidgets()
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Preview of {} loaded!".format(self.current_device), 10*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 

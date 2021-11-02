@@ -9,7 +9,7 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
+from comrad import (CApplication, CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont)
 from PyQt5.QtCore import (QSize, Qt, QRect)
 from PyQt5.QtWidgets import (QSizePolicy, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QFrame, QWidget)
@@ -46,6 +46,9 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # retrieve the app CApplication variable
+        self.app = CApplication.instance()
+
         # set the device list
         self.device_list = ["SP.BA1.BLMDIAMOND.2", "SP.BA2.BLMDIAMOND.2", "SP.BA4.BLMDIAMOND.2", "SP.BA6.BLMDIAMOND.2", "dBLM.TEST4"]
         self.LoadDeviceListFromTxtPremain()
@@ -74,6 +77,10 @@ class MyDisplay(CDisplay):
         self.buildCodeWidgets()
         print("{} - Handling signals and slots...".format(UI_FILENAME))
         self.bindWidgets()
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Device summary of {} loaded!".format(self.current_accelerator), 10*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 
@@ -129,6 +136,7 @@ class MyDisplay(CDisplay):
 
         # iterate over all devices and fill all the fields
         row = 1
+        maxMinWidth = 0
         for device in self.device_list:
 
             # if the device IS working
@@ -141,11 +149,12 @@ class MyDisplay(CDisplay):
                 column = 0
                 self.labelDict["{}_{}".format("main_widget", device)] = QLabel(self.main_widget)
                 self.labelDict["{}_{}".format("main_widget", device)].setObjectName("label_{}_{}".format("main_widget", "title_device"))
-                # self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
                 self.labelDict["{}_{}".format("main_widget", device)].setAlignment(Qt.AlignCenter)
                 self.labelDict["{}_{}".format("main_widget", device)].setText("{}".format(device))
                 minWidth = self.labelDict["{}_{}".format("main_widget", device)].fontMetrics().boundingRect(self.labelDict["{}_{}".format("main_widget", device)].text()).width()
-                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(np.abs(minWidth - round(minWidth*0.3)), 32))
+                if minWidth > maxMinWidth:
+                    maxMinWidth = minWidth
+                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(np.abs(maxMinWidth+round(0.1*maxMinWidth)), 32))
                 self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["{}_{}".format("main_widget", device)], row, column, 1, 1)
 
                 # iterate over the rest of fields
@@ -187,13 +196,11 @@ class MyDisplay(CDisplay):
                 column = 0
                 self.labelDict["{}_{}".format("main_widget", device)] = QLabel(self.main_widget)
                 self.labelDict["{}_{}".format("main_widget", device)].setObjectName("label_{}_{}".format("main_widget", "title_device"))
-                # self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(160, 32))
+                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(8*len(str(device)), 32))
                 self.labelDict["{}_{}".format("main_widget", device)].setAlignment(Qt.AlignCenter)
                 self.labelDict["{}_{}".format("main_widget", device)].setTextFormat(Qt.RichText)
                 self.labelDict["{}_{}".format("main_widget", device)].setText("<font color=red>{}</font>".format(device))
                 self.labelDict["{}_{}".format("main_widget", device)].setStyleSheet("background-color: #ffebeb;")
-                minWidth = self.labelDict["{}_{}".format("main_widget", device)].fontMetrics().boundingRect(self.labelDict["{}_{}".format("main_widget", device)].text()).width()
-                self.labelDict["{}_{}".format("main_widget", device)].setMinimumSize(QSize(np.abs(minWidth - round(minWidth*0.3)), 32))
                 self.layoutDict["grid_layout_main_widget"].addWidget(self.labelDict["{}_{}".format("main_widget", device)], row, column, 1, 1)
 
                 # iterate over the rest of fields
@@ -261,6 +268,11 @@ class MyDisplay(CDisplay):
                 self.working_devices = []
                 for line in f:
                     self.working_devices.append(line.strip())
+
+        # load the current accelerator
+        if os.path.exists("aux_txts/current_accelerator_premain.txt"):
+            with open("aux_txts/current_accelerator_premain.txt", "r") as f:
+                self.current_accelerator = f.read()
 
         return
 

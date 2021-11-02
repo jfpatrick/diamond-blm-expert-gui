@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1320</width>
-    <height>626</height>
+    <width>1420</width>
+    <height>700</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -32,7 +32,7 @@
   <property name="styleSheet">
    <string notr="true"/>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QVBoxLayout" name="verticalLayout" stretch="0,0">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_Form">
      <item>
@@ -104,422 +104,12 @@ CCommandButton:pressed{
             <property name="verticalSpacing">
              <number>3</number>
             </property>
-            <item row="0" column="0">
-             <widget class="CContextFrame" name="CContextFrame_acqStamp_Capture_0">
-              <layout class="QHBoxLayout" name="horizontalLayout">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <spacer name="horizontalSpacer_stamps_0_1">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="CLabel" name="CLabel_acqStamp_Capture_0">
-                 <property name="font">
-                  <font>
-                   <family>Sans Serif</family>
-                  </font>
-                 </property>
-                 <property name="text">
-                  <string>&lt;b&gt;acqStamp:&lt;/b&gt; Null  </string>
-                 </property>
-                 <property name="textFormat">
-                  <enum>Qt::RichText</enum>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="CLabel" name="CLabel_cycleName_Capture_0">
-                 <property name="text">
-                  <string>&lt;b&gt;cycleName:&lt;/b&gt; Null</string>
-                 </property>
-                 <property name="textFormat">
-                  <enum>Qt::RichText</enum>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_stamps_0_2">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT0">
-              <property name="styleSheet">
-               <string notr="true"/>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_9">
-               <item>
-                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT0" native="true">
-                 <property name="styleSheet">
-                  <string notr="true">QWidget.CLabel{
-	border: 1px solid black;
-	background-color: rgb(236, 236, 236);
-}
-
-QWidget.QLabel{
-	border: 1px solid black;
-	background-color: rgb(236, 236, 236);
-}</string>
-                 </property>
-                 <layout class="QGridLayout" name="gridLayout_3" rowstretch="90,100,100,100,100,100,100,100">
-                  <item row="7" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_7">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 7:
-    output('{0:.2f} kHz'.format(new_val[6]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_1">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 1:
-    output('{0:.2f} kHz'.format(new_val[0]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_5">
-                    <property name="text">
-                     <string>5th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_2">
-                    <property name="text">
-                     <string>2nd</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_4">
-                    <property name="text">
-                     <string>4th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_overtones0">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(210, 210, 210);</string>
-                    </property>
-                    <property name="text">
-                     <string>Overtones</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_4">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 4:
-    output('{0:.2f} kHz'.format(new_val[3]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_6">
-                    <property name="font">
-                     <font>
-                      <family>Sans Serif</family>
-                     </font>
-                    </property>
-                    <property name="text">
-                     <string>6th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_3">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 3:
-    output('{0:.2f} kHz'.format(new_val[2]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_frequency0">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(210, 210, 210);</string>
-                    </property>
-                    <property name="text">
-                     <string>Frequency</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_5">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 5:
-    output('{0:.2f} kHz'.format(new_val[4]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_1">
-                    <property name="text">
-                     <string>1st</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_3">
-                    <property name="text">
-                     <string>3rd</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_6">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 6:
-    output('{0:.2f} kHz'.format(new_val[5]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_7">
-                    <property name="text">
-                     <string>7th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones0_2">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 2:
-    output('{0:.2f} kHz'.format(new_val[1]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButton_invisible_0">
-                 <property name="enabled">
-                  <bool>false</bool>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true"/>
-                 </property>
-                 <property name="text">
-                  <string>PushButton</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
             <item row="1" column="0">
              <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0">
               <property name="styleSheet">
                <string notr="true"/>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_7">
-               <item>
-                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0">
-                 <property name="minimumSize">
-                  <size>
-                   <width>500</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="styleSheet">
-                  <string notr="true"/>
-                 </property>
-                 <property name="backgroundBrush">
-                  <brush brushstyle="SolidPattern">
-                   <color alpha="255">
-                    <red>0</red>
-                    <green>0</green>
-                    <blue>0</blue>
-                   </color>
-                  </brush>
-                 </property>
-                 <property name="foregroundBrush">
-                  <brush brushstyle="NoBrush">
-                   <color alpha="255">
-                    <red>0</red>
-                    <green>0</green>
-                    <blue>0</blue>
-                   </color>
-                  </brush>
-                 </property>
-                 <property name="interactive">
-                  <bool>true</bool>
-                 </property>
-                 <property name="renderHints">
-                  <set>QPainter::TextAntialiasing</set>
-                 </property>
-                 <property name="dragMode">
-                  <enum>QGraphicsView::NoDrag</enum>
-                 </property>
-                 <property name="cacheMode">
-                  <set>QGraphicsView::CacheBackground</set>
-                 </property>
-                 <property name="transformationAnchor">
-                  <enum>QGraphicsView::NoAnchor</enum>
-                 </property>
-                 <property name="plotTitle" stdset="0">
-                  <string notr="true">rawBuf0</string>
-                 </property>
-                 <property name="gridOrientation" stdset="0">
-                  <enum>StaticPlotWidget::Both</enum>
-                 </property>
-                 <property name="showLegend" stdset="0">
-                  <bool>false</bool>
-                 </property>
-                 <property name="layerIDs" stdset="0">
-                  <stringlist/>
-                 </property>
-                 <property name="axisLabels" stdset="0">
-                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;time (microseconds)&quot;, &quot;top&quot;: &quot;time (microseconds)&quot;}</string>
-                 </property>
-                 <property name="axisRanges" stdset="0">
-                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
-                 </property>
-                 <property name="replaceDataItemPenColor" stdset="0">
-                  <color>
-                   <red>255</red>
-                   <green>255</green>
-                   <blue>255</blue>
-                  </color>
-                 </property>
-                 <property name="replaceDataItemPenWidth" stdset="0">
-                  <number>1</number>
-                 </property>
-                 <property name="replaceDataItemSymbol" stdset="0">
-                  <enum>StaticPlotWidget::NoSymbol</enum>
-                 </property>
-                 <property name="curves" stdset="0">
-                  <stringlist/>
-                 </property>
-                </widget>
-               </item>
+              <layout class="QVBoxLayout" name="verticalLayout_CContextFrame_CaptureTab_rawBuf0">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf0">
                  <item>
@@ -580,11 +170,14 @@ else:
               </layout>
              </widget>
             </item>
-            <item row="2" column="2">
-             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT1">
-              <layout class="QVBoxLayout" name="verticalLayout_10">
+            <item row="1" column="2">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT0">
+              <property name="styleSheet">
+               <string notr="true"/>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_9">
                <item>
-                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT1" native="true">
+                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT0" native="true">
                  <property name="styleSheet">
                   <string notr="true">QWidget.CLabel{
 	border: 1px solid black;
@@ -596,204 +189,15 @@ QWidget.QLabel{
 	background-color: rgb(236, 236, 236);
 }</string>
                  </property>
-                 <layout class="QGridLayout" name="gridLayout_7" rowstretch="90,100,100,100,100,100,100,100" columnminimumwidth="80,80">
-                  <item row="4" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_4">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 4:
-    output('{0:.2f} kHz'.format(new_val[3]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_2">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 2:
-    output('{0:.2f} kHz'.format(new_val[1]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_1">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 1:
-    output('{0:.2f} kHz'.format(new_val[0]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_3">
-                    <property name="text">
-                     <string>3rd</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="4" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_4">
-                    <property name="text">
-                     <string>4th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="rules" stdset="0">
-                     <string>[]</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="0">
-                   <widget class="QLabel" name="label_overtones1">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(210, 210, 210);</string>
-                    </property>
-                    <property name="text">
-                     <string>Overtones</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_6">
-                    <property name="text">
-                     <string>6th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="0" column="1">
-                   <widget class="QLabel" name="label_frequency1">
-                    <property name="styleSheet">
-                     <string notr="true">background-color: rgb(210, 210, 210);</string>
-                    </property>
-                    <property name="text">
-                     <string>Frequency</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="2" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_2">
-                    <property name="text">
-                     <string>2nd</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="6" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_6">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 6:
-    output('{0:.2f} kHz'.format(new_val[5]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="1" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_1">
-                    <property name="text">
-                     <string>1st</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_5">
-                    <property name="text">
-                     <string>5th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="5" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_5">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 5:
-    output('{0:.2f} kHz'.format(new_val[4]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="3" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_3">
-                    <property name="text">
-                     <string>Null</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                    <property name="valueTransformation">
-                     <string notr="true">if len(new_val) &gt;= 3:
-    output('{0:.2f} kHz'.format(new_val[2]))
-else:
-    output('-')</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item row="7" column="0">
-                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_7">
-                    <property name="text">
-                     <string>7th</string>
-                    </property>
-                    <property name="alignment">
-                     <set>Qt::AlignCenter</set>
-                    </property>
-                   </widget>
-                  </item>
+                 <layout class="QGridLayout" name="gridLayout_3" rowstretch="90,100,100,100,100,100,100,100">
                   <item row="7" column="1">
-                   <widget class="CLabel" name="CLabel_Overtones1_7">
+                   <widget class="CLabel" name="CLabel_Overtones0_7">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
                     <property name="text">
                      <string>Null</string>
                     </property>
@@ -808,13 +212,291 @@ else:
                     </property>
                    </widget>
                   </item>
+                  <item row="1" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 1:
+    output('{0:.2f} kHz'.format(new_val[0]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_5">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>5th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>2nd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_4">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>4th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_overtones0">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(210, 210, 210);</string>
+                    </property>
+                    <property name="text">
+                     <string>Overtones</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_4">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 4:
+    output('{0:.2f} kHz'.format(new_val[3]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_6">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="font">
+                     <font>
+                      <family>Sans Serif</family>
+                     </font>
+                    </property>
+                    <property name="text">
+                     <string>6th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_3">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 3:
+    output('{0:.2f} kHz'.format(new_val[2]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_frequency0">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(210, 210, 210);</string>
+                    </property>
+                    <property name="text">
+                     <string>Frequency</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_5">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 5:
+    output('{0:.2f} kHz'.format(new_val[4]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>1st</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_3">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>3rd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_6">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 6:
+    output('{0:.2f} kHz'.format(new_val[5]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones0_7">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>7th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones0_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 2:
+    output('{0:.2f} kHz'.format(new_val[1]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
                  </layout>
                 </widget>
                </item>
                <item>
-                <widget class="QPushButton" name="pushButton_invisible_1">
+                <widget class="QPushButton" name="pushButton_invisible_0">
                  <property name="enabled">
                   <bool>false</bool>
+                 </property>
+                 <property name="styleSheet">
+                  <string notr="true"/>
                  </property>
                  <property name="text">
                   <string>PushButton</string>
@@ -824,209 +506,12 @@ else:
               </layout>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="CContextFrame" name="CContextFrame_acqStamp_Capture_1">
-              <property name="inheritSelector" stdset="0">
-               <bool>true</bool>
-              </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_2">
-               <property name="spacing">
-                <number>0</number>
-               </property>
-               <property name="leftMargin">
-                <number>0</number>
-               </property>
-               <property name="topMargin">
-                <number>0</number>
-               </property>
-               <property name="rightMargin">
-                <number>0</number>
-               </property>
-               <property name="bottomMargin">
-                <number>0</number>
-               </property>
-               <item>
-                <spacer name="horizontalSpacer_stamps_1_1">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="CLabel" name="CLabel_acqStamp_Capture_1">
-                 <property name="text">
-                  <string>&lt;b&gt;acqStamp:&lt;/b&gt; Null  </string>
-                 </property>
-                 <property name="textFormat">
-                  <enum>Qt::RichText</enum>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="CLabel" name="CLabel_cycleName_Capture_1">
-                 <property name="text">
-                  <string>&lt;b&gt;cycleName:&lt;/b&gt; Null</string>
-                 </property>
-                 <property name="textFormat">
-                  <enum>Qt::RichText</enum>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacer_stamps_1_2">
-                 <property name="orientation">
-                  <enum>Qt::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item row="1" column="1">
-             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0_FFT">
-              <property name="inheritSelector" stdset="0">
-               <bool>false</bool>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_2">
-               <item>
-                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf0_FFT">
-                 <property name="minimumSize">
-                  <size>
-                   <width>500</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="font">
-                  <font>
-                   <family>Sans Serif</family>
-                  </font>
-                 </property>
-                 <property name="plotTitle" stdset="0">
-                  <string>rawBuf0_FFT</string>
-                 </property>
-                 <property name="gridOrientation" stdset="0">
-                  <enum>StaticPlotWidget::Both</enum>
-                 </property>
-                 <property name="layerIDs" stdset="0">
-                  <stringlist/>
-                 </property>
-                 <property name="axisLabels" stdset="0">
-                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;frequency (kHz)&quot;, &quot;top&quot;: &quot;frequency (kHz)&quot;}</string>
-                 </property>
-                 <property name="axisRanges" stdset="0">
-                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
-                 </property>
-                 <property name="curves" stdset="0">
-                  <stringlist/>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf0_FFT">
-                 <item>
-                  <widget class="QCheckBox" name="checkBox_peaks_0">
-                   <property name="styleSheet">
-                    <string notr="true"/>
-                   </property>
-                   <property name="text">
-                    <string>Peaks</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacer_rawBuf0_FFT">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf0_FFT">
-                   <property name="text">
-                    <string> Fullscreen</string>
-                   </property>
-                   <property name="icon">
-                    <iconset>
-                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
-                   </property>
-                   <property name="filenames" stdset="0">
-                    <stringlist>
-                     <string>fullscreen_rawbuf0_fft.py</string>
-                    </stringlist>
-                   </property>
-                   <property name="titles" stdset="0">
-                    <stringlist>
-                     <string>rawBuf0_FFT (Fullscreen)</string>
-                    </stringlist>
-                   </property>
-                   <property name="openInNewWindow" stdset="0">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-              </layout>
-             </widget>
-            </item>
             <item row="2" column="1">
              <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf1_FFT">
               <property name="inheritSelector" stdset="0">
                <bool>false</bool>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
-               <item>
-                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf1_FFT">
-                 <property name="minimumSize">
-                  <size>
-                   <width>500</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="plotTitle" stdset="0">
-                  <string>rawBuf1_FFT</string>
-                 </property>
-                 <property name="gridOrientation" stdset="0">
-                  <enum>StaticPlotWidget::Both</enum>
-                 </property>
-                 <property name="layerIDs" stdset="0">
-                  <stringlist/>
-                 </property>
-                 <property name="axisLabels" stdset="0">
-                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;frequency (kHz)&quot;, &quot;top&quot;: &quot;frequency (kHz)&quot;}</string>
-                 </property>
-                 <property name="axisRanges" stdset="0">
-                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
-                 </property>
-                </widget>
-               </item>
+              <layout class="QVBoxLayout" name="verticalLayout_CContextFrame_CaptureTab_rawBuf1_FFT">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf1_FFT">
                  <item>
@@ -1081,43 +566,88 @@ else:
               </layout>
              </widget>
             </item>
+            <item row="0" column="1">
+             <widget class="CContextFrame" name="CContextFrame_acqStamp_Capture_1">
+              <property name="inheritSelector" stdset="0">
+               <bool>true</bool>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <spacer name="horizontalSpacer_stamps_1_1">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="CLabel" name="CLabel_acqStamp_Capture_1">
+                 <property name="text">
+                  <string>&lt;b&gt;acqStamp:&lt;/b&gt; Null UTC </string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="CLabel" name="CLabel_cycleName_Capture_1">
+                 <property name="text">
+                  <string>&lt;b&gt;cycleName:&lt;/b&gt; Null</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_stamps_1_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
             <item row="2" column="0">
              <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf1">
               <property name="styleSheet">
                <string notr="true"/>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_6">
-               <item>
-                <widget class="CStaticPlot" name="CStaticPlot_Capture_rawBuf1">
-                 <property name="minimumSize">
-                  <size>
-                   <width>500</width>
-                   <height>200</height>
-                  </size>
-                 </property>
-                 <property name="plotTitle" stdset="0">
-                  <string notr="true">rawBuf1</string>
-                 </property>
-                 <property name="defaultYAxisSide" stdset="0">
-                  <enum>StaticPlotWidget::Left</enum>
-                 </property>
-                 <property name="gridOrientation" stdset="0">
-                  <enum>StaticPlotWidget::Both</enum>
-                 </property>
-                 <property name="layerIDs" stdset="0">
-                  <stringlist/>
-                 </property>
-                 <property name="axisLabels" stdset="0">
-                  <string>{&quot;left&quot;: &quot;amplitude&quot;, &quot;right&quot;: &quot;amplitude&quot;, &quot;bottom&quot;: &quot;time (microseconds)&quot;, &quot;top&quot;: &quot;time (microseconds)&quot;}</string>
-                 </property>
-                 <property name="axisRanges" stdset="0">
-                  <string>{&quot;x&quot;: &quot;auto&quot;, &quot;y&quot;: &quot;auto&quot;}</string>
-                 </property>
-                 <property name="curves" stdset="0">
-                  <stringlist/>
-                 </property>
-                </widget>
-               </item>
+              <layout class="QVBoxLayout" name="verticalLayout_CContextFrame_CaptureTab_rawBuf1">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf1">
                  <item>
@@ -1160,6 +690,475 @@ else:
                    <property name="titles" stdset="0">
                     <stringlist>
                      <string>rawBuf1 (Fullscreen)</string>
+                    </stringlist>
+                   </property>
+                   <property name="openInNewWindow" stdset="0">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="CContextFrame" name="CContextFrame_acqStamp_Capture_0">
+              <layout class="QHBoxLayout" name="horizontalLayout">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <spacer name="horizontalSpacer_stamps_0_1">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+               <item>
+                <widget class="CLabel" name="CLabel_acqStamp_Capture_0">
+                 <property name="font">
+                  <font>
+                   <family>Sans Serif</family>
+                  </font>
+                 </property>
+                 <property name="text">
+                  <string>&lt;b&gt;acqStamp:&lt;/b&gt; Null UTC  </string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="CLabel" name="CLabel_cycleName_Capture_0">
+                 <property name="text">
+                  <string>&lt;b&gt;cycleName:&lt;/b&gt; Null</string>
+                 </property>
+                 <property name="textFormat">
+                  <enum>Qt::RichText</enum>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="horizontalSpacer_stamps_0_2">
+                 <property name="orientation">
+                  <enum>Qt::Horizontal</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="2" column="2">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_Overtones_FFT1">
+              <layout class="QVBoxLayout" name="verticalLayout_10">
+               <item>
+                <widget class="QWidget" name="gridWidget_CaptureTab_Overtones_FFT1" native="true">
+                 <property name="styleSheet">
+                  <string notr="true">QWidget.CLabel{
+	border: 1px solid black;
+	background-color: rgb(236, 236, 236);
+}
+
+QWidget.QLabel{
+	border: 1px solid black;
+	background-color: rgb(236, 236, 236);
+}</string>
+                 </property>
+                 <layout class="QGridLayout" name="gridLayout_7" rowstretch="90,100,100,100,100,100,100,100" columnminimumwidth="80,80">
+                  <item row="4" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_4">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 4:
+    output('{0:.2f} kHz'.format(new_val[3]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 2:
+    output('{0:.2f} kHz'.format(new_val[1]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 1:
+    output('{0:.2f} kHz'.format(new_val[0]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_3">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>3rd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="4" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_4">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>4th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="rules" stdset="0">
+                     <string>[]</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_overtones1">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(210, 210, 210);</string>
+                    </property>
+                    <property name="text">
+                     <string>Overtones</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_6">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>6th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QLabel" name="label_frequency1">
+                    <property name="styleSheet">
+                     <string notr="true">background-color: rgb(210, 210, 210);</string>
+                    </property>
+                    <property name="text">
+                     <string>Frequency</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="2" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_2">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>2nd</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="6" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_6">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 6:
+    output('{0:.2f} kHz'.format(new_val[5]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_1">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>1st</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_5">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>5th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="5" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_5">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 5:
+    output('{0:.2f} kHz'.format(new_val[4]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="3" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_3">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 3:
+    output('{0:.2f} kHz'.format(new_val[2]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="0">
+                   <widget class="CLabel" name="CLabel_JustLabel_Overtones1_7">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>7th</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="7" column="1">
+                   <widget class="CLabel" name="CLabel_Overtones1_7">
+                    <property name="minimumSize">
+                     <size>
+                      <width>90</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="text">
+                     <string>Null</string>
+                    </property>
+                    <property name="alignment">
+                     <set>Qt::AlignCenter</set>
+                    </property>
+                    <property name="valueTransformation">
+                     <string notr="true">if len(new_val) &gt;= 7:
+    output('{0:.2f} kHz'.format(new_val[6]))
+else:
+    output('-')</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButton_invisible_1">
+                 <property name="enabled">
+                  <bool>false</bool>
+                 </property>
+                 <property name="text">
+                  <string>PushButton</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf0_FFT">
+              <property name="inheritSelector" stdset="0">
+               <bool>false</bool>
+              </property>
+              <layout class="QVBoxLayout" name="verticalLayout_CContextFrame_CaptureTab_rawBuf0_FFT">
+               <item>
+                <layout class="QHBoxLayout" name="horizontalLayout_CaptureTab_rawBuf0_FFT">
+                 <item>
+                  <widget class="QCheckBox" name="checkBox_peaks_0">
+                   <property name="styleSheet">
+                    <string notr="true"/>
+                   </property>
+                   <property name="text">
+                    <string>Peaks</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_rawBuf0_FFT">
+                   <property name="orientation">
+                    <enum>Qt::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item>
+                  <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf0_FFT">
+                   <property name="text">
+                    <string> Fullscreen</string>
+                   </property>
+                   <property name="icon">
+                    <iconset>
+                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                   </property>
+                   <property name="filenames" stdset="0">
+                    <stringlist>
+                     <string>fullscreen_rawbuf0_fft.py</string>
+                    </stringlist>
+                   </property>
+                   <property name="titles" stdset="0">
+                    <stringlist>
+                     <string>rawBuf0_FFT (Fullscreen)</string>
                     </stringlist>
                    </property>
                    <property name="openInNewWindow" stdset="0">
@@ -1628,6 +1627,16 @@ output(str(final_string))
      </item>
     </layout>
    </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_CValueAggregators">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="sizeConstraint">
+      <enum>QLayout::SetNoConstraint</enum>
+     </property>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -1640,11 +1649,6 @@ output(str(final_string))
    <class>PyDMRelatedDisplayButton</class>
    <extends>QPushButton</extends>
    <header>pydm.widgets.related_display_button</header>
-  </customwidget>
-  <customwidget>
-   <class>StaticPlotWidget</class>
-   <extends>QGraphicsView</extends>
-   <header>accwidgets.graph</header>
   </customwidget>
   <customwidget>
    <class>CRelatedDisplayButton</class>
@@ -1661,11 +1665,6 @@ output(str(final_string))
    <class>CLabel</class>
    <extends>PyDMLabel</extends>
    <header>comrad.widgets.indicators</header>
-  </customwidget>
-  <customwidget>
-   <class>CStaticPlot</class>
-   <extends>StaticPlotWidget</extends>
-   <header>comrad.widgets.graphs</header>
   </customwidget>
  </customwidgets>
  <resources/>

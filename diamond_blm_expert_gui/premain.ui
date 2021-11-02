@@ -144,7 +144,7 @@ QTreeView{
          </property>
          <layout class="QVBoxLayout" name="verticalLayout_9" stretch="5,95">
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,120,3,3">
+           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,120,3,3,3">
             <property name="sizeConstraint">
              <enum>QLayout::SetDefaultConstraint</enum>
             </property>
@@ -217,6 +217,58 @@ border: 1px solid black;</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QToolButton" name="toolButton_freeze">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>16</width>
+                <height>16</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QToolButton{
+	background-color: rgb(255, 255, 255);
+	border: 1px solid black;
+}
+
+QToolButton:hover{
+	background-color: rgb(230, 230, 230);
+}</string>
+              </property>
+              <property name="text">
+               <string>Freeze</string>
+              </property>
+              <property name="icon">
+               <iconset>
+                <normaloff>../icons/freezing_1.png</normaloff>
+                <normalon>../icons/freezing_2.png</normalon>../icons/freezing_1.png</iconset>
+              </property>
+              <property name="checkable">
+               <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
+              </property>
+              <property name="popupMode">
+               <enum>QToolButton::DelayedPopup</enum>
+              </property>
+              <property name="autoRaise">
+               <bool>false</bool>
+              </property>
+              <property name="arrowType">
+               <enum>Qt::NoArrow</enum>
               </property>
              </widget>
             </item>

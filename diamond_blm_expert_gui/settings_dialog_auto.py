@@ -9,9 +9,9 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CContextFrame, CApplication, CLineEdit, CLabel, CCommandButton, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
+from comrad import (CApplication, CContextFrame, CApplication, CLineEdit, CLabel, CCommandButton, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont)
-from PyQt5.QtCore import (QSize, Qt, QRect)
+from PyQt5.QtCore import (QSize, Qt, QRect, QTimer)
 from PyQt5.QtWidgets import (QSizePolicy, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QMessageBox, QFrame, QWidget)
 
 # OTHER IMPORTS
@@ -29,6 +29,17 @@ import json
 
 UI_FILENAME = "settings_dialog_auto.ui"
 SHOW_COMMANDS_IN_SETTINGS = False
+
+########################################################
+########################################################
+
+# util function
+def can_be_converted_to_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
 
 ########################################################
 ########################################################
@@ -341,9 +352,6 @@ class DialogThreeColumnSet(QDialog):
         # setters
         self.pushButton_set.clicked.connect(self.setFunction)
 
-        # selector signal
-        self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
-
         # rbac login signal
         self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
 
@@ -417,6 +425,9 @@ class DialogThreeColumnSet(QDialog):
         list_needs_warning_message_box = []
         list_mux = []
 
+        # boolean
+        types_are_wrong = False
+
         # iterate over all properties
         for property in self.property_list:
 
@@ -432,6 +443,22 @@ class DialogThreeColumnSet(QDialog):
                 # compare old and new values
                 old_value = self.field_values_macro_dict["{}".format(property)]["{}".format(field)]
                 new_value = self.lineEditDict["{}_{}".format(property, field)].text()
+
+                # check if both are booleans
+                if str(old_value) == "True" or str(old_value) == "False":
+                    if str(new_value) != "True" and str(new_value) != "False":
+                        types_are_wrong = True
+
+                # check types are the same
+                if can_be_converted_to_float(str(old_value)) != can_be_converted_to_float(str(new_value)) or types_are_wrong:
+
+                    # if the input type does not match with the field type just show an error and return
+                    message_title = "WARNING"
+                    message_text = "Please check that variable types are the same!"
+                    self.message_box = QMessageBox.warning(self, message_title, message_text)
+
+                    # break the set action
+                    return
 
                 # if at least one field is different, do a SET of the whole dictionary
                 if str(old_value) != str(new_value):
@@ -455,8 +482,16 @@ class DialogThreeColumnSet(QDialog):
         # determine if there were changes that require a non-generic selector
         muxAndNotEmpty = any(list_needs_warning_message_box)
 
+        # check if the selector is generic
+        if self.current_selector:
+            isAllOrEmptySelector = self.current_selector.split(".")[-1] == "ALL"
+        else:
+            isAllOrEmptySelector = True
+
         # if the current selector is generic and there were changes on a non-mux channel, force the user to use a non-generic selector
-        if muxAndNotEmpty and self.current_selector.split(".")[-1] == "ALL":
+        if muxAndNotEmpty and isAllOrEmptySelector:
+
+            print(self.current_selector)
 
             # show warning message
             message_title = "WARNING"
@@ -488,13 +523,21 @@ class DialogThreeColumnSet(QDialog):
                         self.japc.setParam("{}/{}".format(self.current_device, property), list_dict_to_inject[count_prop], timingSelectorOverride = "")
 
         # update values in the parent panel
-        self.dialog_parent.getFunction()
+        self.dialog_parent.getFunction(show_message = False)
 
         # close the dialog
         sleep(0.1)
         self._want_to_close = True
         self.close()
         self.deleteLater()
+
+        # do another get
+        if muxAndNotEmpty:
+            self.dialog_parent.getFunction(show_message = False)
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Command SET ran successfully!", 3*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 
@@ -517,6 +560,15 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # retrieve the app CApplication variable
+        self.app = CApplication.instance()
+
+        # use this dict to store pyjapc subs data
+        self.data_subs = {}
+
+        # init boolean dict to optimize the subsCallback function
+        self.firstReceivedSubsPyjapcData = {}
+
         # retrieve the pyccda json info file
         self.readPyCCDAJsonFile()
 
@@ -533,6 +585,9 @@ class MyDisplay(CDisplay):
             self.current_selector = self.app.main_window.window_context.selector
         else:
             self.current_selector = ""
+
+        # load selector
+        self.LoadSelector()
 
         # get the property list
         self.property_list = list(self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"].keys())
@@ -565,7 +620,11 @@ class MyDisplay(CDisplay):
         self.bindWidgets()
 
         # init GET
-        self.getFunction()
+        self.getFunction(show_message = False)
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Settings panel of {} loaded successfully!".format(self.current_device), 10*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 
@@ -639,6 +698,9 @@ class MyDisplay(CDisplay):
         # create the group boxes
         for property in self.property_list:
 
+            # init subs pyjapc boolean dict
+            self.firstReceivedSubsPyjapcData[property] = False
+
             # property groupbox
             self.groupBoxDict["{}".format(property)] = QGroupBox(self.scrollingContents_properties)
             self.groupBoxDict["{}".format(property)].setObjectName("groupBox_{}".format(property))
@@ -675,6 +737,9 @@ class MyDisplay(CDisplay):
             # in case the property is multiplexed, create a subscription kind of channel (i.e. use CLabel)
             if is_multiplexed == "True":
 
+                self.japc.subscribeParam("{}/{}".format(self.current_device, property), onValueReceived=self.subsCallback, onException=self.onException)
+                self.japc.startSubscriptions()
+
                 # add labels to the layout of the property groupbox
                 row = 0
                 for field in self.field_dict["{}".format(property)]:
@@ -695,7 +760,7 @@ class MyDisplay(CDisplay):
                     self.clabelDict["clabel_value_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
                     self.clabelDict["clabel_value_{}_{}".format(property, field)].setText("{}".format("Null"))
                     self.clabelDict["clabel_value_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
-                    self.clabelDict["clabel_value_{}_{}".format(property, field)].channel = "{}/{}#{}".format(self.current_device, property, field)
+                    # self.clabelDict["clabel_value_{}_{}".format(property, field)].channel = "{}/{}#{}".format(self.current_device, property, field)
                     self.layoutDict["groupBox_{}".format(property)].addWidget(self.clabelDict["clabel_value_{}_{}".format(property, field)], row, column, 1, 1)
 
                     # get the next field
@@ -743,11 +808,45 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
+    # function to receive pyjapc subs data
+    def subsCallback(self, parameterName, dictValues, verbose = False):
+
+        # get property name
+        prop_name = parameterName.split("/")[1]
+
+        # check that the values are different with respect to the previous iteration
+        if self.firstReceivedSubsPyjapcData[prop_name]:
+            if self.data_subs[prop_name] == dictValues:
+                return
+
+        # store the data
+        self.data_subs[prop_name] = dictValues
+
+        # update boolean
+        self.firstReceivedSubsPyjapcData[prop_name] = True
+
+        if verbose:
+            print("{} - Received {} values...".format(UI_FILENAME, prop_name))
+
+        return
+
+    #----------------------------------------------#
+
+    # function that handles pyjapc exceptions
+    def onException(self, parameterName, description, exception):
+
+        # nothing
+        pass
+
+        return
+
+    #----------------------------------------------#
+
     # function that initializes signal-slot dependencies
     def bindWidgets(self):
 
         # getters
-        self.pushButton_get.clicked.connect(self.getFunction)
+        self.pushButton_get.clicked.connect(lambda: self.getFunction(show_message = True))
 
         # setters
         self.pushButton_set.clicked.connect(self.setFunction)
@@ -815,7 +914,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that retrieves and displays the values of the fields
-    def getFunction(self):
+    def getFunction(self, show_message = False):
 
         # print the GET action
         print("{} - Button GET pressed".format(UI_FILENAME))
@@ -838,8 +937,12 @@ class MyDisplay(CDisplay):
                 # iterate over all fields
                 for field in self.field_dict["{}".format(property)]:
 
-                    # fill the dict
-                    self.field_values_macro_dict["{}".format(property)][field] = self.clabelDict["clabel_value_{}_{}".format(property, field)].text()
+                    # fill the dict and set text
+                    try:
+                        self.field_values_macro_dict["{}".format(property)][field] = self.data_subs[property][field]
+                        self.clabelDict["clabel_value_{}_{}".format(property, field)].setText(str(self.data_subs[property][field]))
+                    except:
+                        pass
 
                 # skip the property
                 continue
@@ -859,6 +962,11 @@ class MyDisplay(CDisplay):
                     # get and set the text into the label
                     self.labelDict["label_value_{}_{}".format(property, field)].setText("{}".format(field_values[field]))
 
+        # status bar message
+        if show_message:
+            self.app.main_window.statusBar().showMessage("Command GET ran successfully!", 3*1000)
+            self.app.main_window.statusBar().repaint()
+
         return
 
     #----------------------------------------------#
@@ -870,11 +978,23 @@ class MyDisplay(CDisplay):
         print("{} - Button SET#1 pressed".format(UI_FILENAME))
 
         # get before set
-        self.getFunction()
+        self.getFunction(show_message = False)
 
         # open the dialog
         self.dialog_three_column_set = DialogThreeColumnSet(parent = self)
         self.dialog_three_column_set.show()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that loads the device from the aux txt file
+    def LoadSelector(self):
+
+        # read current device
+        if os.path.exists("aux_txts/current_selector.txt"):
+            with open("aux_txts/current_selector.txt", "r") as f:
+                self.current_selector = f.read()
 
         return
 

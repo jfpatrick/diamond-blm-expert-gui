@@ -9,10 +9,11 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, CContextFrame, CStaticPlot, CLabel, CCommandButton, rbac)
+from comrad import (CValueAggregator, CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, CContextFrame, CStaticPlot, CLabel, CCommandButton, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QBrush)
-from PyQt5.QtCore import (QSize, Qt)
+from PyQt5.QtCore import (QSize, Qt, QTimer)
 from PyQt5.QtWidgets import (QSizePolicy, QWidget, QHBoxLayout, QHBoxLayout, QVBoxLayout, QSpacerItem, QFrame, QGridLayout, QLabel, QTabWidget)
+import pyqtgraph as pg
 
 # OTHER IMPORTS
 
@@ -21,8 +22,11 @@ import os
 import numpy as np
 from copy import deepcopy
 import jpype as jp
-from time import sleep
+import time
 import json
+import math
+import numpy as np
+from time import sleep
 
 ########################################################
 ########################################################
@@ -49,6 +53,29 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # init aux booleans and variables
+        self.data_aux_time = math.inf
+        self.bufferFirstPlotsPainted = False
+        self.compute_time_vector_first_time = True
+        self.firstTimeUcap = False
+        self.firstTimeCapture = False
+        self.data_rawBuf0 = np.array([0])
+        self.data_rawBuf1 = np.array([0])
+        self.is_turn0_checked = True
+        self.is_turn1_checked = True
+        self.is_peaks0_checked = True
+        self.is_peaks1_checked = True
+        self.current_check_dict = {"ts0": True, "ts1": True, "peaks0": True, "peaks1": True}
+        self.current_data_peaks_freq0_xplots = np.array([])
+        self.current_data_peaks_freq1_xplots = np.array([])
+        self.current_data_rawBuffer0_FFT = np.array([])
+        self.current_data_rawBuffer1_FFT = np.array([])
+        self.data_acqStamp_ucap = 0
+        self.data_acqStamp = 1
+        self.freeze_everything = False
+        self.firstPlotPaintedDict = {}
+        self.data_generic_dict = {}
+
         # retrieve the pyccda json info file
         self.readPyCCDAJsonFile()
 
@@ -59,8 +86,8 @@ class MyDisplay(CDisplay):
         self.cern = jp.JPackage("cern")
 
         # set current device
-        self.current_device = "dBLM.TEST4"
-        self.current_accelerator = "LHC"
+        self.current_device = "SP.BA1.BLMDIAMOND.2"
+        self.current_accelerator = "SPS"
         self.LoadDeviceFromTxtPremain()
 
         # get the property list
@@ -97,9 +124,6 @@ class MyDisplay(CDisplay):
             self.command_list_substrings_removed[index_command] = self.command_list_substrings_removed[index_command].replace("Stop", "")
             self.command_list_substrings_removed[index_command] = self.command_list_substrings_removed[index_command].replace("Trigger", "")
 
-        # check dict for the capture tab
-        self.current_check_dict = {"ts0": True, "ts1": True, "peaks0": True, "peaks1": True}
-
         # initialize the field dictionary
         self.field_dict = {}
 
@@ -112,22 +136,13 @@ class MyDisplay(CDisplay):
         print("{} - Handling signals and slots...".format(UI_FILENAME))
         self.bindWidgets()
 
-        # only if CAPTURE_TAB is enabled (use this for debugging)
-        if CAPTURE_TAB and "dBLM.TEST" not in self.current_device:
-
-            # init custom PyDM channels for the Capture plots
-            self.pydm_channel_capture_rawbuffer_0 = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#rawBuffer0", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf0)
-            self.pydm_channel_capture_rawbuffer_0_FFT = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#rawBuffer0_FFT", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf0_FFT)
-            self.pydm_channel_capture_rawbuffer_1 = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#rawBuffer1", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf1)
-            self.pydm_channel_capture_rawbuffer_1_FFT = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#rawBuffer1_FFT", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf1_FFT)
-            self.pydm_channel_capture_rawbuffer_0_timestamps = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#flags0_five_six", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf0)
-            self.pydm_channel_capture_rawbuffer_1_timestamps = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#flags1_five_six", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf1)
-            self.pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0_xplots", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf0_FFT)
-            self.pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones = PyDMChannelDataSource(channel_address="UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1_xplots", data_type_to_emit=CurveData, parent=self.CStaticPlot_Capture_rawBuf1_FFT)
-
         # load and set the channels
         print("{} - Setting all channels...".format(UI_FILENAME))
         self.setChannels()
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Device window loaded successfully!", 10*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 
@@ -144,10 +159,18 @@ class MyDisplay(CDisplay):
         self.commandButtonDict = {}
         self.contextFrameDict = {}
         self.staticPlotDict = {}
+        self.pyqtPlotDict = {}
+        self.cvalueAggregatorDict = {}
         self.frameDict = {}
 
         # iterate over the property tabs
         for property in self.property_list:
+
+            # init boolean to optimize generic plots
+            self.firstPlotPaintedDict[property] = {}
+
+            # init dict to store generic data
+            self.data_generic_dict[property] = {}
 
             # custom tab
             if str(property) in self.exception_list:
@@ -256,9 +279,22 @@ class MyDisplay(CDisplay):
                 self.labelDict["{}_{}".format(property, "title_values")].setStyleSheet("background-color: rgb(210, 210, 210);")
                 self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.labelDict["{}_{}".format(property, "title_values")], row, column, 1, 1)
 
+                # aggregator for the property
+                self.cvalueAggregatorDict["{}".format(property)] = CValueAggregator(self)
+                self.cvalueAggregatorDict["{}".format(property)].setProperty("inputChannels", ['{}/{}'.format(self.current_device, property)])
+                self.cvalueAggregatorDict["{}".format(property)].setObjectName("CValueAggregator_{}".format(property))
+                self.cvalueAggregatorDict["{}".format(property)].setValueTransformation("try:\n"
+                                                                     "    output(next(iter(values.values())))\n"
+                                                                     "except:\n"
+                                                                     "    output(0)")
+                self.horizontalLayout_CValueAggregators.addWidget(self.cvalueAggregatorDict["{}".format(property)])
+
                 # add the labels to the table
                 row = 1
                 for field in self.field_dict["{}".format(property)]["fields_that_are_not_arrays"]:
+
+                    # init generic data fields
+                    self.data_generic_dict[property][field] = "Null"
 
                     # set label (column == 0)
                     column = 0
@@ -358,7 +394,8 @@ class MyDisplay(CDisplay):
                 self.clabelDict["{}_AcqTimestamp".format(property)].setObjectName("{}_AcqTimestamp".format(property))
                 self.clabelDict["{}_AcqTimestamp".format(property)].setProperty("type", 2)
                 self.clabelDict["{}_AcqTimestamp".format(property)].setTextFormat(Qt.RichText)
-                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> Null  ")
+                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> Null UTC  ")
+                self.data_generic_dict[property]["acqStamp"] = "Null"
                 self.clabelDict["{}_AcqTimestamp".format(property)].setAlignment(Qt.AlignCenter)
                 minWidth = self.clabelDict["{}_AcqTimestamp".format(property)].fontMetrics().boundingRect(self.clabelDict["{}_AcqTimestamp".format(property)].text()).width()
                 self.clabelDict["{}_AcqTimestamp".format(property)].setMinimumSize(QSize(minWidth, 0))
@@ -370,6 +407,7 @@ class MyDisplay(CDisplay):
                 self.clabelDict["{}_CycleName".format(property)].setProperty("type", 2)
                 self.clabelDict["{}_CycleName".format(property)].setTextFormat(Qt.RichText)
                 self.clabelDict["{}_CycleName".format(property)].setText("<b>cycleName:</b> Null  ")
+                self.data_generic_dict[property]["cycleName"] = "Null"
                 self.clabelDict["{}_CycleName".format(property)].setAlignment(Qt.AlignCenter)
                 minWidth = self.clabelDict["{}_CycleName".format(property)].fontMetrics().boundingRect(self.clabelDict["{}_CycleName".format(property)].text()).width()
                 self.clabelDict["{}_CycleName".format(property)].setMinimumSize(QSize(minWidth, 0))
@@ -384,9 +422,43 @@ class MyDisplay(CDisplay):
 
                 # add the plots
                 for field in self.field_dict["{}".format(property)]["fields_that_are_arrays"]:
-                    self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)] = CStaticPlot(self.contextFrameDict["CStaticPlot_area_{}".format(property)])
-                    self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)].setObjectName("CStaticPlot_{}_{}".format(property, field))
-                    self.layoutDict["vertical_layout_tab_CStaticplot_area_{}".format(property)].addWidget(self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)])
+
+                    # init boolean to optimize generic plots
+                    self.firstPlotPaintedDict[property][field] = False
+
+                    # init generic data plots
+                    self.data_generic_dict[property][field] = np.array([0])
+
+                    # get x and y labels for the plot
+                    if "AcquisitionHistogram" == property:
+                        y_label = "threshold crossings"
+                        x_label = "bins"
+                    elif "AcquisitionIntegral" == property:
+                        y_label = "loss"
+                        x_label = "bunch number"
+                    elif "AcquisitionIntegralDist" == property:
+                        y_label = "distribution"
+                        x_label = "value"
+                    elif "AcquisitionRawDist" == property:
+                        y_label = "distribution"
+                        x_label = "value"
+                    elif "AcquisitionTurnLoss" == property:
+                        y_label = "loss"
+                        x_label = "turn number"
+                    else:
+                        y_label = "y"
+                        x_label = "x"
+
+                    # pyqt plot
+                    self.pyqtPlotDict["{}_{}".format(property, field)] = pg.PlotWidget(title="{}".format(field))
+                    self.pyqtPlotDict["{}_{}".format(property, field)].enableAutoRange()
+                    self.pyqtPlotDict["{}_{}".format(property, field)].setAutoVisible()
+                    self.pyqtPlotDict["{}_{}".format(property, field)].setMenuEnabled(enableMenu=False)
+                    self.pyqtPlotDict["{}_{}".format(property, field)].showButtons()
+                    self.pyqtPlotDict["{}_{}".format(property, field)].showGrid(x=True, y=True, alpha=0.4)
+                    self.pyqtPlotDict["{}_{}".format(property, field)].getPlotItem().setLabel(axis='left', text=y_label)
+                    self.pyqtPlotDict["{}_{}".format(property, field)].getPlotItem().setLabel(axis='bottom', text=x_label)
+                    self.layoutDict["vertical_layout_tab_CStaticplot_area_{}".format(property)].addWidget(self.pyqtPlotDict["{}_{}".format(property, field)])
 
                 # add the plotting area to the layout
                 self.layoutDict["horizontal_layout_tab_{}".format(property)].addWidget(self.contextFrameDict["CStaticPlot_area_{}".format(property)])
@@ -427,6 +499,10 @@ class MyDisplay(CDisplay):
 
         # obtain the tab names
         self.tab_names = [self.tabWidget.tabText(tab_i) for tab_i in range(0, self.tabWidget.count())]
+
+        #  get current tab and index
+        self.current_tab_name = self.tab_names[tab_i]
+        self.current_tab_index = tab_i
 
         # disable Capture buttons if CAPTURE_TAB is disabled
         if CAPTURE_TAB and "dBLM.TEST" not in self.current_device:
@@ -484,6 +560,82 @@ class MyDisplay(CDisplay):
             self.CLabel_Overtones1_6.setEnabled(False)
             self.CLabel_Overtones1_7.setEnabled(False)
 
+        # pyqtgraph plot for rabuf0
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0.removeItem(self.horizontalLayout_CaptureTab_rawBuf0)
+        self.plot_rawbuf0 = pg.PlotWidget(title="rawBuf0")
+        self.plot_rawbuf0.getPlotItem().enableAutoRange()
+        self.plot_rawbuf0.getPlotItem().setAutoVisible()
+        self.plot_rawbuf0.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf0.getPlotItem().showButtons()
+        self.plot_rawbuf0.getPlotItem().showGrid(x=True, y=True, alpha=0.4)
+        self.plot_rawbuf0.getPlotItem().setClipToView(True)
+        self.plot_rawbuf0.setDownsampling(auto=True, mode="peak")
+        self.plot_rawbuf0.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf0.getPlotItem().setLabel(axis='bottom', text='time (microseconds)')
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0.addWidget(self.plot_rawbuf0)
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0.addItem(self.horizontalLayout_CaptureTab_rawBuf0)
+
+        # pyqtgraph plot for rabuf1
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1.removeItem(self.horizontalLayout_CaptureTab_rawBuf1)
+        self.plot_rawbuf1 = pg.PlotWidget(title="rawBuf1")
+        self.plot_rawbuf1.getPlotItem().enableAutoRange()
+        self.plot_rawbuf1.getPlotItem().setAutoVisible()
+        self.plot_rawbuf1.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf1.getPlotItem().showButtons()
+        self.plot_rawbuf1.getPlotItem().showGrid(x=True, y=True, alpha=0.4)
+        self.plot_rawbuf1.getPlotItem().setClipToView(True)
+        self.plot_rawbuf1.setDownsampling(auto=True, mode="peak")
+        self.plot_rawbuf1.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf1.getPlotItem().setLabel(axis='bottom', text='time (microseconds)')
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1.addWidget(self.plot_rawbuf1)
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1.addItem(self.horizontalLayout_CaptureTab_rawBuf1)
+
+        # pyqtgraph plot for rabuf0_fft
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0_FFT.removeItem(self.horizontalLayout_CaptureTab_rawBuf0_FFT)
+        self.plot_rawbuf0_fft = pg.PlotWidget(title="rawBuf0_FFT")
+        self.plot_rawbuf0_fft.getPlotItem().enableAutoRange()
+        self.plot_rawbuf0_fft.getPlotItem().setAutoVisible()
+        self.plot_rawbuf0_fft.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf0_fft.getPlotItem().showButtons()
+        self.plot_rawbuf0_fft.getPlotItem().showGrid(x=True, y=True, alpha=0.4)
+        self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='bottom', text='frequency (kHz)')
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0_FFT.addWidget(self.plot_rawbuf0_fft)
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf0_FFT.addItem(self.horizontalLayout_CaptureTab_rawBuf0_FFT)
+
+        # pyqtgraph plot for rabuf1_fft
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1_FFT.removeItem(self.horizontalLayout_CaptureTab_rawBuf1_FFT)
+        self.plot_rawbuf1_fft = pg.PlotWidget(title="rawBuf1_FFT")
+        self.plot_rawbuf1_fft.getPlotItem().enableAutoRange()
+        self.plot_rawbuf1_fft.getPlotItem().setAutoVisible()
+        self.plot_rawbuf1_fft.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf1_fft.getPlotItem().showButtons()
+        self.plot_rawbuf1_fft.getPlotItem().showGrid(x=True, y=True, alpha=0.4)
+        self.plot_rawbuf1_fft.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf1_fft.getPlotItem().setLabel(axis='bottom', text='frequency (kHz)')
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1_FFT.addWidget(self.plot_rawbuf1_fft)
+        self.verticalLayout_CContextFrame_CaptureTab_rawBuf1_FFT.addItem(self.horizontalLayout_CaptureTab_rawBuf1_FFT)
+
+        # aggregator for Capture
+        self.CValueAggregator_Capture = CValueAggregator(self)
+        self.CValueAggregator_Capture.setProperty("inputChannels", ['{}/Capture'.format(self.current_device)])
+        self.CValueAggregator_Capture.setObjectName("CValueAggregator_Capture")
+        self.CValueAggregator_Capture.setValueTransformation("try:\n"
+                                                             "    output(next(iter(values.values())))\n"
+                                                             "except:\n"
+                                                             "    output(0)")
+        self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_Capture)
+
+        # aggregator for Capture FFT (UCAP)
+        self.CValueAggregator_Capture_FFT = CValueAggregator(self)
+        self.CValueAggregator_Capture_FFT.setProperty("inputChannels", ['UCAP.VD.{}/bufferFFT'.format(self.current_device)])
+        self.CValueAggregator_Capture_FFT.setObjectName("CValueAggregator_Capture_FFT")
+        self.CValueAggregator_Capture_FFT.setValueTransformation("try:\n"
+                                                             "    output(next(iter(values.values())))\n"
+                                                             "except:\n"
+                                                             "    output(0)")
+        self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_Capture_FFT)
+
         return
 
     #----------------------------------------------#
@@ -520,6 +672,360 @@ class MyDisplay(CDisplay):
 
         # rbac logout signal
         self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
+
+        # capture tab aggregator signals
+        self.CValueAggregator_Capture.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCapture)
+        self.CValueAggregator_Capture_FFT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCaptureFFT)
+        for property in self.property_list:
+            if str(property) not in self.exception_list:
+                self.cvalueAggregatorDict["{}".format(property)].updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromGenericProperty)
+
+        # init qtimer for capture
+        self.timer_keep_calling_capture_function_until_stamps_are_the_same = QTimer(self)
+        self.timer_keep_calling_capture_function_until_stamps_are_the_same.setInterval(250)
+        self.timer_keep_calling_capture_function_until_stamps_are_the_same.timeout.connect(self.plotCaptureFunction)
+
+        # set up a qtimer for the freezing events
+        self.timer_for_freezing_events = QTimer(self)
+        self.timer_for_freezing_events.setInterval(500)
+        self.timer_for_freezing_events.timeout.connect(self.readFreezeFile)
+        self.timer_for_freezing_events.start()
+
+        # signal that gets activated when the current tab changes
+        self.tabWidget.currentChanged.connect(self.tabChanged)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to update tab name and index
+    def tabChanged(self, tab_index):
+
+        # update tab name and index
+        self.current_tab_name = self.tab_names[tab_index]
+        self.current_tab_index = tab_index
+
+        # update items when the tab changes (GENERIC PROPERTIES)
+        if self.current_tab_name in self.data_generic_dict.keys():
+
+            # check it is a generic property
+            if str(self.current_tab_name) not in self.exception_list:
+
+                # iterate over fields
+                for field in self.field_dict["{}".format(self.current_tab_name)]["fields_that_are_not_arrays"]:
+
+                    # check field exists
+                    if field in self.data_generic_dict[self.current_tab_name].keys():
+
+                        # update fields
+                        self.clabelDict["{}_{}".format(self.current_tab_name, field)].setText("{}".format(self.data_generic_dict[self.current_tab_name][field]))
+
+                # iterate over arrays
+                for field in self.field_dict["{}".format(self.current_tab_name)]["fields_that_are_arrays"]:
+
+                    # check field exists
+                    if field in self.data_generic_dict[self.current_tab_name].keys():
+
+                        # update plots
+                        self.pyqtPlotDict["{}_{}".format(self.current_tab_name, field)].clear()
+                        self.pyqtPlotDict["{}_{}".format(self.current_tab_name, field)].plot(self.data_generic_dict[self.current_tab_name][field], pen=(255, 255, 255), name="{}_{}".format(self.current_tab_name, field))
+                        self.pyqtPlotDict["{}_{}".format(self.current_tab_name, field)].show()
+
+                        # first plot boolean
+                        self.firstPlotPaintedDict[self.current_tab_name][field] = True
+
+                        # set up the acq timestamp and cyclename
+                        self.clabelDict["{}_AcqTimestamp".format(self.current_tab_name)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[self.current_tab_name]["acqStamp"]))
+                        self.clabelDict["{}_CycleName".format(self.current_tab_name)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[self.current_tab_name]["cycleName"]))
+
+        # update items when tab changes (CAPTURE TAB)
+        elif self.current_tab_name == "Capture":
+
+            # plot the data
+            self.plotCaptureFunction()
+
+        return
+
+    #----------------------------------------------#
+
+    # connect function
+    def receiveDataFromGenericProperty(self, data, verbose = False):
+
+        # iterate over properties
+        for property in self.property_list:
+
+            # check it is a generic property
+            if str(property) not in self.exception_list:
+
+                # check data was received
+                if set(list(self.field_dict["{}".format(property)]['fields_that_are_not_arrays'])).issubset(set(list(data.keys()))):
+
+                    # print
+                    if verbose:
+                        print("{} - Data received for property {}...".format(UI_FILENAME, property))
+
+                    # store cyclename and timestamp
+                    self.data_generic_dict[property]["acqStamp"] = data["acqStamp"]
+                    self.data_generic_dict[property]["cycleName"] = data["cycleName"]
+
+                    # iterate over fields
+                    for field in self.field_dict["{}".format(property)]["fields_that_are_not_arrays"]:
+
+                        # store array
+                        self.data_generic_dict[property][field] = data[field]
+
+                        # freeze condition
+                        if not self.freeze_everything:
+
+                            # freeze in case we are not in the right tab
+                            if self.current_tab_name == property:
+
+                                # update fields
+                                self.clabelDict["{}_{}".format(property, field)].setText("{}".format(self.data_generic_dict[property][field]))
+
+                    # iterate over arrays
+                    for field in self.field_dict["{}".format(property)]["fields_that_are_arrays"]:
+
+                        # check that the values are different with respect to the previous iteration
+                        if self.firstPlotPaintedDict[property][field]:
+                            if np.array_equal(self.data_generic_dict[property][field], data[field]):
+                                return
+
+                        # store array
+                        self.data_generic_dict[property][field] = data[field]
+
+                        # freeze condition
+                        if not self.freeze_everything:
+
+                            # freeze in case we are not in the right tab
+                            if self.current_tab_name == property:
+
+                                # update plots
+                                self.pyqtPlotDict["{}_{}".format(property, field)].clear()
+                                self.pyqtPlotDict["{}_{}".format(property, field)].plot(self.data_generic_dict[property][field], pen=(255, 255, 255), name="{}_{}".format(property, field))
+                                self.pyqtPlotDict["{}_{}".format(property, field)].show()
+
+                                # first plot boolean
+                                self.firstPlotPaintedDict[property][field] = True
+
+                                # set up the acq timestamp and cyclename
+                                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[property]["acqStamp"]))
+                                self.clabelDict["{}_CycleName".format(property)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[property]["cycleName"]))
+
+                    # stop iterating properties
+                    break
+
+        return
+
+    #----------------------------------------------#
+
+    # connect function
+    def receiveDataFromCapture(self, data, verbose = True):
+
+        # first time init
+        self.firstTimeCapture = True
+
+        # print
+        if verbose:
+            print("{} - Received data from the Capture property!".format(UI_FILENAME))
+
+        # get acqStamp and cycleName
+        self.data_acqStamp = data['acqStamp']
+        self.data_cycleName = data['cycleName']
+
+        # print
+        if verbose:
+            print("{} - CAPTURE TIMESTAMP: {}".format(UI_FILENAME, self.data_acqStamp))
+
+        # check that the arrays are different with respect to the previous iteration
+        if self.bufferFirstPlotsPainted:
+            if np.array_equal(self.data_rawBuf0, data['rawBuf0']) and np.array_equal(self.data_rawBuf1, data['rawBuf1']):
+                return
+
+        # store the rest of the data
+        self.data_rawBuf0 = data['rawBuf0']
+        self.data_rawBuf1= data['rawBuf1']
+        self.data_rawBufFlags0 = data['rawBufFlags0']
+        self.data_rawBufFlags1 = data['rawBufFlags1']
+
+        # wait until data from UCAP is received AND stamps are the same
+        if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == False:
+            self.timer_keep_calling_capture_function_until_stamps_are_the_same.start()
+
+        return
+
+    #----------------------------------------------#
+
+    # connect function
+    def plotCaptureFunction(self, verbose = True):
+
+        # status bar message
+        if self.firstTimeUcap and self.firstTimeCapture:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: {}, LAST BUFFER ACQ_TS: {})".format(self.data_acqStamp_ucap, self.data_acqStamp), 0)
+            self.app.main_window.statusBar().repaint()
+        elif self.firstTimeUcap:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: {}, LAST BUFFER ACQ_TS: Null)".format(self.data_acqStamp_ucap), 0)
+            self.app.main_window.statusBar().repaint()
+        elif self.firstTimeCapture:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: Null, LAST BUFFER ACQ_TS: {})".format(self.data_acqStamp), 0)
+            self.app.main_window.statusBar().repaint()
+        else:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: Null, LAST BUFFER ACQ_TS: Null)".format(self.data_acqStamp_ucap, self.data_acqStamp), 0)
+            self.app.main_window.statusBar().repaint()
+
+        # freeze condition (and freeze in case we are not in the capture tab)
+        if (not self.freeze_everything) and self.current_tab_name == "Capture":
+
+            # check that we received data from both sources
+            if self.firstTimeUcap and self.firstTimeCapture:
+
+                # check that both stamps are the same
+                if self.data_acqStamp == self.data_acqStamp_ucap:
+
+                    # disable the timer
+                    if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == True:
+                        self.timer_keep_calling_capture_function_until_stamps_are_the_same.stop()
+
+                    # double check
+                    if time.time() >= self.data_aux_time:
+
+                        # status bar message
+                        self.app.main_window.statusBar().showMessage("CaptureTab - Received synced data from UCAP and the device!", 0)
+                        self.app.main_window.statusBar().repaint()
+
+                        # print
+                        if verbose:
+                            print("{} - Timestamps are the same (SYNC IN ORDER)".format(UI_FILENAME))
+
+                        # get the time vector in microseconds only one time
+                        if self.compute_time_vector_first_time:
+                            Fs = 0.65
+                            self.time_vector = np.linspace(0, (len(self.data_rawBuf0) - 1) * (1 / (Fs * 1000)), num=len(self.data_rawBuf0))
+                            self.compute_time_vector_first_time = False
+
+                        # get only turn flags (5 and 6) for buf0
+                        idx_flags_five_six = np.where((self.data_rawBufFlags0 == 5) | (self.data_rawBufFlags0 == 6))[0]
+                        flags_five_six = np.zeros(self.data_rawBufFlags0.shape)
+                        flags_five_six[idx_flags_five_six] = 1
+
+                        # re-scale the flags0 curve
+                        self.flags_turn0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
+                                            self.data_turn_line_eq_params_0[1]) * flags_five_six + self.data_turn_line_eq_params_0[2]
+
+                        # get only turn flags (5 and 6) for buf1
+                        idx_flags_five_six = np.where((self.data_rawBufFlags1 == 5) | (self.data_rawBufFlags1 == 6))[0]
+                        flags_five_six = np.zeros(self.data_rawBufFlags1.shape)
+                        flags_five_six[idx_flags_five_six] = 1
+
+                        # re-scale the flags1 curve
+                        self.flags_turn1 = ((self.data_turn_line_eq_params_1[3] - self.data_turn_line_eq_params_1[2]) /
+                                            self.data_turn_line_eq_params_1[1]) * flags_five_six + self.data_turn_line_eq_params_1[2]
+
+                        # plot the data for buf0
+                        self.plot_rawbuf0.getPlotItem().clear()
+                        self.plot_rawbuf0_fft.getPlotItem().clear()
+                        if self.flags_turn0.size != 0 and self.is_turn0_checked:
+                            self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                        self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                        if self.data_peaks_freq0_xplots.size != 0 and self.is_peaks0_checked:
+                            self.plot_rawbuf0_fft.plot(x=self.data_peaks_freq0_xplots[1], y=self.data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255,255,0), symbol='x', symbolPen=(255,255,0), symbolSize=8, name="rawBuf0_peaks")
+                        self.plot_rawbuf0_fft.plot(x=self.data_rawBuffer0_FFT[1, :], y=self.data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                        self.plot_rawbuf0.show()
+                        self.plot_rawbuf0_fft.show()
+
+                        # save current plotted data for checkbuttons
+                        self.current_time_vector = self.time_vector
+                        self.current_flags_turn0 = self.flags_turn0
+                        self.current_data_rawBuf0 = self.data_rawBuf0
+                        self.current_data_peaks_freq0_xplots = self.data_peaks_freq0_xplots
+                        self.current_data_rawBuffer0_FFT = self.data_rawBuffer0_FFT
+                        self.current_data_peaks_freq0 = self.data_peaks_freq0
+
+                        # set the text fields of the frequency peaks
+                        self.CLabel_Overtones0_1.setText("{0:.2f} kHz".format(self.data_peaks_freq0[0]))
+                        self.CLabel_Overtones0_2.setText("{0:.2f} kHz".format(self.data_peaks_freq0[1]))
+                        self.CLabel_Overtones0_3.setText("{0:.2f} kHz".format(self.data_peaks_freq0[2]))
+                        self.CLabel_Overtones0_4.setText("{0:.2f} kHz".format(self.data_peaks_freq0[3]))
+                        self.CLabel_Overtones0_5.setText("{0:.2f} kHz".format(self.data_peaks_freq0[4]))
+                        self.CLabel_Overtones0_6.setText("{0:.2f} kHz".format(self.data_peaks_freq0[5]))
+                        self.CLabel_Overtones0_7.setText("{0:.2f} kHz".format(self.data_peaks_freq0[6]))
+
+                        # plot the data for buf1
+                        self.plot_rawbuf1.getPlotItem().clear()
+                        self.plot_rawbuf1_fft.getPlotItem().clear()
+                        if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                            self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                        self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                        if self.data_peaks_freq1_xplots.size != 0 and self.is_peaks1_checked:
+                            self.plot_rawbuf1_fft.plot(x=self.data_peaks_freq1_xplots[1], y=self.data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255,255,0), symbol='x', symbolPen=(255,255,0), symbolSize=8, name="rawBuf1_peaks")
+                        self.plot_rawbuf1_fft.plot(x=self.data_rawBuffer1_FFT[1, :], y=self.data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+                        self.plot_rawbuf1.show()
+                        self.plot_rawbuf1_fft.show()
+
+                        # save current plotted data for checkbuttons
+                        self.current_time_vector = self.time_vector
+                        self.current_flags_turn1 = self.flags_turn1
+                        self.current_data_rawBuf1 = self.data_rawBuf1
+                        self.current_data_peaks_freq1_xplots = self.data_peaks_freq1_xplots
+                        self.current_data_rawBuffer1_FFT = self.data_rawBuffer1_FFT
+                        self.current_data_peaks_freq1 = self.data_peaks_freq1
+
+                        # set the text fields of the frequency peaks
+                        self.CLabel_Overtones1_1.setText("{0:.2f} kHz".format(self.data_peaks_freq1[0]))
+                        self.CLabel_Overtones1_2.setText("{0:.2f} kHz".format(self.data_peaks_freq1[1]))
+                        self.CLabel_Overtones1_3.setText("{0:.2f} kHz".format(self.data_peaks_freq1[2]))
+                        self.CLabel_Overtones1_4.setText("{0:.2f} kHz".format(self.data_peaks_freq1[3]))
+                        self.CLabel_Overtones1_5.setText("{0:.2f} kHz".format(self.data_peaks_freq1[4]))
+                        self.CLabel_Overtones1_6.setText("{0:.2f} kHz".format(self.data_peaks_freq1[5]))
+                        self.CLabel_Overtones1_7.setText("{0:.2f} kHz".format(self.data_peaks_freq1[6]))
+
+                        # set cycle information
+                        self.CLabel_acqStamp_Capture_0.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp))
+                        self.CLabel_cycleName_Capture_0.setText("<b>cycleName:</b> {}".format(self.data_cycleName))
+                        self.CLabel_acqStamp_Capture_1.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp_ucap))
+                        self.CLabel_cycleName_Capture_1.setText("<b>cycleName:</b> {}".format(self.data_cycleName_ucap))
+
+                        # update first plot boolean
+                        self.bufferFirstPlotsPainted = True
+
+                        # status bar message
+                        self.app.main_window.statusBar().showMessage("CaptureTab - Data plotted succesfully!", 5*1000)
+                        self.app.main_window.statusBar().repaint()
+
+        return
+
+    #----------------------------------------------#
+
+    # connect function
+    def receiveDataFromCaptureFFT(self, data, verbose = True):
+
+        # first time init
+        self.firstTimeUcap = True
+
+        # print
+        if verbose:
+            print("{} - Received data from the UCAP node!".format(UI_FILENAME))
+
+        # store the data
+        self.data_aux_time = data['aux_time']
+        self.data_rawBuffer0_FFT = data['rawBuffer0_FFT']
+        self.data_rawBuffer1_FFT = data['rawBuffer1_FFT']
+        self.data_peaks_freq0 = data['peaks_freq0']
+        self.data_peaks_freq1 = data['peaks_freq1']
+        self.data_peaks_freq0_xplots = data['peaks_freq0_xplots']
+        self.data_peaks_freq1_xplots = data['peaks_freq1_xplots']
+        self.data_turn_line_eq_params_0 = data['turn_line_eq_params_0']
+        self.data_turn_line_eq_params_1 = data['turn_line_eq_params_1']
+        self.data_acqStamp_ucap = data['acqStamp']
+        self.data_cycleName_ucap = data['cycleName']
+
+        # print
+        if verbose:
+            print("{} - UCAP TIMESTAMP: {}".format(UI_FILENAME, self.data_acqStamp_ucap))
+
+        # wait until data from UCAP is received AND stamps are the same
+        if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == False:
+            self.timer_keep_calling_capture_function_until_stamps_are_the_same.start()
 
         return
 
@@ -573,7 +1079,6 @@ class MyDisplay(CDisplay):
                 # update the contexts
                 self.contextFrameDict["CContextFrame_information_area_{}".format(property)].selector = self.current_selector
                 self.contextFrameDict["CStaticPlot_area_{}".format(property)].selector = self.current_selector
-
                 self.clabelDict["{}_AcqTimestamp".format(property)].context_changed()
                 self.clabelDict["{}_CycleName".format(property)].context_changed()
 
@@ -625,37 +1130,55 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
+    # function that reads the freezing event txt
+    def readFreezeFile(self):
+
+        # check if we should freeze the plots
+        if os.path.exists("aux_txts/freeze.txt"):
+            self.freeze_everything = True
+        else:
+            self.freeze_everything = False
+
+        return
+
+    #----------------------------------------------#
+
     # function to add or remove the turn flags from the plot of rawbuf0
     def pleaseShowTurns0(self, state):
 
-        # reset clip to view to avoid errors
-        self.CStaticPlot_Capture_rawBuf0.plotItem.setClipToView(False)
+        # only if there is something to show
+        if self.bufferFirstPlotsPainted:
 
-        # if the button is checked
-        if state == Qt.Checked:
+            # reset clip to view to avoid errors
+            self.plot_rawbuf0.getPlotItem().setClipToView(False)
 
-            # clear plot and add the new flags
-            print("{} - Turns0 button checked...".format(UI_FILENAME))
-            self.current_check_dict["ts0"] = True
-            self.CStaticPlot_Capture_rawBuf0.clear_items()
-            self.CStaticPlot_Capture_rawBuf0.addItem(self.CURVE_pydm_channel_capture_rawbuffer_0_timestamps)
-            if self.current_check_dict["ts0"]:
-                self.CStaticPlot_Capture_rawBuf0.addItem(self.CURVE_pydm_channel_capture_rawbuffer_0)
-            self.pydm_channel_capture_rawbuffer_0.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_timestamps.context_changed()
+            # if the button is checked
+            if state == Qt.Checked:
 
-        # if it is not checked
-        else:
+                # clear plot and add the new flags
+                print("{} - Turns0 button checked...".format(UI_FILENAME))
+                self.current_check_dict["ts0"] = True
+                self.is_turn0_checked = True
+                self.plot_rawbuf0.getPlotItem().clear()
+                if self.current_flags_turn0.size != 0:
+                    self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                if self.current_check_dict["ts0"]:
+                    self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                self.plot_rawbuf0.show()
 
-            # remove the flags
-            print("{} - Turns0 button unchecked...".format(UI_FILENAME))
-            self.current_check_dict["ts0"] = False
-            self.CStaticPlot_Capture_rawBuf0.removeItem(self.CURVE_pydm_channel_capture_rawbuffer_0_timestamps)
-            self.pydm_channel_capture_rawbuffer_0.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_timestamps.context_changed()
+            # if it is not checked
+            else:
 
-        # reset clip to view to avoid errors
-        self.CStaticPlot_Capture_rawBuf0.plotItem.setClipToView(True)
+                # remove the flags
+                print("{} - Turns0 button unchecked...".format(UI_FILENAME))
+                self.current_check_dict["ts0"] = False
+                self.is_turn0_checked = False
+                self.plot_rawbuf0.getPlotItem().clear()
+                self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                self.plot_rawbuf0.show()
+
+            # reset clip to view to avoid errors
+            self.plot_rawbuf0.getPlotItem().setClipToView(True)
 
         return
 
@@ -664,34 +1187,39 @@ class MyDisplay(CDisplay):
     # function to add or remove the turn flags from the plot of rawbuf1
     def pleaseShowTurns1(self, state):
 
-        # reset clip to view to avoid errors
-        self.CStaticPlot_Capture_rawBuf1.plotItem.setClipToView(False)
+        # only if there is something to show
+        if self.bufferFirstPlotsPainted:
 
-        # if the button is checked
-        if state == Qt.Checked:
+            # reset clip to view to avoid errors
+            self.plot_rawbuf1.getPlotItem().setClipToView(False)
 
-            # clear plot and add the new flags
-            print("{} - Turns1 button checked...".format(UI_FILENAME))
-            self.current_check_dict["ts1"] = True
-            self.CStaticPlot_Capture_rawBuf1.clear_items()
-            self.CStaticPlot_Capture_rawBuf1.addItem(self.CURVE_pydm_channel_capture_rawbuffer_1_timestamps)
-            if self.current_check_dict["ts1"]:
-                self.CStaticPlot_Capture_rawBuf1.addItem(self.CURVE_pydm_channel_capture_rawbuffer_1)
-            self.pydm_channel_capture_rawbuffer_1.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_timestamps.context_changed()
+            # if the button is checked
+            if state == Qt.Checked:
 
-        # if it is not checked
-        else:
+                # clear plot and add the new flags
+                print("{} - Turns1 button checked...".format(UI_FILENAME))
+                self.current_check_dict["ts1"] = True
+                self.is_turn1_checked = True
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.current_flags_turn1.size != 0:
+                    self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                if self.current_check_dict["ts1"]:
+                    self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
 
-            # remove the flags
-            print("{} - Turns1 button unchecked...".format(UI_FILENAME))
-            self.current_check_dict["ts1"] = False
-            self.CStaticPlot_Capture_rawBuf1.removeItem(self.CURVE_pydm_channel_capture_rawbuffer_1_timestamps)
-            self.pydm_channel_capture_rawbuffer_1.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_timestamps.context_changed()
+            # if it is not checked
+            else:
 
-        # reset clip to view to avoid errors
-        self.CStaticPlot_Capture_rawBuf1.plotItem.setClipToView(True)
+                # remove the flags
+                print("{} - Turns1 button unchecked...".format(UI_FILENAME))
+                self.current_check_dict["ts1"] = False
+                self.is_turn1_checked = False
+                self.plot_rawbuf1.getPlotItem().clear()
+                self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
+
+            # reset clip to view to avoid errors
+            self.plot_rawbuf1.getPlotItem().setClipToView(True)
 
         return
 
@@ -700,35 +1228,33 @@ class MyDisplay(CDisplay):
     # function to add or remove the peaks from the plot of rawbuf0_FFT
     def pleaseShowPeaks0(self, state):
 
-        # reset clip to view to avoid errors
-        # self.CStaticPlot_Capture_rawBuf0_FFT.plotItem.setClipToView(False)
+        # only if there is something to show
+        if self.bufferFirstPlotsPainted:
 
-        # if the button is checked
-        if state == Qt.Checked:
+            # if the button is checked
+            if state == Qt.Checked:
 
-            # clear plot and add the new peaks
-            print("{} - Peaks0 button checked...".format(UI_FILENAME))
-            self.current_check_dict["peaks0"] = True
-            self.CStaticPlot_Capture_rawBuf0_FFT.clear_items()
-            self.CStaticPlot_Capture_rawBuf0_FFT.addItem(self.CURVE_pydm_channel_capture_rawbuffer_0_FFT)
-            if self.current_check_dict["peaks0"]:
-                self.CStaticPlot_Capture_rawBuf0_FFT.addItem(self.CURVE_pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones)
-            self.pydm_channel_capture_rawbuffer_0_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones.context_changed()
+                # clear plot and add the new peaks
+                print("{} - Peaks0 button checked...".format(UI_FILENAME))
+                self.current_check_dict["peaks0"] = True
+                self.is_peaks0_checked = True
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                if self.current_data_peaks_freq0_xplots.size != 0:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_peaks_freq0_xplots[1], y=self.current_data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
+                if self.current_check_dict["peaks0"]:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
 
-        # if it is not checked
-        else:
+            # if it is not checked
+            else:
 
-            # remove the peaks
-            print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
-            self.current_check_dict["peaks0"] = False
-            self.CStaticPlot_Capture_rawBuf0_FFT.removeItem(
-                self.CURVE_pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones)
-            self.pydm_channel_capture_rawbuffer_0_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones.context_changed()
-
-        # reset clip to view to avoid errors
-        # self.CStaticPlot_Capture_rawBuf0_FFT.plotItem.setClipToView(True)
+                # remove the peaks
+                print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
+                self.current_check_dict["peaks0"] = False
+                self.is_peaks0_checked = False
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
 
         return
 
@@ -737,34 +1263,33 @@ class MyDisplay(CDisplay):
     # function to add or remove the peaks from the plot of rawbuf1_FFT
     def pleaseShowPeaks1(self, state):
 
-        # reset clip to view to avoid errors
-        # self.CStaticPlot_Capture_rawBuf1_FFT.plotItem.setClipToView(False)
+        # only if there is something to show
+        if self.bufferFirstPlotsPainted:
 
-        # if the button is checked
-        if state == Qt.Checked:
+            # if the button is checked
+            if state == Qt.Checked:
 
-            # clear plot and add the new peaks
-            print("{} - Peaks1 button checked...".format(UI_FILENAME))
-            self.current_check_dict["peaks1"] = True
-            self.CStaticPlot_Capture_rawBuf1_FFT.clear_items()
-            self.CStaticPlot_Capture_rawBuf1_FFT.addItem(self.CURVE_pydm_channel_capture_rawbuffer_1_FFT)
-            if self.current_check_dict["peaks1"]:
-                self.CStaticPlot_Capture_rawBuf1_FFT.addItem(self.CURVE_pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones)
-            self.pydm_channel_capture_rawbuffer_1_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones.context_changed()
+                # clear plot and add the new peaks
+                print("{} - Peaks1 button checked...".format(UI_FILENAME))
+                self.current_check_dict["peaks1"] = True
+                self.is_peaks1_checked = True
+                self.plot_rawbuf1_fft.getPlotItem().clear()
+                if self.current_data_peaks_freq1_xplots.size != 0:
+                    self.plot_rawbuf1_fft.plot(x=self.current_data_peaks_freq1_xplots[1], y=self.current_data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
+                if self.current_check_dict["peaks1"]:
+                    self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+                self.plot_rawbuf1_fft.show()
 
-        # if it is not checked
-        else:
+            # if it is not checked
+            else:
 
-            # remove the peaks
-            print("{} - Peaks1 button unchecked...".format(UI_FILENAME))
-            self.current_check_dict["peaks1"] = False
-            self.CStaticPlot_Capture_rawBuf1_FFT.removeItem(self.CURVE_pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones)
-            self.pydm_channel_capture_rawbuffer_1_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones.context_changed()
-
-        # reset clip to view to avoid errors
-        # self.CStaticPlot_Capture_rawBuf1_FFT.plotItem.setClipToView(True)
+                # remove the peaks
+                print("{} - Peaks1 button unchecked...".format(UI_FILENAME))
+                self.current_check_dict["peaks1"] = False
+                self.is_peaks1_checked = False
+                self.plot_rawbuf1_fft.getPlotItem().clear()
+                self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+                self.plot_rawbuf1_fft.show()
 
         return
 
@@ -772,45 +1297,6 @@ class MyDisplay(CDisplay):
 
     # function that set the right channels for each widget depending on the selected device
     def setChannels(self):
-
-        # set channels for the generic tabs
-        for property in self.property_list:
-
-            # make sure the tab was created
-            if property in self.tab_names and property in self.field_dict:
-
-                # set up the acq timestamp
-                self.clabelDict["{}_AcqTimestamp".format(property)].channel = "{}/{}#{}".format(self.current_device, property, "acqStamp")
-                self.clabelDict["{}_AcqTimestamp".format(property)].setValueTransformation("output(\'<b>acqStamp:</b> {} UTC  \'.format(new_val))")
-                self.clabelDict["{}_CycleName".format(property)].channel = "{}/{}#{}".format(self.current_device, property, "cycleName")
-                self.clabelDict["{}_CycleName".format(property)].setValueTransformation("output(\'<b>cycleName:</b> {}\'.format(new_val))")
-
-                # iterate over the non-plot fields
-                for field in self.field_dict["{}".format(property)]["fields_that_are_not_arrays"]:
-
-                    # set the channel with a normal CLabel.channel allocation
-                    self.clabelDict["{}_{}".format(property, field)].channel = "{}/{}#{}".format(self.current_device, property, field)
-
-                # iterate over the plot fields
-                for field in self.field_dict["{}".format(property)]["fields_that_are_arrays"]:
-
-                    # set the channel with an addCurve update
-                    self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)].addCurve(data_source = "{}/{}#{}".format(self.current_device, property, field))
-
-                    # set the title of the plot
-                    self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_plot_title("{}".format(field))
-
-                    # the axis have to be added manually by hand
-                    if "AcquisitionHistogram" == property:
-                        self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_axis_labels("{\"left\": \"threshold crossings\", \"top\": \"\", \"right\": \"\", \"bottom\": \"bins\"}")
-                    elif "AcquisitionIntegral" == property:
-                       self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_axis_labels("{\"left\": \"loss\", \"top\": \"\", \"right\": \"\", \"bottom\": \"bunch number\"}")
-                    elif "AcquisitionIntegralDist" == property:
-                       self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_axis_labels("{\"left\": \"distribution\", \"top\": \"\", \"right\": \"\", \"bottom\": \"value\"}")
-                    elif "AcquisitionRawDist" == property:
-                       self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_axis_labels("{\"left\": \"distribution\", \"top\": \"\", \"right\": \"\", \"bottom\": \"value\"}")
-                    elif "AcquisitionTurnLoss" == property:
-                       self.staticPlotDict["CStaticPlot_{}_{}".format(property, field)]._set_axis_labels("{\"left\": \"loss\", \"top\": \"\", \"right\": \"\", \"bottom\": \"turn number\"}")
 
         # set channels for the GeneralInformation tab
         self.CLabel_GeneralInformation_AcqStamp.channel = self.current_device + "/" + "GeneralInformation#acqStamp"
@@ -827,91 +1313,6 @@ class MyDisplay(CDisplay):
         self.CLabel_GeneralInformation_TurnBc.channel = self.current_device + "/" + "GeneralInformation#TurnBc"
         self.CLabel_GeneralInformation_TurnDropped.channel = self.current_device + "/" + "GeneralInformation#TurnDropped"
         self.CLabel_GeneralInformation_TurnSample.channel = self.current_device + "/" + "GeneralInformation#TurnSample"
-
-        # only if CAPTURE_TAB is enabled (use this for debugging)
-        if CAPTURE_TAB and "dBLM.TEST" not in self.current_device:
-
-            # set up the acqStamp and cycleName for the rabuf0
-            self.CContextFrame_acqStamp_Capture_0.inheritSelector = False
-            self.CContextFrame_acqStamp_Capture_0.selector = ""
-            self.CLabel_acqStamp_Capture_0.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#acqStamp"
-            self.CLabel_acqStamp_Capture_0.setValueTransformation("output(\'<b>acqStamp:</b> {} UTC  \'.format(new_val))")
-            self.CLabel_cycleName_Capture_0.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#cycleName"
-            self.CLabel_cycleName_Capture_0.setValueTransformation("output(\'<b>cycleName:</b> {}\'.format(new_val))")
-
-            # set up the acqStamp and cycleName for the rabuf1
-            self.CContextFrame_acqStamp_Capture_1.inheritSelector = False
-            self.CContextFrame_acqStamp_Capture_1.selector = ""
-            self.CLabel_acqStamp_Capture_1.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#acqStamp"
-            self.CLabel_acqStamp_Capture_1.setValueTransformation("output(\'<b>acqStamp:</b> {} UTC  \'.format(new_val))")
-            self.CLabel_cycleName_Capture_1.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#cycleName"
-            self.CLabel_cycleName_Capture_1.setValueTransformation("output(\'<b>cycleName:</b> {}\'.format(new_val))")
-
-            # set channels for Capture tab rawBuffer0
-            self.CContextFrame_CaptureTab_rawBuf0.inheritSelector = False
-            self.CContextFrame_CaptureTab_rawBuf0.selector = ""
-            self.CStaticPlot_Capture_rawBuf0.clear_items()
-            self.CURVE_pydm_channel_capture_rawbuffer_0_timestamps = self.CStaticPlot_Capture_rawBuf0.addCurve(data_source=self.pydm_channel_capture_rawbuffer_0_timestamps, color=QColor("#F0E912"))
-            self.CURVE_pydm_channel_capture_rawbuffer_0 = self.CStaticPlot_Capture_rawBuf0.addCurve(data_source = self.pydm_channel_capture_rawbuffer_0, color=QColor("#FFFFFF"))
-            self.CStaticPlot_Capture_rawBuf0.setDownsampling(auto=True, mode="peak")
-            self.CStaticPlot_Capture_rawBuf0.plotItem.setClipToView(True)
-            self.pydm_channel_capture_rawbuffer_0.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_timestamps.context_changed()
-
-            # set channels for Capture tab rawBuffer1
-            self.CContextFrame_CaptureTab_rawBuf1.inheritSelector = False
-            self.CContextFrame_CaptureTab_rawBuf1.selector = ""
-            self.CStaticPlot_Capture_rawBuf1.clear_items()
-            self.CURVE_pydm_channel_capture_rawbuffer_1_timestamps = self.CStaticPlot_Capture_rawBuf1.addCurve(data_source=self.pydm_channel_capture_rawbuffer_1_timestamps, color=QColor("#F0E912"))
-            self.CURVE_pydm_channel_capture_rawbuffer_1 = self.CStaticPlot_Capture_rawBuf1.addCurve(data_source=self.pydm_channel_capture_rawbuffer_1, color=QColor("#FFFFFF"))
-            self.CStaticPlot_Capture_rawBuf1.setDownsampling(auto=True, mode="peak")
-            self.CStaticPlot_Capture_rawBuf1.plotItem.setClipToView(True)
-            self.pydm_channel_capture_rawbuffer_1.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_timestamps.context_changed()
-
-            # set channels for Capture tab rawBuffer0_FFT
-            self.CContextFrame_CaptureTab_rawBuf0_FFT.inheritSelector = False
-            self.CContextFrame_CaptureTab_rawBuf0_FFT.selector = ""
-            self.CStaticPlot_Capture_rawBuf0_FFT.clear_items()
-            self.CURVE_pydm_channel_capture_rawbuffer_0_FFT = self.CStaticPlot_Capture_rawBuf0_FFT.addCurve(data_source=self.pydm_channel_capture_rawbuffer_0_FFT, color=QColor("#FFFFFF"))
-            self.CURVE_pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones = self.CStaticPlot_Capture_rawBuf0_FFT.addCurve(data_source=self.pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones, color=QColor('yellow'), line_style=Qt.NoPen, symbol="o", symbol_size=8)
-            self.CStaticPlot_Capture_rawBuf0_FFT.setDownsampling(auto=True, mode="peak")
-            # self.CStaticPlot_Capture_rawBuf0_FFT.plotItem.setClipToView(True)
-            self.pydm_channel_capture_rawbuffer_0_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_0_FFT_xplots_overtones.context_changed()
-
-            # set channels for Capture tab rawBuffer1_FFT
-            self.CContextFrame_CaptureTab_rawBuf1_FFT.inheritSelector = False
-            self.CContextFrame_CaptureTab_rawBuf1_FFT.selector = ""
-            self.CStaticPlot_Capture_rawBuf1_FFT.clear_items()
-            self.CURVE_pydm_channel_capture_rawbuffer_1_FFT = self.CStaticPlot_Capture_rawBuf1_FFT.addCurve(data_source=self.pydm_channel_capture_rawbuffer_1_FFT, color=QColor("#FFFFFF"))
-            self.CURVE_pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones = self.CStaticPlot_Capture_rawBuf1_FFT.addCurve(data_source=self.pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones, color=QColor('yellow'), line_style=Qt.NoPen, symbol="o", symbol_size=8)
-            self.CStaticPlot_Capture_rawBuf1_FFT.setDownsampling(auto=True, mode="peak")
-            # self.CStaticPlot_Capture_rawBuf1_FFT.plotItem.setClipToView(True)
-            self.pydm_channel_capture_rawbuffer_1_FFT.context_changed()
-            self.pydm_channel_capture_rawbuffer_1_FFT_xplots_overtones.context_changed()
-
-            # set channels for CLabel overtones of rawbuf0
-            self.CContextFrame_CaptureTab_Overtones_FFT0.inheritSelector = False
-            self.CContextFrame_CaptureTab_Overtones_FFT0.selector = ""
-            self.CLabel_Overtones0_1.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_2.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_3.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_4.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_5.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_6.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-            self.CLabel_Overtones0_7.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq0"
-
-            # set channels for CLabel overtones of rawbuf1
-            self.CContextFrame_CaptureTab_Overtones_FFT1.inheritSelector = False
-            self.CContextFrame_CaptureTab_Overtones_FFT1.selector = ""
-            self.CLabel_Overtones1_1.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_2.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_3.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_4.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_5.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_6.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
-            self.CLabel_Overtones1_7.channel = "UCAP.VD." + self.current_device + "/" + "bufferFFT#peaks_freq1"
 
         return
 
