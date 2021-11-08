@@ -97,6 +97,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QCheckBox" name="checkBox_sync_main">
+          <property name="text">
+           <string>Sync (main window)</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
          <spacer name="horizontalSpacer">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>

@@ -10,9 +10,9 @@
 # COMRAD AND PYQT IMPORTS
 
 from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, rbac)
-from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject)
-from PyQt5.QtWidgets import (QSizePolicy, QMessageBox)
+from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop)
+from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog)
 from PyQt5.Qt import QItemSelectionModel, QMenu
 
 # OTHER IMPORTS
@@ -27,6 +27,7 @@ from create_pyccda_json_file import create_pyccda_json_file
 import json
 import numpy as np
 import shutil
+import faulthandler
 
 ########################################################
 ########################################################
@@ -36,6 +37,90 @@ import shutil
 UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
+
+########################################################
+########################################################
+
+class MessageBoxProcessCommands(QWidget):
+
+    def __init__(self, parent=None):
+
+        QWidget.__init__(self, parent)
+
+        self.msgBox = QMessageBox(self)
+        self.msgBox.setWindowTitle("Title")
+        self.msgBox.setIcon(QMessageBox.Warning)
+        self.msgBox.setText("Start")
+        self.msgBox.show()
+
+        timer = QTimer(self)
+        timer.timeout.connect(self.onTimeout)
+        timer.start(1000)
+
+    def onTimeout(self):
+        self.msgBox.setText("datetime: {}".format(QDateTime.currentDateTime().toString()))
+
+
+class DialogProcessCommands(QDialog):
+
+    #----------------------------------------------#
+
+    def __init__(self, parent=None):
+
+        # save the parent
+        self.dialog_parent = parent
+
+        # inherit from QDialog
+        QDialog.__init__(self, parent)
+
+        # when you want to destroy the dialog set this to True
+        self._want_to_close = False
+
+        # set the window title and build the GUI
+        self.setWindowTitle("Processing")
+        self.buildCodeWidgets()
+
+        return
+
+    #----------------------------------------------#
+
+    # event for closing the window in a right way
+    def closeEvent(self, evnt):
+
+        # close event
+        if self._want_to_close:
+            super(DialogThreeColumnSet, self).closeEvent(evnt)
+        else:
+            evnt.ignore()
+            self.setVisible(False)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that builds the widgets that weren't initialized using the UI qt designer file
+    def buildCodeWidgets(self):
+
+        # resize the dialog window
+        self.resize(400, 200)
+
+        # vertical layout of the main form of the dialog
+        self.vertical_layout_main_dialog = QVBoxLayout(self)
+        self.vertical_layout_main_dialog.setObjectName("vertical_layout_main_dialog")
+        self.vertical_layout_main_dialog.setContentsMargins(6, 20, 6, 6)
+        self.vertical_layout_main_dialog.setSpacing(2)
+
+        # label
+        self.label_1 = QLabel(self)
+        self.label_1.setObjectName("label_1")
+        self.label_1.setAlignment(Qt.AlignCenter)
+        self.label_1.setText("{}".format("Process"))
+        # self.label_1.setMinimumSize(QSize(120, 24))
+        self.vertical_layout_main_dialog.addWidget(self.label_1)
+
+        return
+
+    #----------------------------------------------#
 
 ########################################################
 ########################################################
@@ -174,6 +259,12 @@ class MyDisplay(CDisplay):
 
     # init function
     def __init__(self, *args, **kwargs):
+
+        # use faulthandler to debug segmentation faults
+        # faulthandler.enable()
+
+        # init last index
+        self.last_index_tree_view = 0
 
         # obtain all info about the devices via pyccda
         self.pyccda_dictionary = create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", verbose = False)
@@ -347,8 +438,22 @@ class MyDisplay(CDisplay):
         exception_dev_list = []
         exception = ""
 
+        # init progress bar
+        counter_device = 0
+        self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.setAutoClose(False)
+        self.progress_dialog_all_commands.setWindowTitle("Progress")
+        self.progress_dialog_all_commands.setWindowIcon(QIcon("../icons/diamond_2.png"))
+        self.progress_dialog_all_commands.show()
+        self.progress_dialog_all_commands.repaint()
+
         # iterate over devices
         for counter_device, selected_device in enumerate(acc_device_list):
+
+            # update progress bar
+            self.progress_dialog_all_commands.setValue(counter_device)
+            self.progress_dialog_all_commands.repaint()
+            self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
 
             # status bar message
             self.app.main_window.statusBar().showMessage("Running command {} on all {} devices ({}/{})...".format(command, selected_accelerator, counter_device+1, len(acc_device_list)), 0)
@@ -361,6 +466,9 @@ class MyDisplay(CDisplay):
                 exception = xcp
                 print("{} - Unable to run the command: {}".format(UI_FILENAME, exception))
                 exception_dev_list.append(selected_device)
+
+        # close progress bar
+        self.progress_dialog_all_commands.close()
 
         # status bar message
         self.app.main_window.statusBar().showMessage("Finished running command {} on all {} devices!".format(command, selected_accelerator), 10*1000)
@@ -520,7 +628,7 @@ class MyDisplay(CDisplay):
         # update UI
         if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
             if self.last_index_tree_view != 0:
-                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view, ignore_checking=True)
 
         return
 
@@ -528,6 +636,15 @@ class MyDisplay(CDisplay):
 
     # this function gets activated whenever RBAC logins successfully
     def rbacLoginSucceeded(self):
+
+        # progress bar init
+        counter_device = 0
+        self.progress_dialog_after_rbac = QProgressDialog("Updating devices after a successful RBAC login...", None, 0, len(self.device_list))
+        self.progress_dialog_after_rbac.setAutoClose(False)
+        self.progress_dialog_after_rbac.setWindowTitle("Progress")
+        self.progress_dialog_after_rbac.setWindowIcon(QIcon("../icons/diamond_2.png"))
+        self.progress_dialog_after_rbac.show()
+        self.progress_dialog_after_rbac.repaint()
 
         # print message
         print("{} - RBAC login succeeded...".format(UI_FILENAME))
@@ -550,10 +667,13 @@ class MyDisplay(CDisplay):
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
                 item.setIcon(QIcon("../icons/red_cross.png"))
 
+        # close progress bar
+        self.progress_dialog_after_rbac.close()
+
         # update UI (the preview panels)
         if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
             if self.last_index_tree_view != 0:
-                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view, ignore_checking=True)
 
         return
 
@@ -589,6 +709,9 @@ class MyDisplay(CDisplay):
             if from_rbac:
                 self.app.main_window.statusBar().showMessage("Successful RBAC login! Checking availability of new devices ({}/{})...".format(index_device+1, len(self.device_list)), 0)
                 self.app.main_window.statusBar().repaint()
+                self.progress_dialog_after_rbac.setValue(index_device)
+                self.progress_dialog_after_rbac.repaint()
+                self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
 
             # print the device for logging and debugging
             if verbose:
@@ -632,7 +755,7 @@ class MyDisplay(CDisplay):
 
         # status bar message
         if from_rbac:
-            self.app.main_window.statusBar().showMessage("Device availability check finished! Number of working devices: {}/{}.".format(len(self.working_devices), len(self.device_list)), 10*1000)
+            self.app.main_window.statusBar().showMessage("Device availability check finished! {}/{} devices working right now!".format(len(self.working_devices), len(self.device_list)), 10*1000)
             self.app.main_window.statusBar().repaint()
 
         return
@@ -662,7 +785,7 @@ class MyDisplay(CDisplay):
         # update UI (the preview panels)
         if self.current_window == "preview" or self.current_window == "premain":
             if self.last_index_tree_view != 0:
-                self.itemFromTreeviewClicked(index=self.last_index_tree_view)
+                self.itemFromTreeviewClicked(index=self.last_index_tree_view, ignore_checking=True)
 
         return
 
@@ -712,19 +835,24 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
-    # function that selects and clicks the root (e.g. SPS) to init the summary
+    # function that selects and clicks the root (e.g. SPS) to init tshe summary
     def selectAndClickTheRoot(self):
 
         # initialize the summary by selecting and clicking the root
         self.treeView.selectionModel().select(self.index_of_the_root, QItemSelectionModel.Select)
-        self.itemFromTreeviewClicked(self.index_of_the_root)
+        self.itemFromTreeviewClicked(self.index_of_the_root, ignore_checking = True)
 
         return
 
     #----------------------------------------------#
 
     # function that shows the device preview when a device is clicked
-    def itemFromTreeviewClicked(self, index):
+    def itemFromTreeviewClicked(self, index, ignore_checking = False):
+
+        # if the user clicked the same just skip
+        if not ignore_checking:
+            if index == self.last_index_tree_view:
+                return
 
         # store last index
         self.last_index_tree_view = index
@@ -768,7 +896,7 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.hide()
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_one_device.py"
-            self.CEmbeddedDisplay.open_file(force=True)
+            self.CEmbeddedDisplay.open_file()
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
@@ -806,7 +934,7 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.hide()
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_summary.py"
-            self.CEmbeddedDisplay.open_file(force=True)
+            self.CEmbeddedDisplay.open_file()
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
@@ -877,7 +1005,7 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.hide()
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "settings_dialog_auto.py"
-            self.CEmbeddedDisplay.open_file(force=True)
+            self.CEmbeddedDisplay.open_file()
 
             # disable and enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
@@ -911,7 +1039,7 @@ class MyDisplay(CDisplay):
                 self.CEmbeddedDisplay.hide()
                 self.CEmbeddedDisplay.show()
                 self.CEmbeddedDisplay.filename = "main_auto.py"
-                self.CEmbeddedDisplay.open_file(force=True)
+                self.CEmbeddedDisplay.open_file()
 
                 # disable and enable tool buttons
                 self.toolButton_main_settings.setEnabled(True)
@@ -937,7 +1065,7 @@ class MyDisplay(CDisplay):
                 self.CEmbeddedDisplay.hide()
                 self.CEmbeddedDisplay.show()
                 self.CEmbeddedDisplay.filename = "preview_one_device.py"
-                self.CEmbeddedDisplay.open_file(force=True)
+                self.CEmbeddedDisplay.open_file()
 
                 # disable and enable tool buttons
                 self.toolButton_main_settings.setEnabled(False)
@@ -982,7 +1110,7 @@ class MyDisplay(CDisplay):
                 self.CEmbeddedDisplay.hide()
                 self.CEmbeddedDisplay.show()
                 self.CEmbeddedDisplay.filename = "main_auto.py"
-                self.CEmbeddedDisplay.open_file(force=True)
+                self.CEmbeddedDisplay.open_file()
 
                 # enable tool buttons
                 self.toolButton_main_settings.setEnabled(True)

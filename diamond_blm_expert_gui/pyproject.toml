@@ -1,8 +1,8 @@
 [project]
 name = "diamond-blm-expert-gui"
-version = "1.0.4"
-dependencies = [ "pyqtgraph==0.10.0.post0", "comrad==0.1.3", "h5py==3.5.0",]
-description = "Expert GUI for the BI-DIAMOND-BLM devices."
+version = "1.0.6"
+dependencies = [ "comrad==0.1.3", "h5py==3.5.0", "pyqtgraph==0.10.0.post0",]
+description = "Expert GUI for the DIAMOND BLM devices."
 [[project.maintainers]]
 name = "martinja"
 email = "javier.martinez.samblas@cern.ch"
@@ -13,4 +13,4 @@ build-backend = "comrad_package.builder"
 
 [tool.comrad.package]
 entrypoint = "premain.py"
-arguments = "--hide-log-console --hide-status-bar -s SPS.USER.ALL"
+arguments = "--hide-log-console -s SPS.USER.ALL"

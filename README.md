@@ -1,3 +1,3 @@
 # diamond-blm-expert-gui
 
-Expert GUI for the BI-DIAMOND-BLM devices.
+Expert GUI for the DIAMOND BLM devices.

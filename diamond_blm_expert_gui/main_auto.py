@@ -53,9 +53,14 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # write boolean for fullscreens
+        self.writeAuxFFTFileForFullscreen(is_fft_plotted = False)
+        self.writeAuxBufferFileForFullscreen(is_buffer_plotted = False)
+
         # init aux booleans and variables
         self.data_aux_time = math.inf
         self.bufferFirstPlotsPainted = False
+        self.bufferUcapFirstPlotsPainted = False
         self.compute_time_vector_first_time = True
         self.firstTimeUcap = False
         self.firstTimeCapture = False
@@ -505,60 +510,60 @@ class MyDisplay(CDisplay):
         self.current_tab_index = tab_i
 
         # disable Capture buttons if CAPTURE_TAB is disabled
-        if CAPTURE_TAB and "dBLM.TEST" not in self.current_device:
-            self.CRelatedDisplayButton_rawBuf0.setEnabled(True)
-            self.CRelatedDisplayButton_rawBuf1.setEnabled(True)
-            self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(True)
-            self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(True)
-            self.checkBox_turns_0.setEnabled(True)
-            self.checkBox_turns_1.setEnabled(True)
-            self.checkBox_peaks_0.setEnabled(True)
-            self.checkBox_peaks_1.setEnabled(True)
-            self.CLabel_acqStamp_Capture_0.setEnabled(True)
-            self.CLabel_acqStamp_Capture_1.setEnabled(True)
-            self.CLabel_cycleName_Capture_0.setEnabled(True)
-            self.CLabel_cycleName_Capture_1.setEnabled(True)
-            self.CLabel_Overtones0_1.setEnabled(True)
-            self.CLabel_Overtones0_2.setEnabled(True)
-            self.CLabel_Overtones0_3.setEnabled(True)
-            self.CLabel_Overtones0_4.setEnabled(True)
-            self.CLabel_Overtones0_5.setEnabled(True)
-            self.CLabel_Overtones0_6.setEnabled(True)
-            self.CLabel_Overtones0_7.setEnabled(True)
-            self.CLabel_Overtones1_1.setEnabled(True)
-            self.CLabel_Overtones1_2.setEnabled(True)
-            self.CLabel_Overtones1_3.setEnabled(True)
-            self.CLabel_Overtones1_4.setEnabled(True)
-            self.CLabel_Overtones1_5.setEnabled(True)
-            self.CLabel_Overtones1_6.setEnabled(True)
-            self.CLabel_Overtones1_7.setEnabled(True)
-        else:
-            self.CRelatedDisplayButton_rawBuf0.setEnabled(False)
-            self.CRelatedDisplayButton_rawBuf1.setEnabled(False)
-            self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(False)
-            self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(False)
-            self.checkBox_turns_0.setEnabled(False)
-            self.checkBox_turns_1.setEnabled(False)
-            self.checkBox_peaks_0.setEnabled(False)
-            self.checkBox_peaks_1.setEnabled(False)
-            self.CLabel_acqStamp_Capture_0.setEnabled(False)
-            self.CLabel_acqStamp_Capture_1.setEnabled(False)
-            self.CLabel_cycleName_Capture_0.setEnabled(False)
-            self.CLabel_cycleName_Capture_1.setEnabled(False)
-            self.CLabel_Overtones0_1.setEnabled(False)
-            self.CLabel_Overtones0_2.setEnabled(False)
-            self.CLabel_Overtones0_3.setEnabled(False)
-            self.CLabel_Overtones0_4.setEnabled(False)
-            self.CLabel_Overtones0_5.setEnabled(False)
-            self.CLabel_Overtones0_6.setEnabled(False)
-            self.CLabel_Overtones0_7.setEnabled(False)
-            self.CLabel_Overtones1_1.setEnabled(False)
-            self.CLabel_Overtones1_2.setEnabled(False)
-            self.CLabel_Overtones1_3.setEnabled(False)
-            self.CLabel_Overtones1_4.setEnabled(False)
-            self.CLabel_Overtones1_5.setEnabled(False)
-            self.CLabel_Overtones1_6.setEnabled(False)
-            self.CLabel_Overtones1_7.setEnabled(False)
+        # if CAPTURE_TAB and "dBLM.TEST" not in self.current_device:
+        #     self.CRelatedDisplayButton_rawBuf0.setEnabled(True)
+        #     self.CRelatedDisplayButton_rawBuf1.setEnabled(True)
+        #     self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(True)
+        #     self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(True)
+        #     self.checkBox_turns_0.setEnabled(True)
+        #     self.checkBox_turns_1.setEnabled(True)
+        #     self.checkBox_peaks_0.setEnabled(True)
+        #     self.checkBox_peaks_1.setEnabled(True)
+        #     self.CLabel_acqStamp_Capture_0.setEnabled(True)
+        #     self.CLabel_acqStamp_Capture_1.setEnabled(True)
+        #     self.CLabel_cycleName_Capture_0.setEnabled(True)
+        #     self.CLabel_cycleName_Capture_1.setEnabled(True)
+        #     self.CLabel_Overtones0_1.setEnabled(True)
+        #     self.CLabel_Overtones0_2.setEnabled(True)
+        #     self.CLabel_Overtones0_3.setEnabled(True)
+        #     self.CLabel_Overtones0_4.setEnabled(True)
+        #     self.CLabel_Overtones0_5.setEnabled(True)
+        #     self.CLabel_Overtones0_6.setEnabled(True)
+        #     self.CLabel_Overtones0_7.setEnabled(True)
+        #     self.CLabel_Overtones1_1.setEnabled(True)
+        #     self.CLabel_Overtones1_2.setEnabled(True)
+        #     self.CLabel_Overtones1_3.setEnabled(True)
+        #     self.CLabel_Overtones1_4.setEnabled(True)
+        #     self.CLabel_Overtones1_5.setEnabled(True)
+        #     self.CLabel_Overtones1_6.setEnabled(True)
+        #     self.CLabel_Overtones1_7.setEnabled(True)
+        # else:
+        #     self.CRelatedDisplayButton_rawBuf0.setEnabled(False)
+        #     self.CRelatedDisplayButton_rawBuf1.setEnabled(False)
+        #     self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(False)
+        #     self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(False)
+        #     self.checkBox_turns_0.setEnabled(False)
+        #     self.checkBox_turns_1.setEnabled(False)
+        #     self.checkBox_peaks_0.setEnabled(False)
+        #     self.checkBox_peaks_1.setEnabled(False)
+        #     self.CLabel_acqStamp_Capture_0.setEnabled(False)
+        #     self.CLabel_acqStamp_Capture_1.setEnabled(False)
+        #     self.CLabel_cycleName_Capture_0.setEnabled(False)
+        #     self.CLabel_cycleName_Capture_1.setEnabled(False)
+        #     self.CLabel_Overtones0_1.setEnabled(False)
+        #     self.CLabel_Overtones0_2.setEnabled(False)
+        #     self.CLabel_Overtones0_3.setEnabled(False)
+        #     self.CLabel_Overtones0_4.setEnabled(False)
+        #     self.CLabel_Overtones0_5.setEnabled(False)
+        #     self.CLabel_Overtones0_6.setEnabled(False)
+        #     self.CLabel_Overtones0_7.setEnabled(False)
+        #     self.CLabel_Overtones1_1.setEnabled(False)
+        #     self.CLabel_Overtones1_2.setEnabled(False)
+        #     self.CLabel_Overtones1_3.setEnabled(False)
+        #     self.CLabel_Overtones1_4.setEnabled(False)
+        #     self.CLabel_Overtones1_5.setEnabled(False)
+        #     self.CLabel_Overtones1_6.setEnabled(False)
+        #     self.CLabel_Overtones1_7.setEnabled(False)
 
         # pyqtgraph plot for rabuf0
         self.verticalLayout_CContextFrame_CaptureTab_rawBuf0.removeItem(self.horizontalLayout_CaptureTab_rawBuf0)
@@ -679,6 +684,9 @@ class MyDisplay(CDisplay):
         for property in self.property_list:
             if str(property) not in self.exception_list:
                 self.cvalueAggregatorDict["{}".format(property)].updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromGenericProperty)
+
+        # singleshot qtimer for adding a delay to the timer_keep_calling_capture_function_until_stamps_are_the_same timer
+        self.single_shot_timer = QTimer(self)
 
         # init qtimer for capture
         self.timer_keep_calling_capture_function_until_stamps_are_the_same = QTimer(self)
@@ -822,6 +830,12 @@ class MyDisplay(CDisplay):
     # connect function
     def receiveDataFromCapture(self, data, verbose = True):
 
+        # if the arrays are empty just show a message and return
+        if data['rawBuf0'].size == 0 or data['rawBuf1'].size == 0:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Buffers are empty..", 0)
+            self.app.main_window.statusBar().repaint()
+            return
+
         # first time init
         self.firstTimeCapture = True
 
@@ -850,7 +864,17 @@ class MyDisplay(CDisplay):
 
         # wait until data from UCAP is received AND stamps are the same
         if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == False:
-            self.timer_keep_calling_capture_function_until_stamps_are_the_same.start()
+            self.single_shot_timer.singleShot(5000, self.singleShot)
+
+        return
+
+    #----------------------------------------------#
+
+    # delay function
+    def singleShot(self):
+
+        # start the timer after a delay
+        self.timer_keep_calling_capture_function_until_stamps_are_the_same.start()
 
         return
 
@@ -859,18 +883,12 @@ class MyDisplay(CDisplay):
     # connect function
     def plotCaptureFunction(self, verbose = True):
 
+        # boolean to see if we should only plot the buffer (not the FFT)
+        plotOnlyBuffer = False
+
         # status bar message
-        if self.firstTimeUcap and self.firstTimeCapture:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: {}, LAST BUFFER ACQ_TS: {})".format(self.data_acqStamp_ucap, self.data_acqStamp), 0)
-            self.app.main_window.statusBar().repaint()
-        elif self.firstTimeUcap:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: {}, LAST BUFFER ACQ_TS: Null)".format(self.data_acqStamp_ucap), 0)
-            self.app.main_window.statusBar().repaint()
-        elif self.firstTimeCapture:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: Null, LAST BUFFER ACQ_TS: {})".format(self.data_acqStamp), 0)
-            self.app.main_window.statusBar().repaint()
-        else:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new buffer data... (LAST UCAP ACQ_TS: Null, LAST BUFFER ACQ_TS: Null)".format(self.data_acqStamp_ucap, self.data_acqStamp), 0)
+        if not self.firstTimeCapture:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new data...", 0)
             self.app.main_window.statusBar().repaint()
 
         # freeze condition (and freeze in case we are not in the capture tab)
@@ -889,8 +907,16 @@ class MyDisplay(CDisplay):
                     # double check
                     if time.time() >= self.data_aux_time:
 
+                        # check data is not the same
+                        if self.bufferUcapFirstPlotsPainted:
+                            if np.array_equal(self.current_data_rawBuffer0_FFT, self.data_rawBuffer0_FFT) and np.array_equal(self.current_data_rawBuffer1_FFT, self.data_rawBuffer1_FFT):
+                                return
+                        if self.bufferFirstPlotsPainted:
+                            if np.array_equal(self.data_rawBuf0, self.current_data_rawBuf0) and np.array_equal(self.data_rawBuf1, self.current_data_rawBuf1):
+                                return
+
                         # status bar message
-                        self.app.main_window.statusBar().showMessage("CaptureTab - Received synced data from UCAP and the device!", 0)
+                        self.app.main_window.statusBar().showMessage("CaptureTab - Received synced data from both UCAP and the device!", 0)
                         self.app.main_window.statusBar().repaint()
 
                         # print
@@ -902,6 +928,27 @@ class MyDisplay(CDisplay):
                             Fs = 0.65
                             self.time_vector = np.linspace(0, (len(self.data_rawBuf0) - 1) * (1 / (Fs * 1000)), num=len(self.data_rawBuf0))
                             self.compute_time_vector_first_time = False
+
+                        # offset
+                        offset_for_timestamps = 0
+
+                        # line equation parameters
+                        y_1 = np.min(self.data_rawBuf0) - offset_for_timestamps
+                        y_2 = np.max(self.data_rawBuf0) + offset_for_timestamps
+                        x_1 = 0
+                        x_2 = 1
+
+                        # for turn flags0
+                        self.data_turn_line_eq_params_0 = [float(x_1), float(x_2), float(y_1), float(y_2)]
+
+                        # line equation parameters
+                        y_1 = np.min(self.data_rawBuf1) - offset_for_timestamps
+                        y_2 = np.max(self.data_rawBuf1) + offset_for_timestamps
+                        x_1 = 0
+                        x_2 = 1
+
+                        # for turn flags1
+                        self.data_turn_line_eq_params_1 = [float(x_1), float(x_2), float(y_1), float(y_2)]
 
                         # get only turn flags (5 and 6) for buf0
                         idx_flags_five_six = np.where((self.data_rawBufFlags0 == 5) | (self.data_rawBufFlags0 == 6))[0]
@@ -987,10 +1034,123 @@ class MyDisplay(CDisplay):
 
                         # update first plot boolean
                         self.bufferFirstPlotsPainted = True
+                        self.bufferUcapFirstPlotsPainted = True
+
+                        # write aux txt for the fullscreen plots
+                        self.writeAuxFFTFileForFullscreen(is_fft_plotted = True)
+                        self.writeAuxBufferFileForFullscreen(is_buffer_plotted = True)
 
                         # status bar message
-                        self.app.main_window.statusBar().showMessage("CaptureTab - Data plotted succesfully!", 5*1000)
+                        self.app.main_window.statusBar().showMessage("CaptureTab - Buffer and FFT plotted succesfully!", 15*1000)
                         self.app.main_window.statusBar().repaint()
+
+                # if stamps are different only plot the buffer
+                else:
+
+                    # update boolean
+                    plotOnlyBuffer = True
+
+            # if we only received the buffer only plot the buffer
+            elif self.firstTimeCapture:
+
+                # update boolean
+                plotOnlyBuffer = True
+
+            # plot only the buffer
+            if plotOnlyBuffer:
+
+                # status bar message
+                self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for UCAP to send new data...", 0)
+                self.app.main_window.statusBar().repaint()
+
+                # do not plot if data is just the same
+                if self.bufferFirstPlotsPainted:
+                    if np.array_equal(self.data_rawBuf0, self.current_data_rawBuf0) and np.array_equal(self.data_rawBuf1, self.current_data_rawBuf1):
+                        return
+
+                # disable the timer
+                if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == True:
+                    self.timer_keep_calling_capture_function_until_stamps_are_the_same.stop()
+
+                # get the time vector in microseconds only one time
+                if self.compute_time_vector_first_time:
+                    Fs = 0.65
+                    self.time_vector = np.linspace(0, (len(self.data_rawBuf0) - 1) * (1 / (Fs * 1000)), num=len(self.data_rawBuf0))
+                    self.compute_time_vector_first_time = False
+
+                # offset
+                offset_for_timestamps = 0
+
+                # line equation parameters
+                y_1 = np.min(self.data_rawBuf0) - offset_for_timestamps
+                y_2 = np.max(self.data_rawBuf0) + offset_for_timestamps
+                x_1 = 0
+                x_2 = 1
+
+                # for turn flags0
+                self.data_turn_line_eq_params_0 = [float(x_1), float(x_2), float(y_1), float(y_2)]
+
+                # line equation parameters
+                y_1 = np.min(self.data_rawBuf1) - offset_for_timestamps
+                y_2 = np.max(self.data_rawBuf1) + offset_for_timestamps
+                x_1 = 0
+                x_2 = 1
+
+                # for turn flags1
+                self.data_turn_line_eq_params_1 = [float(x_1), float(x_2), float(y_1), float(y_2)]
+
+                # get only turn flags (5 and 6) for buf0
+                idx_flags_five_six = np.where((self.data_rawBufFlags0 == 5) | (self.data_rawBufFlags0 == 6))[0]
+                flags_five_six = np.zeros(self.data_rawBufFlags0.shape)
+                flags_five_six[idx_flags_five_six] = 1
+
+                # re-scale the flags0 curve
+                self.flags_turn0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
+                                    self.data_turn_line_eq_params_0[1]) * flags_five_six + self.data_turn_line_eq_params_0[2]
+
+                # get only turn flags (5 and 6) for buf1
+                idx_flags_five_six = np.where((self.data_rawBufFlags1 == 5) | (self.data_rawBufFlags1 == 6))[0]
+                flags_five_six = np.zeros(self.data_rawBufFlags1.shape)
+                flags_five_six[idx_flags_five_six] = 1
+
+                # re-scale the flags1 curve
+                self.flags_turn1 = ((self.data_turn_line_eq_params_1[3] - self.data_turn_line_eq_params_1[2]) /
+                                    self.data_turn_line_eq_params_1[1]) * flags_five_six + self.data_turn_line_eq_params_1[2]
+
+                # plot the data for buf0
+                self.plot_rawbuf0.getPlotItem().clear()
+                if self.flags_turn0.size != 0 and self.is_turn0_checked:
+                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                self.plot_rawbuf0.show()
+
+                # save current plotted data for checkbuttons
+                self.current_time_vector = self.time_vector
+                self.current_flags_turn0 = self.flags_turn0
+                self.current_data_rawBuf0 = self.data_rawBuf0
+
+                # plot the data for buf1
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
+
+                # save current plotted data for checkbuttons
+                self.current_time_vector = self.time_vector
+                self.current_flags_turn1 = self.flags_turn1
+                self.current_data_rawBuf1 = self.data_rawBuf1
+
+                # set cycle information
+                self.CLabel_acqStamp_Capture_0.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp))
+                self.CLabel_cycleName_Capture_0.setText("<b>cycleName:</b> {}".format(self.data_cycleName))
+
+                # update first plot boolean
+                self.bufferFirstPlotsPainted = True
+
+                # write aux txt for the fullscreen plots
+                self.writeAuxFFTFileForFullscreen(is_fft_plotted = False)
+                self.writeAuxBufferFileForFullscreen(is_buffer_plotted = True)
 
         return
 
@@ -998,6 +1158,12 @@ class MyDisplay(CDisplay):
 
     # connect function
     def receiveDataFromCaptureFFT(self, data, verbose = True):
+
+        # if the arrays are empty just show a message and return
+        if data['rawBuffer0_FFT'].size == 0 or data['rawBuffer1_FFT'].size == 0:
+            self.app.main_window.statusBar().showMessage("CaptureTab - Buffers are empty..", 0)
+            self.app.main_window.statusBar().repaint()
+            return
 
         # first time init
         self.firstTimeUcap = True
@@ -1014,8 +1180,6 @@ class MyDisplay(CDisplay):
         self.data_peaks_freq1 = data['peaks_freq1']
         self.data_peaks_freq0_xplots = data['peaks_freq0_xplots']
         self.data_peaks_freq1_xplots = data['peaks_freq1_xplots']
-        self.data_turn_line_eq_params_0 = data['turn_line_eq_params_0']
-        self.data_turn_line_eq_params_1 = data['turn_line_eq_params_1']
         self.data_acqStamp_ucap = data['acqStamp']
         self.data_cycleName_ucap = data['cycleName']
 
@@ -1025,7 +1189,7 @@ class MyDisplay(CDisplay):
 
         # wait until data from UCAP is received AND stamps are the same
         if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == False:
-            self.timer_keep_calling_capture_function_until_stamps_are_the_same.start()
+            self.single_shot_timer.singleShot(5000, self.singleShot)
 
         return
 
@@ -1146,19 +1310,17 @@ class MyDisplay(CDisplay):
     # function to add or remove the turn flags from the plot of rawbuf0
     def pleaseShowTurns0(self, state):
 
-        # only if there is something to show
-        if self.bufferFirstPlotsPainted:
+        # reset clip to view to avoid errors
+        self.plot_rawbuf0.getPlotItem().setClipToView(False)
 
-            # reset clip to view to avoid errors
-            self.plot_rawbuf0.getPlotItem().setClipToView(False)
+        # if the button is checked
+        if state == Qt.Checked:
 
-            # if the button is checked
-            if state == Qt.Checked:
-
-                # clear plot and add the new flags
-                print("{} - Turns0 button checked...".format(UI_FILENAME))
-                self.current_check_dict["ts0"] = True
-                self.is_turn0_checked = True
+            # clear plot and add the new flags
+            print("{} - Turns0 button checked...".format(UI_FILENAME))
+            self.current_check_dict["ts0"] = True
+            self.is_turn0_checked = True
+            if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf0.getPlotItem().clear()
                 if self.current_flags_turn0.size != 0:
                     self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
@@ -1166,19 +1328,20 @@ class MyDisplay(CDisplay):
                     self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
-            # if it is not checked
-            else:
+        # if it is not checked
+        else:
 
-                # remove the flags
-                print("{} - Turns0 button unchecked...".format(UI_FILENAME))
-                self.current_check_dict["ts0"] = False
-                self.is_turn0_checked = False
+            # remove the flags
+            print("{} - Turns0 button unchecked...".format(UI_FILENAME))
+            self.current_check_dict["ts0"] = False
+            self.is_turn0_checked = False
+            if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf0.getPlotItem().clear()
                 self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
-            # reset clip to view to avoid errors
-            self.plot_rawbuf0.getPlotItem().setClipToView(True)
+        # reset clip to view to avoid errors
+        self.plot_rawbuf0.getPlotItem().setClipToView(True)
 
         return
 
@@ -1187,39 +1350,38 @@ class MyDisplay(CDisplay):
     # function to add or remove the turn flags from the plot of rawbuf1
     def pleaseShowTurns1(self, state):
 
-        # only if there is something to show
-        if self.bufferFirstPlotsPainted:
+        # reset clip to view to avoid errors
+        self.plot_rawbuf1.getPlotItem().setClipToView(False)
 
-            # reset clip to view to avoid errors
-            self.plot_rawbuf1.getPlotItem().setClipToView(False)
+        # if the button is checked
+        if state == Qt.Checked:
 
-            # if the button is checked
-            if state == Qt.Checked:
-
-                # clear plot and add the new flags
-                print("{} - Turns1 button checked...".format(UI_FILENAME))
-                self.current_check_dict["ts1"] = True
-                self.is_turn1_checked = True
-                self.plot_rawbuf1.getPlotItem().clear()
+            # clear plot and add the new flags
+            print("{} - Turns1 button checked...".format(UI_FILENAME))
+            self.current_check_dict["ts1"] = True
+            self.is_turn1_checked = True
+            self.plot_rawbuf1.getPlotItem().clear()
+            if self.bufferFirstPlotsPainted:
                 if self.current_flags_turn1.size != 0:
                     self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
                 if self.current_check_dict["ts1"]:
                     self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 self.plot_rawbuf1.show()
 
-            # if it is not checked
-            else:
+        # if it is not checked
+        else:
 
-                # remove the flags
-                print("{} - Turns1 button unchecked...".format(UI_FILENAME))
-                self.current_check_dict["ts1"] = False
-                self.is_turn1_checked = False
+            # remove the flags
+            print("{} - Turns1 button unchecked...".format(UI_FILENAME))
+            self.current_check_dict["ts1"] = False
+            self.is_turn1_checked = False
+            if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf1.getPlotItem().clear()
                 self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 self.plot_rawbuf1.show()
 
-            # reset clip to view to avoid errors
-            self.plot_rawbuf1.getPlotItem().setClipToView(True)
+        # reset clip to view to avoid errors
+        self.plot_rawbuf1.getPlotItem().setClipToView(True)
 
         return
 
@@ -1228,16 +1390,14 @@ class MyDisplay(CDisplay):
     # function to add or remove the peaks from the plot of rawbuf0_FFT
     def pleaseShowPeaks0(self, state):
 
-        # only if there is something to show
-        if self.bufferFirstPlotsPainted:
+        # if the button is checked
+        if state == Qt.Checked:
 
-            # if the button is checked
-            if state == Qt.Checked:
-
-                # clear plot and add the new peaks
-                print("{} - Peaks0 button checked...".format(UI_FILENAME))
-                self.current_check_dict["peaks0"] = True
-                self.is_peaks0_checked = True
+            # clear plot and add the new peaks
+            print("{} - Peaks0 button checked...".format(UI_FILENAME))
+            self.current_check_dict["peaks0"] = True
+            self.is_peaks0_checked = True
+            if self.bufferUcapFirstPlotsPainted:
                 self.plot_rawbuf0_fft.getPlotItem().clear()
                 if self.current_data_peaks_freq0_xplots.size != 0:
                     self.plot_rawbuf0_fft.plot(x=self.current_data_peaks_freq0_xplots[1], y=self.current_data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
@@ -1245,13 +1405,14 @@ class MyDisplay(CDisplay):
                     self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
                 self.plot_rawbuf0_fft.show()
 
-            # if it is not checked
-            else:
+        # if it is not checked
+        else:
 
-                # remove the peaks
-                print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
-                self.current_check_dict["peaks0"] = False
-                self.is_peaks0_checked = False
+            # remove the peaks
+            print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
+            self.current_check_dict["peaks0"] = False
+            self.is_peaks0_checked = False
+            if self.bufferUcapFirstPlotsPainted:
                 self.plot_rawbuf0_fft.getPlotItem().clear()
                 self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
                 self.plot_rawbuf0_fft.show()
@@ -1263,16 +1424,14 @@ class MyDisplay(CDisplay):
     # function to add or remove the peaks from the plot of rawbuf1_FFT
     def pleaseShowPeaks1(self, state):
 
-        # only if there is something to show
-        if self.bufferFirstPlotsPainted:
+        # if the button is checked
+        if state == Qt.Checked:
 
-            # if the button is checked
-            if state == Qt.Checked:
-
-                # clear plot and add the new peaks
-                print("{} - Peaks1 button checked...".format(UI_FILENAME))
-                self.current_check_dict["peaks1"] = True
-                self.is_peaks1_checked = True
+            # clear plot and add the new peaks
+            print("{} - Peaks1 button checked...".format(UI_FILENAME))
+            self.current_check_dict["peaks1"] = True
+            self.is_peaks1_checked = True
+            if self.bufferUcapFirstPlotsPainted:
                 self.plot_rawbuf1_fft.getPlotItem().clear()
                 if self.current_data_peaks_freq1_xplots.size != 0:
                     self.plot_rawbuf1_fft.plot(x=self.current_data_peaks_freq1_xplots[1], y=self.current_data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
@@ -1280,13 +1439,14 @@ class MyDisplay(CDisplay):
                     self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
                 self.plot_rawbuf1_fft.show()
 
-            # if it is not checked
-            else:
+        # if it is not checked
+        else:
 
-                # remove the peaks
-                print("{} - Peaks1 button unchecked...".format(UI_FILENAME))
-                self.current_check_dict["peaks1"] = False
-                self.is_peaks1_checked = False
+            # remove the peaks
+            print("{} - Peaks1 button unchecked...".format(UI_FILENAME))
+            self.current_check_dict["peaks1"] = False
+            self.is_peaks1_checked = False
+            if self.bufferUcapFirstPlotsPainted:
                 self.plot_rawbuf1_fft.getPlotItem().clear()
                 self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
                 self.plot_rawbuf1_fft.show()
@@ -1313,6 +1473,42 @@ class MyDisplay(CDisplay):
         self.CLabel_GeneralInformation_TurnBc.channel = self.current_device + "/" + "GeneralInformation#TurnBc"
         self.CLabel_GeneralInformation_TurnDropped.channel = self.current_device + "/" + "GeneralInformation#TurnDropped"
         self.CLabel_GeneralInformation_TurnSample.channel = self.current_device + "/" + "GeneralInformation#TurnSample"
+
+        return
+
+    #----------------------------------------------#
+
+    # function to write aux fft file
+    def writeAuxFFTFileForFullscreen(self, is_fft_plotted = False):
+
+        # create the dir in case it does not exist
+        if not os.path.exists("aux_txts"):
+            os.mkdir("aux_txts")
+
+        # write file
+        with open("aux_txts/is_fft_plotted.txt", "w") as f:
+            if is_fft_plotted:
+                f.write("True")
+            else:
+                f.write("False")
+
+        return
+
+    #----------------------------------------------#
+
+    # function to write aux buffer file
+    def writeAuxBufferFileForFullscreen(self, is_buffer_plotted = False):
+
+        # create the dir in case it does not exist
+        if not os.path.exists("aux_txts"):
+            os.mkdir("aux_txts")
+
+        # write file
+        with open("aux_txts/is_buffer_plotted.txt", "w") as f:
+            if is_buffer_plotted:
+                f.write("True")
+            else:
+                f.write("False")
 
         return
 

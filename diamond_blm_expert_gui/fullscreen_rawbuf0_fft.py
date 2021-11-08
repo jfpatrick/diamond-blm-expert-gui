@@ -9,9 +9,9 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData)
+from comrad import (CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData)
 from PyQt5.QtGui import (QIcon, QColor)
-from PyQt5.QtCore import (QSize, Qt)
+from PyQt5.QtCore import (QSize, Qt, QTimer)
 import pyqtgraph as pg
 
 # OTHER IMPORTS
@@ -68,15 +68,28 @@ class MyDisplay(CDisplay):
         self.data_acqStamp_ucap = 0
         self.data_acqStamp = 1
         self.freeze_everything = False
+        self.data_save = {}
+        self.is_fft_plotted_in_the_main_window = "False"
+        self.sync_wrt_main = True
 
         # set current device
         self.current_device = "SP.BA1.BLMDIAMOND.2"
         self.LoadDeviceFromTxt()
 
+        # retrieve the app CApplication variable
+        self.app = CApplication.instance()
+
+        # aux variable for the after-fully-loaded-comrad operations
+        self.is_comrad_fully_loaded = False
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Successfully opened window for {}!".format(self.current_device), 30*1000)
+        self.app.main_window.statusBar().repaint()
+
         # load the file
         print("{} - Loading the GUI file...".format(UI_FILENAME))
         super().__init__(*args, **kwargs)
-        self.setWindowTitle("rawBuf0_FFT")
+        self.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
 
         # build code widgets
         print("{} - Building the code-only widgets...".format(UI_FILENAME))
@@ -85,6 +98,9 @@ class MyDisplay(CDisplay):
         # handle signals and slots
         print("Handling signals and slots...")
         self.bindWidgets()
+
+        # at this point comrad should be fully loaded
+        self.is_comrad_fully_loaded = True
 
         return
 
@@ -126,8 +142,46 @@ class MyDisplay(CDisplay):
         # checkbox for peaks signal
         self.checkBox_one.stateChanged.connect(self.updatePeaks)
 
+        # checkbox for sync signal
+        self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
+
         # capture tab aggregator signals
         self.CValueAggregator_Capture_FFT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCaptureFFT)
+
+        # init qtimer to check if the fft is plotted in the main window
+        self.timer_to_check_if_the_fft_is_plotted_in_the_main_window = QTimer(self)
+        self.timer_to_check_if_the_fft_is_plotted_in_the_main_window.setInterval(250)
+        self.timer_to_check_if_the_fft_is_plotted_in_the_main_window.timeout.connect(self.readAuxFFTFileForFullscreen)
+        self.timer_to_check_if_the_fft_is_plotted_in_the_main_window.start()
+
+        # set up a timer to HACK comrad after it is fully loaded
+        self.timer_hack_operations_after_comrad_is_fully_loaded = QTimer(self)
+        self.timer_hack_operations_after_comrad_is_fully_loaded.setInterval(1000)
+        self.timer_hack_operations_after_comrad_is_fully_loaded.timeout.connect(self.doOperationsAfterComradIsFullyLoaded)
+        self.timer_hack_operations_after_comrad_is_fully_loaded.start()
+
+        return
+
+    #----------------------------------------------#
+
+    # function to handle sync wrt the main window
+    def syncWithMainWindowFunction(self, state):
+
+        # if the button is checked
+        if state == Qt.Checked:
+
+            # update boolean
+            self.sync_wrt_main = True
+
+        # if it is not checked
+        else:
+
+            # update boolean
+            self.sync_wrt_main = False
+
+            # call the plot function
+            if self.data_save:
+                self.auxReceiveDataFromCaptureFFT(self.data_save)
 
         return
 
@@ -135,6 +189,21 @@ class MyDisplay(CDisplay):
 
     # connect function
     def receiveDataFromCaptureFFT(self, data, verbose = False):
+
+        # save the received data
+        self.data_save = data
+
+        return
+
+    #----------------------------------------------#
+
+    # connect function (aux)
+    def auxReceiveDataFromCaptureFFT(self, data, verbose = False):
+
+        # check data is different
+        if self.firstTimeUcap:
+            if np.array_equal(data['rawBuffer0_FFT'], self.data_rawBuffer0_FFT) and np.array_equal(data['rawBuffer1_FFT'], self.data_rawBuffer1_FFT):
+                return
 
         # first time init
         self.firstTimeUcap = True
@@ -154,8 +223,6 @@ class MyDisplay(CDisplay):
             self.data_peaks_freq1 = data['peaks_freq1']
             self.data_peaks_freq0_xplots = data['peaks_freq0_xplots']
             self.data_peaks_freq1_xplots = data['peaks_freq1_xplots']
-            self.data_turn_line_eq_params_0 = data['turn_line_eq_params_0']
-            self.data_turn_line_eq_params_1 = data['turn_line_eq_params_1']
             self.data_acqStamp_ucap = data['acqStamp']
             self.data_cycleName_ucap = data['cycleName']
 
@@ -221,12 +288,13 @@ class MyDisplay(CDisplay):
             print("{} - Peaks0 button checked...".format(UI_FILENAME))
             self.current_check_dict["peaks0"] = True
             self.is_peaks0_checked = True
-            self.plot_rawbuf0_fft.getPlotItem().clear()
-            if self.data_peaks_freq0_xplots.size != 0:
-                self.plot_rawbuf0_fft.plot(x=self.current_data_peaks_freq0_xplots[1], y=self.current_data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
-            if self.current_check_dict["peaks0"]:
-                self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
-            self.plot_rawbuf0_fft.show()
+            if self.bufferFirstPlotsPainted:
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                if self.data_peaks_freq0_xplots.size != 0:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_peaks_freq0_xplots[1], y=self.current_data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
+                if self.current_check_dict["peaks0"]:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
 
         # if not
         else:
@@ -235,9 +303,65 @@ class MyDisplay(CDisplay):
             print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
             self.current_check_dict["peaks0"] = False
             self.is_peaks0_checked = False
-            self.plot_rawbuf0_fft.getPlotItem().clear()
-            self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
-            self.plot_rawbuf0_fft.show()
+            if self.bufferFirstPlotsPainted:
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
+
+        return
+
+    #----------------------------------------------#
+
+    # read aux txt
+    def readAuxFFTFileForFullscreen(self):
+
+        # if you want to sync the main with the fullscreen
+        if self.sync_wrt_main:
+
+            # read fft boolean
+            if os.path.exists("aux_txts/is_fft_plotted.txt"):
+                with open("aux_txts/is_fft_plotted.txt", "r") as f:
+                    self.is_fft_plotted_in_the_main_window = f.read()
+
+            # call plot function if fft is plotted in the main window and we received the data
+            if self.is_fft_plotted_in_the_main_window == "True":
+
+                # set the txt to false
+                with open("aux_txts/is_fft_plotted.txt", "w") as f:
+                    f.write("False")
+
+                # call the plot function
+                if self.data_save:
+                    self.auxReceiveDataFromCaptureFFT(self.data_save)
+
+        # if you do not want to sync the main with the fullscreen
+        else:
+
+            # call the plot function
+            if self.data_save:
+                self.auxReceiveDataFromCaptureFFT(self.data_save)
+
+        return
+
+    # ----------------------------------------------#
+
+    # function that does all operations that are required after comrad is fully loaded
+    def doOperationsAfterComradIsFullyLoaded(self):
+
+        # click the root and stop the timer when comrad is fully loaded
+        if self.is_comrad_fully_loaded:
+
+            # change the title of the app
+            self.app.main_window.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
+
+            # change the logo
+            self.app.main_window.setWindowIcon(QIcon("../icons/diamond_2.png"))
+
+            # hide the log console (not needed when using launcher.py)
+            # self.app.main_window.hide_log_console()
+
+            # finally stop the timer
+            self.timer_hack_operations_after_comrad_is_fully_loaded.stop()
 
         return
 
