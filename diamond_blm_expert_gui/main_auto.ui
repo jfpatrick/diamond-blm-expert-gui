@@ -145,7 +145,7 @@ CCommandButton:pressed{
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -544,7 +544,7 @@ else:
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -680,7 +680,7 @@ else:
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -1149,7 +1149,7 @@ else:
                    </property>
                    <property name="icon">
                     <iconset>
-                     <normaloff>../icons/fullscreen.png</normaloff>../icons/fullscreen.png</iconset>
+                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
