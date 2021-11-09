@@ -33,6 +33,8 @@ from time import sleep
 
 # GLOBALS
 
+ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
+QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
 UI_FILENAME = "main_auto.ui"
 CAPTURE_TAB = True
 
@@ -370,7 +372,7 @@ class MyDisplay(CDisplay):
                         sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format(property, command)].sizePolicy().hasHeightForWidth())
                         self.commandButtonDict["{}_{}".format(property, command)].setSizePolicy(sizePolicy)
                         self.commandButtonDict["{}_{}".format(property, command)].setText("{}".format(" Run"))
-                        self.commandButtonDict["{}_{}".format(property, command)].setIcon(QIcon("../icons/command.png"))
+                        self.commandButtonDict["{}_{}".format(property, command)].setIcon(QIcon(ICONS_PATH + "/command.png"))
                         self.commandButtonDict["{}_{}".format(property, command)].setMinimumSize(QSize(0, 30))
                         self.commandButtonDict["{}_{}".format(property, command)].channel = "{}/{}".format(self.current_device, command)
                         self.layoutDict["layout_command_button_{}".format(property, command)].addWidget(self.commandButtonDict["{}_{}".format(property, command)])

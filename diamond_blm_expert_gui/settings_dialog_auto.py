@@ -27,6 +27,8 @@ import json
 
 # GLOBALS
 
+ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
+QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
 UI_FILENAME = "settings_dialog_auto.ui"
 SHOW_COMMANDS_IN_SETTINGS = False
 
@@ -232,11 +234,11 @@ class DialogThreeColumnSet(QDialog):
         self.vertical_layout_main_dialog.setStretch(1, 5)
 
         # read and apply the qss files
-        with open("../qss/scrollArea_properties.qss", "r") as fh:
+        with open(QSS_PATH + "/scrollArea_properties.qss", "r") as fh:
             self.scrollArea_properties.setStyleSheet(fh.read())
-        with open("../qss/scrollingContents_properties.qss", "r") as fh:
+        with open(QSS_PATH + "/scrollingContents_properties.qss", "r") as fh:
             self.scrollingContents_properties.setStyleSheet(fh.read())
-        with open("../qss/pushButton_set.qss", "r") as fh:
+        with open(QSS_PATH + "/pushButton_set.qss", "r") as fh:
             self.pushButton_set.setStyleSheet(fh.read())
 
         # set groupbox for the titles of the labels
@@ -687,7 +689,7 @@ class MyDisplay(CDisplay):
                 sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format("Commands", command)].sizePolicy().hasHeightForWidth())
                 self.commandButtonDict["{}_{}".format("Commands", command)].setSizePolicy(sizePolicy)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setText("{}".format(" Run"))
-                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon("../icons/command.png"))
+                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon(ICONS_PATH + "/command.png"))
                 self.commandButtonDict["{}_{}".format("Commands", command)].channel = "{}/{}".format(self.current_device, command)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setMinimumSize(QSize(120, 24))
                 self.layoutDict["groupBox_{}".format("Commands")].addWidget(self.commandButtonDict["{}_{}".format("Commands", command)], row, column, 1, 1)

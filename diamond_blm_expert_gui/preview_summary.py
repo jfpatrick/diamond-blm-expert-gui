@@ -27,6 +27,8 @@ import numpy as np
 
 # GLOBALS
 
+ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
+QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
 UI_FILENAME = "preview_summary.ui"
 
 ########################################################

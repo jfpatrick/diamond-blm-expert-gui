@@ -27,6 +27,8 @@ import math
 
 # GLOBALS
 
+ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
+QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
 UI_FILENAME = "fullscreen_rawbuf1_fft.ui"
 
 ########################################################
@@ -355,7 +357,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf1_FFT - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon("../icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

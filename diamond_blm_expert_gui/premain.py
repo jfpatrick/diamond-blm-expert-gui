@@ -34,6 +34,8 @@ import faulthandler
 
 # GLOBALS
 
+ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
+QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
 UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
@@ -443,7 +445,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
-        self.progress_dialog_all_commands.setWindowIcon(QIcon("../icons/diamond_2.png"))
+        self.progress_dialog_all_commands.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
         self.progress_dialog_all_commands.show()
         self.progress_dialog_all_commands.repaint()
 
@@ -620,10 +622,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/green_tick.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/red_cross.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
 
         # update UI
         if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
@@ -642,7 +644,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_after_rbac = QProgressDialog("Updating devices after a successful RBAC login...", None, 0, len(self.device_list))
         self.progress_dialog_after_rbac.setAutoClose(False)
         self.progress_dialog_after_rbac.setWindowTitle("Progress")
-        self.progress_dialog_after_rbac.setWindowIcon(QIcon("../icons/diamond_2.png"))
+        self.progress_dialog_after_rbac.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
         self.progress_dialog_after_rbac.show()
         self.progress_dialog_after_rbac.repaint()
 
@@ -662,10 +664,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/green_tick.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/red_cross.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
 
         # close progress bar
         self.progress_dialog_after_rbac.close()
@@ -777,10 +779,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/green_tick.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon("../icons/red_cross.png"))
+                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
 
         # update UI (the preview panels)
         if self.current_window == "preview" or self.current_window == "premain":
@@ -816,10 +818,10 @@ class MyDisplay(CDisplay):
                 # determine the icon (working or not)
                 if device in self.working_devices:
                     itemToAppend.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon("../icons/green_tick.png"))
+                    itemToAppend.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
                 else:
                     itemToAppend.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon("../icons/red_cross.png"))
+                    itemToAppend.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
 
                 # append it to the tree
                 root.appendRow(itemToAppend)
@@ -1214,7 +1216,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("DIAMOND BLM EXPERT GUI")
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon("../icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

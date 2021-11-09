@@ -184,7 +184,7 @@ QToolButton:pressed{
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../icons/back.png</normaloff>../icons/back.png</iconset>
+                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</iconset>
               </property>
              </widget>
             </item>
@@ -252,8 +252,8 @@ QToolButton:hover{
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../icons/freezing_1.png</normaloff>
-                <normalon>../icons/freezing_2.png</normalon>../icons/freezing_1.png</iconset>
+                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</normaloff>
+                <normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_2.png</normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</iconset>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -308,7 +308,7 @@ QToolButton:pressed{
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../icons/settings.png</normaloff>../icons/settings.png</iconset>
+                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</iconset>
               </property>
               <property name="iconSize">
                <size>
@@ -375,7 +375,7 @@ QToolButton:pressed{
               </property>
               <property name="icon">
                <iconset>
-                <normaloff>../icons/close.png</normaloff>../icons/close.png</iconset>
+                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</iconset>
               </property>
               <property name="autoRaise">
                <bool>false</bool>
