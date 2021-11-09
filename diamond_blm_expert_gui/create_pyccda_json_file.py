@@ -19,6 +19,7 @@ import os
 
 # GLOBALS
 
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 
 ########################################################
@@ -121,11 +122,11 @@ def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", v
         pprint.pprint(output_dict)
 
     # create the saving dir in case it does not exist
-    if not os.path.exists("aux_jsons"):
-        os.mkdir("aux_jsons")
+    if not os.path.exists(SAVING_PATH + "/aux_jsons"):
+        os.mkdir(SAVING_PATH + "/aux_jsons")
 
     # store the json file
-    with open("aux_jsons/{}".format(name_json_file), 'w') as fp:
+    with open(SAVING_PATH + "/aux_jsons/{}".format(name_json_file), 'w') as fp:
         json.dump(output_dict, fp, sort_keys=True, indent=4)
 
     return output_dict

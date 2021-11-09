@@ -34,8 +34,7 @@ import faulthandler
 
 # GLOBALS
 
-ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
-QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
@@ -319,12 +318,12 @@ class MyDisplay(CDisplay):
         self.getWorkingDevices(verbose = True)
 
         # remove the open device aux txt at startup
-        if os.path.exists("aux_txts/open_new_device.txt"):
-            os.remove("aux_txts/open_new_device.txt")
+        if os.path.exists(SAVING_PATH + "/aux_txts/open_new_device.txt"):
+            os.remove(SAVING_PATH + "/aux_txts/open_new_device.txt")
 
         # remove the freeze txt at startup
-        if os.path.exists("aux_txts/freeze.txt"):
-            os.remove("aux_txts/freeze.txt")
+        if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
+            os.remove(SAVING_PATH + "/aux_txts/freeze.txt")
 
         # load the gui and set the title,
         print("{} - Loading the GUI file...".format(UI_FILENAME))
@@ -445,7 +444,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
-        self.progress_dialog_all_commands.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
+        self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
         self.progress_dialog_all_commands.show()
         self.progress_dialog_all_commands.repaint()
 
@@ -622,10 +621,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
 
         # update UI
         if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
@@ -644,7 +643,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_after_rbac = QProgressDialog("Updating devices after a successful RBAC login...", None, 0, len(self.device_list))
         self.progress_dialog_after_rbac.setAutoClose(False)
         self.progress_dialog_after_rbac.setWindowTitle("Progress")
-        self.progress_dialog_after_rbac.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
+        self.progress_dialog_after_rbac.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
         self.progress_dialog_after_rbac.show()
         self.progress_dialog_after_rbac.repaint()
 
@@ -664,10 +663,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
 
         # close progress bar
         self.progress_dialog_after_rbac.close()
@@ -779,10 +778,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
 
         # update UI (the preview panels)
         if self.current_window == "preview" or self.current_window == "premain":
@@ -818,10 +817,10 @@ class MyDisplay(CDisplay):
                 # determine the icon (working or not)
                 if device in self.working_devices:
                     itemToAppend.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon(ICONS_PATH + "/green_tick.png"))
+                    itemToAppend.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
                 else:
                     itemToAppend.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon(ICONS_PATH + "/red_cross.png"))
+                    itemToAppend.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
 
                 # append it to the tree
                 root.appendRow(itemToAppend)
@@ -1086,22 +1085,20 @@ class MyDisplay(CDisplay):
     def isOpenDevicePushButtonPressed(self):
 
         # check if txt exists
-        if os.path.exists("aux_txts/open_new_device.txt"):
+        if os.path.exists(SAVING_PATH + "/aux_txts/open_new_device.txt"):
 
             # init the boolean
             wasTheButtonPressed = "False"
 
             # open it
-            with open("aux_txts/open_new_device.txt", "r") as f:
-
-                # read it
+            with open(SAVING_PATH + "/aux_txts/open_new_device.txt", "r") as f:
                 wasTheButtonPressed = f.read()
 
             # if the button was pressed then open the device panel
             if wasTheButtonPressed == "True":
 
                 # remove the file because we already know we have to open the device
-                os.remove("aux_txts/open_new_device.txt")
+                os.remove(SAVING_PATH + "/aux_txts/open_new_device.txt")
 
                 # status bar message
                 self.app.main_window.statusBar().showMessage("Loading device window...", 0)
@@ -1131,11 +1128,11 @@ class MyDisplay(CDisplay):
     def writeSelectorIntoTxt(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # write the selector
-        with open("aux_txts/current_selector.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/current_selector.txt", "w") as f:
             f.write(str(self.current_selector))
 
         return
@@ -1149,28 +1146,28 @@ class MyDisplay(CDisplay):
         acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == acc_name])
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # write the current device
-        with open("aux_txts/current_device_premain.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "w") as f:
             f.write(str(self.current_device))
 
         # write the current accelerator
-        with open("aux_txts/current_accelerator_premain.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "w") as f:
             f.write(str(acc_name))
 
         # write the exception of the current device
-        with open("aux_txts/exception_premain.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/exception_premain.txt", "w") as f:
             f.write("{}\n".format(self.exception_dict[str(self.current_device)]))
 
         # write the file: device_list_premain
-        with open("aux_txts/device_list_premain.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/device_list_premain.txt", "w") as f:
             for dev in acc_device_list:
                 f.write("{}\n".format(dev))
 
         # write the file: working_devices_premain
-        with open("aux_txts/working_devices_premain.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/working_devices_premain.txt", "w") as f:
             for dev in self.working_devices:
                 f.write("{}\n".format(dev))
 
@@ -1182,22 +1179,22 @@ class MyDisplay(CDisplay):
     def sendFreezeText(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # if it is pressed
         if self.toolButton_freeze.isChecked():
 
             # write the file
-            with open("aux_txts/freeze.txt", "w") as f:
+            with open(SAVING_PATH + "/aux_txts/freeze.txt", "w") as f:
                 f.write("True")
 
         # if it is not pressed
         else:
 
             # remove the freeze txt
-            if os.path.exists("aux_txts/freeze.txt"):
-                os.remove("aux_txts/freeze.txt")
+            if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
+                os.remove(SAVING_PATH + "/aux_txts/freeze.txt")
 
         return
 
@@ -1216,7 +1213,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("DIAMOND BLM EXPERT GUI")
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

@@ -27,8 +27,7 @@ import numpy as np
 
 # GLOBALS
 
-ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
-QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "preview_summary.ui"
 
 ########################################################
@@ -258,22 +257,22 @@ class MyDisplay(CDisplay):
     def LoadDeviceListFromTxtPremain(self):
 
         # load the device list
-        if os.path.exists("aux_txts/device_list_premain.txt"):
-            with open("aux_txts/device_list_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/device_list_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/device_list_premain.txt", "r") as f:
                 self.device_list = []
                 for line in f:
                     self.device_list.append(line.strip())
 
         # load the working devices
-        if os.path.exists("aux_txts/working_devices_premain.txt"):
-            with open("aux_txts/working_devices_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/working_devices_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/working_devices_premain.txt", "r") as f:
                 self.working_devices = []
                 for line in f:
                     self.working_devices.append(line.strip())
 
         # load the current accelerator
-        if os.path.exists("aux_txts/current_accelerator_premain.txt"):
-            with open("aux_txts/current_accelerator_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "r") as f:
                 self.current_accelerator = f.read()
 
         return

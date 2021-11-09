@@ -33,8 +33,7 @@ from time import sleep
 
 # GLOBALS
 
-ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
-QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "main_auto.ui"
 CAPTURE_TAB = True
 
@@ -372,7 +371,7 @@ class MyDisplay(CDisplay):
                         sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format(property, command)].sizePolicy().hasHeightForWidth())
                         self.commandButtonDict["{}_{}".format(property, command)].setSizePolicy(sizePolicy)
                         self.commandButtonDict["{}_{}".format(property, command)].setText("{}".format(" Run"))
-                        self.commandButtonDict["{}_{}".format(property, command)].setIcon(QIcon(ICONS_PATH + "/command.png"))
+                        self.commandButtonDict["{}_{}".format(property, command)].setIcon(QIcon(SAVING_PATH + "/icons/command.png"))
                         self.commandButtonDict["{}_{}".format(property, command)].setMinimumSize(QSize(0, 30))
                         self.commandButtonDict["{}_{}".format(property, command)].channel = "{}/{}".format(self.current_device, command)
                         self.layoutDict["layout_command_button_{}".format(property, command)].addWidget(self.commandButtonDict["{}_{}".format(property, command)])
@@ -1256,8 +1255,8 @@ class MyDisplay(CDisplay):
     def readPyCCDAJsonFile(self):
 
         # read pyccda info file
-        if os.path.exists("aux_jsons/pyccda_sps.json"):
-            with open("aux_jsons/pyccda_sps.json") as f:
+        if os.path.exists(SAVING_PATH + "/aux_jsons/pyccda_sps.json"):
+            with open(SAVING_PATH + "/aux_jsons/pyccda_sps.json") as f:
                 self.pyccda_dictionary = json.load(f)
 
         return
@@ -1268,13 +1267,13 @@ class MyDisplay(CDisplay):
     def LoadDeviceFromTxtPremain(self):
 
         # read current device
-        if os.path.exists("aux_txts/current_device_premain.txt"):
-            with open("aux_txts/current_device_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_device_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "r") as f:
                 self.current_device = f.read()
 
         # read current accelerator
-        if os.path.exists("aux_txts/current_accelerator_premain.txt"):
-            with open("aux_txts/current_accelerator_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "r") as f:
                 self.current_accelerator = f.read()
 
         return
@@ -1285,11 +1284,11 @@ class MyDisplay(CDisplay):
     def writeDeviceIntoTxtForFullScreen(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # write the file
-        with open("aux_txts/current_device.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/current_device.txt", "w") as f:
             f.write(str(self.current_device))
 
         return
@@ -1300,7 +1299,7 @@ class MyDisplay(CDisplay):
     def readFreezeFile(self):
 
         # check if we should freeze the plots
-        if os.path.exists("aux_txts/freeze.txt"):
+        if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
             self.freeze_everything = True
         else:
             self.freeze_everything = False
@@ -1484,11 +1483,11 @@ class MyDisplay(CDisplay):
     def writeAuxFFTFileForFullscreen(self, is_fft_plotted = False):
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # write file
-        with open("aux_txts/is_fft_plotted.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/is_fft_plotted.txt", "w") as f:
             if is_fft_plotted:
                 f.write("True")
             else:
@@ -1502,11 +1501,11 @@ class MyDisplay(CDisplay):
     def writeAuxBufferFileForFullscreen(self, is_buffer_plotted = False):
 
         # create the dir in case it does not exist
-        if not os.path.exists("aux_txts"):
-            os.mkdir("aux_txts")
+        if not os.path.exists(SAVING_PATH + "/aux_txts"):
+            os.mkdir(SAVING_PATH + "/aux_txts")
 
         # write file
-        with open("aux_txts/is_buffer_plotted.txt", "w") as f:
+        with open(SAVING_PATH + "/aux_txts/is_buffer_plotted.txt", "w") as f:
             if is_buffer_plotted:
                 f.write("True")
             else:

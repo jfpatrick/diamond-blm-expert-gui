@@ -27,8 +27,7 @@ import json
 
 # GLOBALS
 
-ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
-QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "settings_dialog_auto.ui"
 SHOW_COMMANDS_IN_SETTINGS = False
 
@@ -234,11 +233,11 @@ class DialogThreeColumnSet(QDialog):
         self.vertical_layout_main_dialog.setStretch(1, 5)
 
         # read and apply the qss files
-        with open(QSS_PATH + "/scrollArea_properties.qss", "r") as fh:
+        with open(SAVING_PATH + "/qss/scrollArea_properties.qss", "r") as fh:
             self.scrollArea_properties.setStyleSheet(fh.read())
-        with open(QSS_PATH + "/scrollingContents_properties.qss", "r") as fh:
+        with open(SAVING_PATH + "/qss/scrollingContents_properties.qss", "r") as fh:
             self.scrollingContents_properties.setStyleSheet(fh.read())
-        with open(QSS_PATH + "/pushButton_set.qss", "r") as fh:
+        with open(SAVING_PATH + "/qss/pushButton_set.qss", "r") as fh:
             self.pushButton_set.setStyleSheet(fh.read())
 
         # set groupbox for the titles of the labels
@@ -689,7 +688,7 @@ class MyDisplay(CDisplay):
                 sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format("Commands", command)].sizePolicy().hasHeightForWidth())
                 self.commandButtonDict["{}_{}".format("Commands", command)].setSizePolicy(sizePolicy)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setText("{}".format(" Run"))
-                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon(ICONS_PATH + "/command.png"))
+                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon(SAVING_PATH + "/icons/command.png"))
                 self.commandButtonDict["{}_{}".format("Commands", command)].channel = "{}/{}".format(self.current_device, command)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setMinimumSize(QSize(120, 24))
                 self.layoutDict["groupBox_{}".format("Commands")].addWidget(self.commandButtonDict["{}_{}".format("Commands", command)], row, column, 1, 1)
@@ -994,8 +993,8 @@ class MyDisplay(CDisplay):
     def LoadSelector(self):
 
         # read current device
-        if os.path.exists("aux_txts/current_selector.txt"):
-            with open("aux_txts/current_selector.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_selector.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_selector.txt", "r") as f:
                 self.current_selector = f.read()
 
         return
@@ -1006,13 +1005,13 @@ class MyDisplay(CDisplay):
     def LoadDeviceFromTxtPremain(self):
 
         # read current device
-        if os.path.exists("aux_txts/current_device_premain.txt"):
-            with open("aux_txts/current_device_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_device_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "r") as f:
                 self.current_device = f.read()
 
         # read current accelerator
-        if os.path.exists("aux_txts/current_accelerator_premain.txt"):
-            with open("aux_txts/current_accelerator_premain.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "r") as f:
                 self.current_accelerator = f.read()
 
         return
@@ -1023,8 +1022,8 @@ class MyDisplay(CDisplay):
     def readPyCCDAJsonFile(self):
 
         # read pyccda info file
-        if os.path.exists("aux_jsons/pyccda_sps.json"):
-            with open("aux_jsons/pyccda_sps.json") as f:
+        if os.path.exists(SAVING_PATH + "/aux_jsons/pyccda_sps.json"):
+            with open(SAVING_PATH + "/aux_jsons/pyccda_sps.json") as f:
                 self.pyccda_dictionary = json.load(f)
 
         return

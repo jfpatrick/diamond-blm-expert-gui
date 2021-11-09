@@ -27,8 +27,7 @@ import math
 
 # GLOBALS
 
-ICONS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons"
-QSS_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/qss"
+SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "fullscreen_rawbuf1.ui"
 
 ########################################################
@@ -305,8 +304,8 @@ class MyDisplay(CDisplay):
     # function that loads the device from the aux txt file
     def LoadDeviceFromTxt(self):
 
-        if os.path.exists("aux_txts/current_device.txt"):
-            with open("aux_txts/current_device.txt", "r") as f:
+        if os.path.exists(SAVING_PATH + "/aux_txts/current_device.txt"):
+            with open(SAVING_PATH + "/aux_txts/current_device.txt", "r") as f:
                 self.current_device = f.read()
 
         return
@@ -405,15 +404,15 @@ class MyDisplay(CDisplay):
         if self.sync_wrt_main:
 
             # read buffer boolean
-            if os.path.exists("aux_txts/is_buffer_plotted.txt"):
-                with open("aux_txts/is_buffer_plotted.txt", "r") as f:
+            if os.path.exists(SAVING_PATH + "/aux_txts/is_buffer_plotted.txt"):
+                with open(SAVING_PATH + "/aux_txts/is_buffer_plotted.txt", "r") as f:
                     self.is_buffer_plotted_in_the_main_window = f.read()
 
             # call plot function if buffer is plotted in the main window and we received the data
             if self.is_buffer_plotted_in_the_main_window == "True":
 
                 # set the txt to false
-                with open("aux_txts/is_buffer_plotted.txt", "w") as f:
+                with open(SAVING_PATH + "/aux_txts/is_buffer_plotted.txt", "w") as f:
                     f.write("False")
 
                 # call the plot function
@@ -441,7 +440,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf1 - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon(ICONS_PATH + "/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()
