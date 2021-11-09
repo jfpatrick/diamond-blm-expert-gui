@@ -881,12 +881,6 @@ class MyDisplay(CDisplay):
             self.current_accelerator = parent_text
             self.writeDeviceIntoTxtForSubWindows(self.current_accelerator)
 
-            # update text label
-            if self.current_device in self.working_devices:
-                self.label_device_panel.setText("DEVICE PANEL <font color=green>{}</font> : <font color=green>{}</font>".format(parent_text, self.current_device))
-            else:
-                self.label_device_panel.setText( "DEVICE PANEL <font color=red>{}</font> : <font color=red>{}</font>".format(parent_text, self.current_device))
-
             # status bar message
             self.app.main_window.statusBar().showMessage("Loading device preview...", 0)
             self.app.main_window.statusBar().repaint()
@@ -897,6 +891,12 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_one_device.py"
             self.CEmbeddedDisplay.open_file()
+
+            # update text label
+            if self.current_device in self.working_devices:
+                self.label_device_panel.setText("DEVICE PANEL <font color=green>{}</font> : <font color=green>{}</font>".format(parent_text, self.current_device))
+            else:
+                self.label_device_panel.setText( "DEVICE PANEL <font color=red>{}</font> : <font color=red>{}</font>".format(parent_text, self.current_device))
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
@@ -922,9 +922,6 @@ class MyDisplay(CDisplay):
             self.current_accelerator = selected_text
             self.writeDeviceIntoTxtForSubWindows(self.current_accelerator)
 
-            # update text label
-            self.label_device_panel.setText("DEVICE PANEL <font color=black>{}</font> : <font color=black>{}</font>".format(selected_text, "SUMMARY"))
-
             # status bar message
             self.app.main_window.statusBar().showMessage("Loading {} summary preview...".format(self.current_accelerator), 0)
             self.app.main_window.statusBar().repaint()
@@ -935,6 +932,9 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_summary.py"
             self.CEmbeddedDisplay.open_file()
+
+            # update text label
+            self.label_device_panel.setText("DEVICE PANEL <font color=black>{}</font> : <font color=black>{}</font>".format(selected_text, "SUMMARY"))
 
             # enable tool buttons
             self.toolButton_main_settings.setEnabled(False)
