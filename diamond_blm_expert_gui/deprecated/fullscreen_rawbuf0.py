@@ -154,13 +154,8 @@ class MyDisplay(CDisplay):
         # checkbox for flags 5 and 6
         self.checkBox_turn.stateChanged.connect(self.updateFlags_5_6)
 
-        # disable buttons until reception of data
-        self.checkBox_bunch.setEnabled(False)
-        self.checkBox_turn.setEnabled(False)
-
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCapture)
@@ -201,6 +196,7 @@ class MyDisplay(CDisplay):
                 self.auxReceiveDataFromCapture(self.data_save)
 
         return
+
 
     #----------------------------------------------#
 
@@ -305,10 +301,6 @@ class MyDisplay(CDisplay):
 
         # update first plot boolean
         self.bufferFirstPlotsPainted = True
-
-        # enable buttons
-        self.checkBox_bunch.setEnabled(True)
-        self.checkBox_turn.setEnabled(True)
 
         return
 
@@ -417,17 +409,16 @@ class MyDisplay(CDisplay):
         if self.sync_wrt_main:
 
             # read buffer boolean
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt")):
-                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"), "r") as f:
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt")):
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt"), "r") as f:
                     self.is_buffer_plotted_in_the_main_window = f.read()
 
             # call plot function if buffer is plotted in the main window and we received the data
             if self.is_buffer_plotted_in_the_main_window == "True":
 
                 # set the txt to false
-                if self.bufferFirstPlotsPainted:
-                    with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"), "w") as f:
-                        f.write("False")
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt"), "w") as f:
+                    f.write("False")
 
                 # call the plot function
                 if self.data_save:

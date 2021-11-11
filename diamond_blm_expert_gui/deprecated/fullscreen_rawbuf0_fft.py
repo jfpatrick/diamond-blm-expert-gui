@@ -30,7 +30,7 @@ from general_utils import createCustomTempDir, getSystemTempDir
 
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
-UI_FILENAME = "fullscreen_rawbuf1_fft.ui"
+UI_FILENAME = "fullscreen_rawbuf0_fft.ui"
 
 ########################################################
 ########################################################
@@ -89,13 +89,13 @@ class MyDisplay(CDisplay):
         self.is_comrad_fully_loaded = False
 
         # status bar message
-        self.app.main_window.statusBar().showMessage("Successfully opened window for {}!".format(self.current_device), 15*1000)
+        self.app.main_window.statusBar().showMessage("Successfully opened window for {}!".format(self.current_device), 30*1000)
         self.app.main_window.statusBar().repaint()
 
         # load the file
         print("{} - Loading the GUI file...".format(UI_FILENAME))
         super().__init__(*args, **kwargs)
-        self.setWindowTitle("rawBuf1_FFT - {}".format(self.current_device))
+        self.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
 
         # build code widgets
         print("{} - Building the code-only widgets...".format(UI_FILENAME))
@@ -115,17 +115,17 @@ class MyDisplay(CDisplay):
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
 
-        # pyqtgraph plot for rabuf1_fft
+        # pyqtgraph plot for rabuf0_fft
         self.verticalLayout_Capture_FFT.removeItem(self.horizontalLayout)
-        self.plot_rawbuf1_fft = pg.PlotWidget(title="rawBuf1_FFT")
-        self.plot_rawbuf1_fft.getPlotItem().enableAutoRange()
-        self.plot_rawbuf1_fft.getPlotItem().setAutoVisible()
-        # self.plot_rawbuf1_fft.getPlotItem().setMenuEnabled(enableMenu=False)
-        self.plot_rawbuf1_fft.getPlotItem().showButtons()
-        self.plot_rawbuf1_fft.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
-        self.plot_rawbuf1_fft.getPlotItem().setLabel(axis='left', text='amplitude')
-        self.plot_rawbuf1_fft.getPlotItem().setLabel(axis='bottom', text='frequency (kHz)')
-        self.verticalLayout_Capture_FFT.addWidget(self.plot_rawbuf1_fft)
+        self.plot_rawbuf0_fft = pg.PlotWidget(title="rawBuf0_FFT")
+        self.plot_rawbuf0_fft.getPlotItem().enableAutoRange()
+        self.plot_rawbuf0_fft.getPlotItem().setAutoVisible()
+        # self.plot_rawbuf0_fft.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf0_fft.getPlotItem().showButtons()
+        self.plot_rawbuf0_fft.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
+        self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='bottom', text='frequency (kHz)')
+        self.verticalLayout_Capture_FFT.addWidget(self.plot_rawbuf0_fft)
         self.verticalLayout_Capture_FFT.addItem(self.horizontalLayout)
 
         # aggregator for Capture FFT (UCAP)
@@ -148,12 +148,8 @@ class MyDisplay(CDisplay):
         # checkbox for peaks signal
         self.checkBox_one.stateChanged.connect(self.updatePeaks)
 
-        # disable buttons until reception of data
-        self.checkBox_one.setEnabled(False)
-
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture_FFT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCaptureFFT)
@@ -259,12 +255,12 @@ class MyDisplay(CDisplay):
         # freeze condition
         if not self.freeze_everything:
 
-            # plot the data for buf1_fft
-            self.plot_rawbuf1_fft.getPlotItem().clear()
-            if self.data_peaks_freq1_xplots.size != 0 and self.is_peaks1_checked:
-                self.plot_rawbuf1_fft.plot(x=self.data_peaks_freq1_xplots[1], y=self.data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
-            self.plot_rawbuf1_fft.plot(x=self.data_rawBuffer1_FFT[1, :], y=self.data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
-            self.plot_rawbuf1_fft.show()
+            # plot the data for buf0_fft
+            self.plot_rawbuf0_fft.getPlotItem().clear()
+            if self.data_peaks_freq0_xplots.size != 0 and self.is_peaks0_checked:
+                self.plot_rawbuf0_fft.plot(x=self.data_peaks_freq0_xplots[1], y=self.data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
+            self.plot_rawbuf0_fft.plot(x=self.data_rawBuffer0_FFT[1, :], y=self.data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+            self.plot_rawbuf0_fft.show()
 
             # set cycle information
             self.CLabel_acqStamp_Capture.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp_ucap))
@@ -272,9 +268,6 @@ class MyDisplay(CDisplay):
 
         # update first plot boolean
         self.bufferFirstPlotsPainted = True
-
-        # enable buttons
-        self.checkBox_one.setEnabled(True)
 
         return
 
@@ -298,28 +291,28 @@ class MyDisplay(CDisplay):
         if state == Qt.Checked:
 
             # clear plot and add the new flags
-            print("{} - Peaks1 button checked...".format(UI_FILENAME))
-            self.current_check_dict["peaks1"] = True
-            self.is_peaks1_checked = True
+            print("{} - Peaks0 button checked...".format(UI_FILENAME))
+            self.current_check_dict["peaks0"] = True
+            self.is_peaks0_checked = True
             if self.bufferFirstPlotsPainted:
-                self.plot_rawbuf1_fft.getPlotItem().clear()
-                if self.data_peaks_freq1_xplots.size != 0:
-                    self.plot_rawbuf1_fft.plot(x=self.current_data_peaks_freq1_xplots[1], y=self.current_data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
-                if self.current_check_dict["peaks1"]:
-                    self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
-                self.plot_rawbuf1_fft.show()
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                if self.data_peaks_freq0_xplots.size != 0:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_peaks_freq0_xplots[1], y=self.current_data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf0_peaks")
+                if self.current_check_dict["peaks0"]:
+                    self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
 
         # if not
         else:
 
             # remove the peaks
-            print("{} - Peaks1 button unchecked...".format(UI_FILENAME))
-            self.current_check_dict["peaks1"] = False
-            self.is_peaks1_checked = False
+            print("{} - Peaks0 button unchecked...".format(UI_FILENAME))
+            self.current_check_dict["peaks0"] = False
+            self.is_peaks0_checked = False
             if self.bufferFirstPlotsPainted:
-                self.plot_rawbuf1_fft.getPlotItem().clear()
-                self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
-                self.plot_rawbuf1_fft.show()
+                self.plot_rawbuf0_fft.getPlotItem().clear()
+                self.plot_rawbuf0_fft.plot(x=self.current_data_rawBuffer0_FFT[1, :], y=self.current_data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
+                self.plot_rawbuf0_fft.show()
 
         return
 
@@ -332,17 +325,16 @@ class MyDisplay(CDisplay):
         if self.sync_wrt_main:
 
             # read fft boolean
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt")):
-                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"), "r") as f:
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt")):
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt"), "r") as f:
                     self.is_fft_plotted_in_the_main_window = f.read()
 
             # call plot function if fft is plotted in the main window and we received the data
             if self.is_fft_plotted_in_the_main_window == "True":
 
                 # set the txt to false
-                if self.bufferFirstPlotsPainted:
-                    with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"), "w") as f:
-                        f.write("False")
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt"), "w") as f:
+                    f.write("False")
 
                 # call the plot function
                 if self.data_save:
@@ -357,7 +349,7 @@ class MyDisplay(CDisplay):
 
         return
 
-    #----------------------------------------------#
+    # ----------------------------------------------#
 
     # function that does all operations that are required after comrad is fully loaded
     def doOperationsAfterComradIsFullyLoaded(self):
@@ -366,7 +358,7 @@ class MyDisplay(CDisplay):
         if self.is_comrad_fully_loaded:
 
             # change the title of the app
-            self.app.main_window.setWindowTitle("rawBuf1_FFT - {}".format(self.current_device))
+            self.app.main_window.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
 
             # change the logo
             self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))

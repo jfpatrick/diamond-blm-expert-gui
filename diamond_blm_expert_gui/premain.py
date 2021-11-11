@@ -11,7 +11,7 @@
 
 from comrad import (CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap)
-from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication)
 from PyQt5.QtWidgets import (QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog)
 from PyQt5.Qt import QItemSelectionModel, QMenu
 
@@ -28,100 +28,18 @@ import json
 import numpy as np
 import shutil
 import faulthandler
+from general_utils import createCustomTempDir, getSystemTempDir
 
 ########################################################
 ########################################################
 
 # GLOBALS
 
+TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
-
-########################################################
-########################################################
-
-class MessageBoxProcessCommands(QWidget):
-
-    def __init__(self, parent=None):
-
-        QWidget.__init__(self, parent)
-
-        self.msgBox = QMessageBox(self)
-        self.msgBox.setWindowTitle("Title")
-        self.msgBox.setIcon(QMessageBox.Warning)
-        self.msgBox.setText("Start")
-        self.msgBox.show()
-
-        timer = QTimer(self)
-        timer.timeout.connect(self.onTimeout)
-        timer.start(1000)
-
-    def onTimeout(self):
-        self.msgBox.setText("datetime: {}".format(QDateTime.currentDateTime().toString()))
-
-
-class DialogProcessCommands(QDialog):
-
-    #----------------------------------------------#
-
-    def __init__(self, parent=None):
-
-        # save the parent
-        self.dialog_parent = parent
-
-        # inherit from QDialog
-        QDialog.__init__(self, parent)
-
-        # when you want to destroy the dialog set this to True
-        self._want_to_close = False
-
-        # set the window title and build the GUI
-        self.setWindowTitle("Processing")
-        self.buildCodeWidgets()
-
-        return
-
-    #----------------------------------------------#
-
-    # event for closing the window in a right way
-    def closeEvent(self, evnt):
-
-        # close event
-        if self._want_to_close:
-            super(DialogThreeColumnSet, self).closeEvent(evnt)
-        else:
-            evnt.ignore()
-            self.setVisible(False)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that builds the widgets that weren't initialized using the UI qt designer file
-    def buildCodeWidgets(self):
-
-        # resize the dialog window
-        self.resize(400, 200)
-
-        # vertical layout of the main form of the dialog
-        self.vertical_layout_main_dialog = QVBoxLayout(self)
-        self.vertical_layout_main_dialog.setObjectName("vertical_layout_main_dialog")
-        self.vertical_layout_main_dialog.setContentsMargins(6, 20, 6, 6)
-        self.vertical_layout_main_dialog.setSpacing(2)
-
-        # label
-        self.label_1 = QLabel(self)
-        self.label_1.setObjectName("label_1")
-        self.label_1.setAlignment(Qt.AlignCenter)
-        self.label_1.setText("{}".format("Process"))
-        # self.label_1.setMinimumSize(QSize(120, 24))
-        self.vertical_layout_main_dialog.addWidget(self.label_1)
-
-        return
-
-    #----------------------------------------------#
 
 ########################################################
 ########################################################
@@ -197,21 +115,24 @@ class GetWorkingDevicesThreadWorker(QObject):
             if verbose:
                 print("{} - Checking the availability of {}".format(UI_FILENAME, device))
 
-            # use an empty selector for LHC devices
-            if self.acc_dev_list[index_device] == "LHC":
-                selectorOverride = ""
-            # use SPS.USER.ALL for SPS devices
-            elif self.acc_dev_list[index_device] == "SPS":
-                selectorOverride = "SPS.USER.SFTPRO1"
-            # use an empty selector for the others
-            else:
-                selectorOverride = ""
+            # # use an empty selector for LHC devices
+            # if self.acc_dev_list[index_device] == "LHC":
+            #     selectorOverride = ""
+            # # use SPS.USER.ALL for SPS devices
+            # elif self.acc_dev_list[index_device] == "SPS":
+            #     selectorOverride = "SPS.USER.SFTPRO1"
+            # # use an empty selector for the others
+            # else:
+            #     selectorOverride = ""
+
+            # use empty selector for GeneralInformation
+            selectorOverride = ""
 
             # try out if japc returns an error or not
             try:
 
                 # try to acquire the data from pyjapc
-                all_data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(device, "Capture", "rawBuf0"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
+                all_data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(device, "GeneralInformation", "AutoGain"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
 
             # in case we get an exception, don't add the device to the working list
             except self.cern.japc.core.ParameterException as xcp:
@@ -264,11 +185,14 @@ class MyDisplay(CDisplay):
         # use faulthandler to debug segmentation faults
         # faulthandler.enable()
 
+        # create the temporary directory to store all the aux variables
+        self.app_temp_dir = createCustomTempDir(TEMP_DIR_NAME)
+
         # init last index
         self.last_index_tree_view = 0
 
         # obtain all info about the devices via pyccda
-        self.pyccda_dictionary = create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", verbose = False)
+        self.pyccda_dictionary = create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_config.json", dir_json = self.app_temp_dir, verbose = False)
 
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
@@ -316,14 +240,6 @@ class MyDisplay(CDisplay):
 
         # get the devices that work
         self.getWorkingDevices(verbose = True)
-
-        # remove the open device aux txt at startup
-        if os.path.exists(SAVING_PATH + "/aux_txts/open_new_device.txt"):
-            os.remove(SAVING_PATH + "/aux_txts/open_new_device.txt")
-
-        # remove the freeze txt at startup
-        if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
-            os.remove(SAVING_PATH + "/aux_txts/freeze.txt")
 
         # load the gui and set the title,
         print("{} - Loading the GUI file...".format(UI_FILENAME))
@@ -718,21 +634,24 @@ class MyDisplay(CDisplay):
             if verbose:
                 print("{} - Checking the availability of {}".format(UI_FILENAME, device))
 
-            # use an empty selector for LHC devices
-            if self.acc_dev_list[index_device] == "LHC":
-                selectorOverride = ""
-            # use SPS.USER.ALL for SPS devices
-            elif self.acc_dev_list[index_device] == "SPS":
-                selectorOverride = "SPS.USER.SFTPRO1"
-            # use an empty selector for the others
-            else:
-                selectorOverride = ""
+            # # use an empty selector for LHC devices
+            # if self.acc_dev_list[index_device] == "LHC":
+            #     selectorOverride = ""
+            # # use SPS.USER.ALL for SPS devices
+            # elif self.acc_dev_list[index_device] == "SPS":
+            #     selectorOverride = "SPS.USER.SFTPRO1"
+            # # use an empty selector for the others
+            # else:
+            #     selectorOverride = ""
+
+            # use empty selector for GeneralInformation
+            selectorOverride = ""
 
             # try out if japc returns an error or not
             try:
 
                 # try to acquire the data from pyjapc
-                all_data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(device, "Capture", "rawBuf0"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
+                all_data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(device, "GeneralInformation", "AutoGain"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
 
             # in case we get an exception, don't add the device to the working list
             except self.cern.japc.core.ParameterException as xcp:
@@ -1085,20 +1004,20 @@ class MyDisplay(CDisplay):
     def isOpenDevicePushButtonPressed(self):
 
         # check if txt exists
-        if os.path.exists(SAVING_PATH + "/aux_txts/open_new_device.txt"):
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "open_new_device.txt")):
 
             # init the boolean
             wasTheButtonPressed = "False"
 
             # open it
-            with open(SAVING_PATH + "/aux_txts/open_new_device.txt", "r") as f:
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "open_new_device.txt"), "r") as f:
                 wasTheButtonPressed = f.read()
 
             # if the button was pressed then open the device panel
             if wasTheButtonPressed == "True":
 
                 # remove the file because we already know we have to open the device
-                os.remove(SAVING_PATH + "/aux_txts/open_new_device.txt")
+                os.remove(os.path.join(self.app_temp_dir, "aux_txts", "open_new_device.txt"))
 
                 # status bar message
                 self.app.main_window.statusBar().showMessage("Loading device window...", 0)
@@ -1128,11 +1047,11 @@ class MyDisplay(CDisplay):
     def writeSelectorIntoTxt(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write the selector
-        with open(SAVING_PATH + "/aux_txts/current_selector.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "current_selector.txt"), "w") as f:
             f.write(str(self.current_selector))
 
         return
@@ -1146,28 +1065,28 @@ class MyDisplay(CDisplay):
         acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == acc_name])
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write the current device
-        with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt"), "w") as f:
             f.write(str(self.current_device))
 
         # write the current accelerator
-        with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator_premain.txt"), "w") as f:
             f.write(str(acc_name))
 
         # write the exception of the current device
-        with open(SAVING_PATH + "/aux_txts/exception_premain.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "exception_premain.txt"), "w") as f:
             f.write("{}\n".format(self.exception_dict[str(self.current_device)]))
 
         # write the file: device_list_premain
-        with open(SAVING_PATH + "/aux_txts/device_list_premain.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "device_list_premain.txt"), "w") as f:
             for dev in acc_device_list:
                 f.write("{}\n".format(dev))
 
         # write the file: working_devices_premain
-        with open(SAVING_PATH + "/aux_txts/working_devices_premain.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "working_devices_premain.txt"), "w") as f:
             for dev in self.working_devices:
                 f.write("{}\n".format(dev))
 
@@ -1179,22 +1098,22 @@ class MyDisplay(CDisplay):
     def sendFreezeText(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # if it is pressed
         if self.toolButton_freeze.isChecked():
 
             # write the file
-            with open(SAVING_PATH + "/aux_txts/freeze.txt", "w") as f:
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt"), "w") as f:
                 f.write("True")
 
         # if it is not pressed
         else:
 
             # remove the freeze txt
-            if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
-                os.remove(SAVING_PATH + "/aux_txts/freeze.txt")
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt")):
+                os.remove(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt"))
 
         return
 

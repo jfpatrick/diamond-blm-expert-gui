@@ -20,12 +20,14 @@ import sys
 import os
 from time import sleep
 import pyjapc
+from general_utils import createCustomTempDir, getSystemTempDir
 
 ########################################################
 ########################################################
 
 # GLOBALS
 
+TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "preview_one_device.ui"
 
@@ -45,6 +47,9 @@ class MyDisplay(CDisplay):
 
     # init function
     def __init__(self, *args, **kwargs):
+
+        # get temp dir
+        self.app_temp_dir = os.path.join(getSystemTempDir(), TEMP_DIR_NAME)
 
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
@@ -227,11 +232,11 @@ class MyDisplay(CDisplay):
         print("{} - Button OPEN DEVICE pressed".format(UI_FILENAME))
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write the file
-        with open(SAVING_PATH + "/aux_txts/open_new_device.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "open_new_device.txt"), "w") as f:
             f.write("True")
 
         return
@@ -242,19 +247,20 @@ class MyDisplay(CDisplay):
     def LoadDeviceFromTxtPremain(self):
 
         # load the selected device
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_device_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "r") as f:
+
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt"), "r") as f:
                 self.current_device = f.read()
 
         # load the exception if any
         self.possible_exception = ""
-        if os.path.exists(SAVING_PATH + "/aux_txts/exception_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/exception_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "exception_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "exception_premain.txt"), "r") as f:
                 self.possible_exception = f.read()
 
         # load the working devices
-        if os.path.exists(SAVING_PATH + "/aux_txts/working_devices_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/working_devices_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "working_devices_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "working_devices_premain.txt"), "r") as f:
                 self.working_devices = []
                 for line in f:
                     self.working_devices.append(line.strip())

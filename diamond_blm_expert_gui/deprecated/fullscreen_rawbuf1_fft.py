@@ -148,12 +148,8 @@ class MyDisplay(CDisplay):
         # checkbox for peaks signal
         self.checkBox_one.stateChanged.connect(self.updatePeaks)
 
-        # disable buttons until reception of data
-        self.checkBox_one.setEnabled(False)
-
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture_FFT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCaptureFFT)
@@ -273,9 +269,6 @@ class MyDisplay(CDisplay):
         # update first plot boolean
         self.bufferFirstPlotsPainted = True
 
-        # enable buttons
-        self.checkBox_one.setEnabled(True)
-
         return
 
     #----------------------------------------------#
@@ -332,17 +325,16 @@ class MyDisplay(CDisplay):
         if self.sync_wrt_main:
 
             # read fft boolean
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt")):
-                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"), "r") as f:
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt")):
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt"), "r") as f:
                     self.is_fft_plotted_in_the_main_window = f.read()
 
             # call plot function if fft is plotted in the main window and we received the data
             if self.is_fft_plotted_in_the_main_window == "True":
 
                 # set the txt to false
-                if self.bufferFirstPlotsPainted:
-                    with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"), "w") as f:
-                        f.write("False")
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted.txt"), "w") as f:
+                    f.write("False")
 
                 # call the plot function
                 if self.data_save:

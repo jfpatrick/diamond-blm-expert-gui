@@ -27,12 +27,14 @@ import json
 import math
 import numpy as np
 from time import sleep
+from general_utils import createCustomTempDir, getSystemTempDir
 
 ########################################################
 ########################################################
 
 # GLOBALS
 
+TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "main_auto.ui"
 CAPTURE_TAB = True
@@ -53,6 +55,19 @@ class MyDisplay(CDisplay):
 
     # init function
     def __init__(self, *args, **kwargs):
+
+        # get temp dir
+        self.app_temp_dir = os.path.join(getSystemTempDir(), TEMP_DIR_NAME)
+
+        # clean up
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt")):
+            os.remove(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"))
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_1.txt")):
+            os.remove(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_1.txt"))
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_0.txt")):
+            os.remove(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_0.txt"))
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt")):
+            os.remove(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"))
 
         # write boolean for fullscreens
         self.writeAuxFFTFileForFullscreen(is_fft_plotted = False)
@@ -147,7 +162,7 @@ class MyDisplay(CDisplay):
         self.setChannels()
 
         # status bar message
-        self.app.main_window.statusBar().showMessage("Device window loaded successfully!", 10*1000)
+        self.app.main_window.statusBar().showMessage("CaptureTab - Waiting to receive any data...", 0)
         self.app.main_window.statusBar().repaint()
 
         return
@@ -667,6 +682,16 @@ class MyDisplay(CDisplay):
         self.CRelatedDisplayButton_rawBuf0_FFT.clicked.connect(self.writeDeviceIntoTxtForFullScreen)
         self.CRelatedDisplayButton_rawBuf1_FFT.clicked.connect(self.writeDeviceIntoTxtForFullScreen)
 
+        # disable stuff
+        self.checkBox_turns_0.setEnabled(False)
+        self.checkBox_turns_1.setEnabled(False)
+        self.checkBox_peaks_0.setEnabled(False)
+        self.checkBox_peaks_1.setEnabled(False)
+        self.CRelatedDisplayButton_rawBuf0.setEnabled(False)
+        self.CRelatedDisplayButton_rawBuf1.setEnabled(False)
+        self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(False)
+        self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(False)
+
         # selector signal
         self.app.main_window.window_context.selectorChanged.connect(self.selectorWasChanged)
 
@@ -833,7 +858,7 @@ class MyDisplay(CDisplay):
 
         # if the arrays are empty just show a message and return
         if data['rawBuf0'].size == 0 or data['rawBuf1'].size == 0:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Buffers are empty..", 0)
+            self.app.main_window.statusBar().showMessage("CaptureTab - Data was received but buffers are empty...", 0)
             self.app.main_window.statusBar().repaint()
             return
 
@@ -887,11 +912,6 @@ class MyDisplay(CDisplay):
         # boolean to see if we should only plot the buffer (not the FFT)
         plotOnlyBuffer = False
 
-        # status bar message
-        if not self.firstTimeCapture:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for the device to send new data...", 0)
-            self.app.main_window.statusBar().repaint()
-
         # freeze condition (and freeze in case we are not in the capture tab)
         if (not self.freeze_everything) and self.current_tab_name == "Capture":
 
@@ -913,8 +933,9 @@ class MyDisplay(CDisplay):
                             if np.array_equal(self.current_data_rawBuffer0_FFT, self.data_rawBuffer0_FFT) and np.array_equal(self.current_data_rawBuffer1_FFT, self.data_rawBuffer1_FFT):
                                 return
                         if self.bufferFirstPlotsPainted:
-                            if np.array_equal(self.data_rawBuf0, self.current_data_rawBuf0) and np.array_equal(self.data_rawBuf1, self.current_data_rawBuf1):
-                                return
+                            if self.bufferUcapFirstPlotsPainted:
+                                if np.array_equal(self.data_rawBuf0, self.current_data_rawBuf0) and np.array_equal(self.data_rawBuf1, self.current_data_rawBuf1):
+                                    return
 
                         # status bar message
                         self.app.main_window.statusBar().showMessage("CaptureTab - Received synced data from both UCAP and the device!", 0)
@@ -1041,6 +1062,16 @@ class MyDisplay(CDisplay):
                         self.writeAuxFFTFileForFullscreen(is_fft_plotted = True)
                         self.writeAuxBufferFileForFullscreen(is_buffer_plotted = True)
 
+                        # enable / disable fullscreens
+                        self.CRelatedDisplayButton_rawBuf0.setEnabled(True)
+                        self.CRelatedDisplayButton_rawBuf1.setEnabled(True)
+                        self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(True)
+                        self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(True)
+                        self.checkBox_turns_0.setEnabled(True)
+                        self.checkBox_turns_1.setEnabled(True)
+                        self.checkBox_peaks_0.setEnabled(True)
+                        self.checkBox_peaks_1.setEnabled(True)
+
                         # status bar message
                         self.app.main_window.statusBar().showMessage("CaptureTab - Buffer and FFT plotted succesfully!", 15*1000)
                         self.app.main_window.statusBar().repaint()
@@ -1061,17 +1092,17 @@ class MyDisplay(CDisplay):
             if plotOnlyBuffer:
 
                 # status bar message
-                self.app.main_window.statusBar().showMessage("CaptureTab - Waiting for UCAP to send new data...", 0)
+                self.app.main_window.statusBar().showMessage("CaptureTab - Raw data was received! Waiting for UCAP to send FFT new data...", 0)
                 self.app.main_window.statusBar().repaint()
+
+                # disable the timer
+                if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == True:
+                    self.timer_keep_calling_capture_function_until_stamps_are_the_same.stop()
 
                 # do not plot if data is just the same
                 if self.bufferFirstPlotsPainted:
                     if np.array_equal(self.data_rawBuf0, self.current_data_rawBuf0) and np.array_equal(self.data_rawBuf1, self.current_data_rawBuf1):
                         return
-
-                # disable the timer
-                if self.timer_keep_calling_capture_function_until_stamps_are_the_same.isActive() == True:
-                    self.timer_keep_calling_capture_function_until_stamps_are_the_same.stop()
 
                 # get the time vector in microseconds only one time
                 if self.compute_time_vector_first_time:
@@ -1153,6 +1184,16 @@ class MyDisplay(CDisplay):
                 self.writeAuxFFTFileForFullscreen(is_fft_plotted = False)
                 self.writeAuxBufferFileForFullscreen(is_buffer_plotted = True)
 
+                # enable / disable fullscreens
+                self.CRelatedDisplayButton_rawBuf0.setEnabled(True)
+                self.CRelatedDisplayButton_rawBuf1.setEnabled(True)
+                self.CRelatedDisplayButton_rawBuf0_FFT.setEnabled(False)
+                self.CRelatedDisplayButton_rawBuf1_FFT.setEnabled(False)
+                self.checkBox_turns_0.setEnabled(True)
+                self.checkBox_turns_1.setEnabled(True)
+                self.checkBox_peaks_0.setEnabled(False)
+                self.checkBox_peaks_1.setEnabled(False)
+
         return
 
     #----------------------------------------------#
@@ -1162,7 +1203,7 @@ class MyDisplay(CDisplay):
 
         # if the arrays are empty just show a message and return
         if data['rawBuffer0_FFT'].size == 0 or data['rawBuffer1_FFT'].size == 0:
-            self.app.main_window.statusBar().showMessage("CaptureTab - Buffers are empty..", 0)
+            self.app.main_window.statusBar().showMessage("CaptureTab - Data was received but buffers are empty...", 0)
             self.app.main_window.statusBar().repaint()
             return
 
@@ -1255,8 +1296,8 @@ class MyDisplay(CDisplay):
     def readPyCCDAJsonFile(self):
 
         # read pyccda info file
-        if os.path.exists(SAVING_PATH + "/aux_jsons/pyccda_sps.json"):
-            with open(SAVING_PATH + "/aux_jsons/pyccda_sps.json") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")):
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")) as f:
                 self.pyccda_dictionary = json.load(f)
 
         return
@@ -1267,13 +1308,13 @@ class MyDisplay(CDisplay):
     def LoadDeviceFromTxtPremain(self):
 
         # read current device
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_device_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt"), "r") as f:
                 self.current_device = f.read()
 
         # read current accelerator
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator_premain.txt"), "r") as f:
                 self.current_accelerator = f.read()
 
         return
@@ -1284,12 +1325,18 @@ class MyDisplay(CDisplay):
     def writeDeviceIntoTxtForFullScreen(self):
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write the file
-        with open(SAVING_PATH + "/aux_txts/current_device.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device.txt"), "w") as f:
             f.write(str(self.current_device))
+
+        # write aux files to check if data is plotted in the main window
+        if self.bufferFirstPlotsPainted:
+            self.writeAuxBufferFileForFullscreen(is_buffer_plotted=True)
+        if self.bufferUcapFirstPlotsPainted:
+            self.writeAuxFFTFileForFullscreen(is_fft_plotted=True)
 
         return
 
@@ -1299,7 +1346,7 @@ class MyDisplay(CDisplay):
     def readFreezeFile(self):
 
         # check if we should freeze the plots
-        if os.path.exists(SAVING_PATH + "/aux_txts/freeze.txt"):
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt")):
             self.freeze_everything = True
         else:
             self.freeze_everything = False
@@ -1483,11 +1530,16 @@ class MyDisplay(CDisplay):
     def writeAuxFFTFileForFullscreen(self, is_fft_plotted = False):
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write file
-        with open(SAVING_PATH + "/aux_txts/is_fft_plotted.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_0.txt"), "w") as f:
+            if is_fft_plotted:
+                f.write("True")
+            else:
+                f.write("False")
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "is_fft_plotted_1.txt"), "w") as f:
             if is_fft_plotted:
                 f.write("True")
             else:
@@ -1501,11 +1553,16 @@ class MyDisplay(CDisplay):
     def writeAuxBufferFileForFullscreen(self, is_buffer_plotted = False):
 
         # create the dir in case it does not exist
-        if not os.path.exists(SAVING_PATH + "/aux_txts"):
-            os.mkdir(SAVING_PATH + "/aux_txts")
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_txts")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_txts"))
 
         # write file
-        with open(SAVING_PATH + "/aux_txts/is_buffer_plotted.txt", "w") as f:
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"), "w") as f:
+            if is_buffer_plotted:
+                f.write("True")
+            else:
+                f.write("False")
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_1.txt"), "w") as f:
             if is_buffer_plotted:
                 f.write("True")
             else:

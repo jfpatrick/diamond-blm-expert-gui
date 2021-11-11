@@ -30,7 +30,7 @@ from general_utils import createCustomTempDir, getSystemTempDir
 
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
-UI_FILENAME = "fullscreen_rawbuf0.ui"
+UI_FILENAME = "fullscreen_rawbuf1.ui"
 
 ########################################################
 ########################################################
@@ -96,7 +96,7 @@ class MyDisplay(CDisplay):
         # load the file
         print("{} - Loading the GUI file...".format(UI_FILENAME))
         super().__init__(*args, **kwargs)
-        self.setWindowTitle("rawBuf0 - {}".format(self.current_device))
+        self.setWindowTitle("rawBuf1 - {}".format(self.current_device))
 
         # build code widgets
         print("{} - Building the code-only widgets...".format(UI_FILENAME))
@@ -116,19 +116,19 @@ class MyDisplay(CDisplay):
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
 
-        # pyqtgraph plot for rabuf0
+        # pyqtgraph plot for rabuf1
         self.verticalLayout_Capture.removeItem(self.horizontalLayout)
-        self.plot_rawbuf0 = pg.PlotWidget(title="rawBuf0")
-        self.plot_rawbuf0.getPlotItem().enableAutoRange()
-        self.plot_rawbuf0.getPlotItem().setAutoVisible()
-        # self.plot_rawbuf0.getPlotItem().setMenuEnabled(enableMenu=False)
-        self.plot_rawbuf0.getPlotItem().showButtons()
-        self.plot_rawbuf0.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
-        self.plot_rawbuf0.getPlotItem().setClipToView(True)
-        self.plot_rawbuf0.setDownsampling(auto=True, mode="peak")
-        self.plot_rawbuf0.getPlotItem().setLabel(axis='left', text='amplitude')
-        self.plot_rawbuf0.getPlotItem().setLabel(axis='bottom', text='time (microseconds)')
-        self.verticalLayout_Capture.addWidget(self.plot_rawbuf0)
+        self.plot_rawbuf1 = pg.PlotWidget(title="rawBuf1")
+        self.plot_rawbuf1.getPlotItem().enableAutoRange()
+        self.plot_rawbuf1.getPlotItem().setAutoVisible()
+        # self.plot_rawbuf1.getPlotItem().setMenuEnabled(enableMenu=False)
+        self.plot_rawbuf1.getPlotItem().showButtons()
+        self.plot_rawbuf1.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
+        self.plot_rawbuf1.getPlotItem().setClipToView(True)
+        self.plot_rawbuf1.setDownsampling(auto=True, mode="peak")
+        self.plot_rawbuf1.getPlotItem().setLabel(axis='left', text='amplitude')
+        self.plot_rawbuf1.getPlotItem().setLabel(axis='bottom', text='time (microseconds)')
+        self.verticalLayout_Capture.addWidget(self.plot_rawbuf1)
         self.verticalLayout_Capture.addItem(self.horizontalLayout)
 
         # aggregator for Capture
@@ -154,13 +154,8 @@ class MyDisplay(CDisplay):
         # checkbox for flags 5 and 6
         self.checkBox_turn.stateChanged.connect(self.updateFlags_5_6)
 
-        # disable buttons until reception of data
-        self.checkBox_bunch.setEnabled(False)
-        self.checkBox_turn.setEnabled(False)
-
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCapture)
@@ -201,6 +196,7 @@ class MyDisplay(CDisplay):
                 self.auxReceiveDataFromCapture(self.data_save)
 
         return
+
 
     #----------------------------------------------#
 
@@ -260,44 +256,44 @@ class MyDisplay(CDisplay):
         # get the time vector in microseconds only one time
         if self.compute_time_vector_first_time:
             Fs = 0.65
-            self.time_vector = np.linspace(0, (len(self.data_rawBuf0) - 1) * (1 / (Fs * 1000)), num=len(self.data_rawBuf0))
+            self.time_vector = np.linspace(0, (len(self.data_rawBuf1) - 1) * (1 / (Fs * 1000)), num=len(self.data_rawBuf1))
             self.compute_time_vector_first_time = False
 
-        # get only bunch flags (1 and 2) for buf0
-        idx_flags_one_two = np.where((self.data_rawBufFlags0 == 1) | (self.data_rawBufFlags0 == 2))[0]
-        flags_one_two = np.zeros(self.data_rawBufFlags0.shape)
+        # get only bunch flags (1 and 2) for buf1
+        idx_flags_one_two = np.where((self.data_rawBufFlags1 == 1) | (self.data_rawBufFlags1 == 2))[0]
+        flags_one_two = np.zeros(self.data_rawBufFlags1.shape)
         flags_one_two[idx_flags_one_two] = 1
 
-        # get only turn flags (5 and 6) for buf0
-        idx_flags_five_six = np.where((self.data_rawBufFlags0 == 5) | (self.data_rawBufFlags0 == 6))[0]
-        flags_five_six = np.zeros(self.data_rawBufFlags0.shape)
+        # get only turn flags (5 and 6) for buf1
+        idx_flags_five_six = np.where((self.data_rawBufFlags1 == 5) | (self.data_rawBufFlags1 == 6))[0]
+        flags_five_six = np.zeros(self.data_rawBufFlags1.shape)
         flags_five_six[idx_flags_five_six] = 1
 
         # line equation parameters
         offset_for_timestamps = 0
-        y_1 = np.min(self.data_rawBuf0) - offset_for_timestamps
-        y_2 = np.max(self.data_rawBuf0) + offset_for_timestamps
+        y_1 = np.min(self.data_rawBuf1) - offset_for_timestamps
+        y_2 = np.max(self.data_rawBuf1) + offset_for_timestamps
         x_1 = 0
         x_2 = 1
-        self.data_turn_line_eq_params_0 = [float(x_1), float(x_2), float(y_1), float(y_2)]
+        self.data_turn_line_eq_params_1 = [float(x_1), float(x_2), float(y_1), float(y_2)]
 
-        # re-scale the flags0 curve
-        self.flags_bunch0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
-                            self.data_turn_line_eq_params_0[1]) * flags_one_two + self.data_turn_line_eq_params_0[2]
-        self.flags_turn0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
-                            self.data_turn_line_eq_params_0[1]) * flags_five_six + self.data_turn_line_eq_params_0[2]
+        # re-scale the flags1 curve
+        self.flags_bunch1 = ((self.data_turn_line_eq_params_1[3] - self.data_turn_line_eq_params_1[2]) /
+                            self.data_turn_line_eq_params_1[1]) * flags_one_two + self.data_turn_line_eq_params_1[2]
+        self.flags_turn1 = ((self.data_turn_line_eq_params_1[3] - self.data_turn_line_eq_params_1[2]) /
+                            self.data_turn_line_eq_params_1[1]) * flags_five_six + self.data_turn_line_eq_params_1[2]
 
         # freeze condition
         if not self.freeze_everything:
 
-            # plot the data for buf0
-            self.plot_rawbuf0.getPlotItem().clear()
-            if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-            if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
-            self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
-            self.plot_rawbuf0.show()
+            # plot the data for buf1
+            self.plot_rawbuf1.getPlotItem().clear()
+            if self.flags_bunch1.size != 0 and self.is_bunch1_checked:
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_bunch1, pen=QColor("#EF476F"), name="rawBuf1_bunch_flags")
+            if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+            self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+            self.plot_rawbuf1.show()
 
             # set cycle information
             self.CLabel_acqStamp_Capture.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp))
@@ -305,10 +301,6 @@ class MyDisplay(CDisplay):
 
         # update first plot boolean
         self.bufferFirstPlotsPainted = True
-
-        # enable buttons
-        self.checkBox_bunch.setEnabled(True)
-        self.checkBox_turn.setEnabled(True)
 
         return
 
@@ -329,40 +321,40 @@ class MyDisplay(CDisplay):
     def updateFlags_1_2(self, state):
 
         # reset clip to view to avoid errors
-        self.plot_rawbuf0.getPlotItem().setClipToView(False)
+        self.plot_rawbuf1.getPlotItem().setClipToView(False)
 
         # if the button is checked
         if state == Qt.Checked:
 
             # clear plot and add the new flags
-            print("{} - Bunchs0 button checked...".format(UI_FILENAME))
+            print("{} - Bunchs1 button checked...".format(UI_FILENAME))
             self.current_flags_dict["1,2"] = True
-            self.is_bunch0_checked = True
+            self.is_bunch1_checked = True
             if self.bufferFirstPlotsPainted:
-                self.plot_rawbuf0.getPlotItem().clear()
-                if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-                if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
-                self.plot_rawbuf0.show()
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.flags_bunch1.size != 0 and self.is_bunch1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_bunch1, pen=QColor("#EF476F"), name="rawBuf1_bunch_flags")
+                if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
 
         # if not
         else:
 
             # remove the flags
-            print("{} - Bunchs0 button unchecked...".format(UI_FILENAME))
+            print("{} - Bunchs1 button unchecked...".format(UI_FILENAME))
             self.current_flags_dict["1,2"] = False
-            self.is_bunch0_checked = False
+            self.is_bunch1_checked = False
             if self.bufferFirstPlotsPainted:
-                self.plot_rawbuf0.getPlotItem().clear()
-                if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
-                self.plot_rawbuf0.show()
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
 
         # reset clip to view to avoid errors
-        self.plot_rawbuf0.plotItem.setClipToView(True)
+        self.plot_rawbuf1.plotItem.setClipToView(True)
 
         return
 
@@ -372,39 +364,39 @@ class MyDisplay(CDisplay):
     def updateFlags_5_6(self, state):
 
         # reset clip to view to avoid errors
-        self.plot_rawbuf0.getPlotItem().setClipToView(False)
+        self.plot_rawbuf1.getPlotItem().setClipToView(False)
 
         # if the button is checked
         if state == Qt.Checked:
 
             # clear plot and add the new flags
-            print("{} - Turns0 button checked...".format(UI_FILENAME))
+            print("{} - Turns1 button checked...".format(UI_FILENAME))
             self.current_flags_dict["5,6"] = True
-            self.is_turn0_checked = True
+            self.is_turn1_checked = True
             if self.bufferFirstPlotsPainted:
-                self.plot_rawbuf0.getPlotItem().clear()
-                if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-                if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
-                self.plot_rawbuf0.show()
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.flags_bunch1.size != 0 and self.is_bunch1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_bunch1, pen=QColor("#EF476F"), name="rawBuf1_bunch_flags")
+                if self.flags_turn1.size != 0 and self.is_turn1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
 
         else:
 
             # remove the flags
-            print("{} - Turns0 button unchecked...".format(UI_FILENAME))
+            print("{} - Turns1 button unchecked...".format(UI_FILENAME))
             self.current_flags_dict["5,6"] = False
-            self.is_turn0_checked = False
-            self.plot_rawbuf0.getPlotItem().clear()
+            self.is_turn1_checked = False
+            self.plot_rawbuf1.getPlotItem().clear()
             if self.bufferFirstPlotsPainted:
-                if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
-                self.plot_rawbuf0.show()
+                if self.flags_bunch1.size != 0 and self.is_bunch1_checked:
+                    self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_bunch1, pen=QColor("#EF476F"), name="rawBuf1_bunch_flags")
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.plot_rawbuf1.show()
 
         # reset clip to view to avoid errors
-        self.plot_rawbuf0.plotItem.setClipToView(True)
+        self.plot_rawbuf1.plotItem.setClipToView(True)
 
         return
 
@@ -417,17 +409,16 @@ class MyDisplay(CDisplay):
         if self.sync_wrt_main:
 
             # read buffer boolean
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt")):
-                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"), "r") as f:
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt")):
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt"), "r") as f:
                     self.is_buffer_plotted_in_the_main_window = f.read()
 
             # call plot function if buffer is plotted in the main window and we received the data
             if self.is_buffer_plotted_in_the_main_window == "True":
 
                 # set the txt to false
-                if self.bufferFirstPlotsPainted:
-                    with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted_0.txt"), "w") as f:
-                        f.write("False")
+                with open(os.path.join(self.app_temp_dir, "aux_txts", "is_buffer_plotted.txt"), "w") as f:
+                    f.write("False")
 
                 # call the plot function
                 if self.data_save:
@@ -451,7 +442,7 @@ class MyDisplay(CDisplay):
         if self.is_comrad_fully_loaded:
 
             # change the title of the app
-            self.app.main_window.setWindowTitle("rawBuf0 - {}".format(self.current_device))
+            self.app.main_window.setWindowTitle("rawBuf1 - {}".format(self.current_device))
 
             # change the logo
             self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))

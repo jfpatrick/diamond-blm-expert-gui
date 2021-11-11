@@ -26,7 +26,7 @@ QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timin
 ########################################################
 
 # this function retrieves the list of devices and their property-field names for a given query
-def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", verbose = False):
+def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_config.json", dir_json = "", verbose = False):
 
     # the query instructions are here:
     # https://gitlab.cern.ch/controls-configuration-service/controls-configuration-data-api/accsoft-ccs-ccda/-/blob/dev/accsoft-ccs-pyccda/generator/docs/generate_query_ref.py
@@ -122,11 +122,11 @@ def create_pyccda_json_file(query = QUERY, name_json_file = "pyccda_sps.json", v
         pprint.pprint(output_dict)
 
     # create the saving dir in case it does not exist
-    if not os.path.exists(SAVING_PATH + "/aux_jsons"):
-        os.mkdir(SAVING_PATH + "/aux_jsons")
+    if not os.path.exists(os.path.join(dir_json, "aux_jsons")):
+        os.mkdir(os.path.join(dir_json, "aux_jsons"))
 
     # store the json file
-    with open(SAVING_PATH + "/aux_jsons/{}".format(name_json_file), 'w') as fp:
+    with open(os.path.join(dir_json, "aux_jsons", name_json_file), 'w') as fp:
         json.dump(output_dict, fp, sort_keys=True, indent=4)
 
     return output_dict

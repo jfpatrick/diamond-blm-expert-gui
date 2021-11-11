@@ -21,12 +21,14 @@ import os
 from time import sleep
 import pyjapc
 import json
+from general_utils import createCustomTempDir, getSystemTempDir
 
 ########################################################
 ########################################################
 
 # GLOBALS
 
+TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "settings_dialog_auto.ui"
 SHOW_COMMANDS_IN_SETTINGS = False
@@ -561,6 +563,9 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # get temp dir
+        self.app_temp_dir = os.path.join(getSystemTempDir(), TEMP_DIR_NAME)
+
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
 
@@ -993,8 +998,8 @@ class MyDisplay(CDisplay):
     def LoadSelector(self):
 
         # read current device
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_selector.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_selector.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_selector.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_selector.txt"), "r") as f:
                 self.current_selector = f.read()
 
         return
@@ -1005,13 +1010,13 @@ class MyDisplay(CDisplay):
     def LoadDeviceFromTxtPremain(self):
 
         # read current device
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_device_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_device_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device_premain.txt"), "r") as f:
                 self.current_device = f.read()
 
         # read current accelerator
-        if os.path.exists(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt"):
-            with open(SAVING_PATH + "/aux_txts/current_accelerator_premain.txt", "r") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator_premain.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator_premain.txt"), "r") as f:
                 self.current_accelerator = f.read()
 
         return
@@ -1022,8 +1027,8 @@ class MyDisplay(CDisplay):
     def readPyCCDAJsonFile(self):
 
         # read pyccda info file
-        if os.path.exists(SAVING_PATH + "/aux_jsons/pyccda_sps.json"):
-            with open(SAVING_PATH + "/aux_jsons/pyccda_sps.json") as f:
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")):
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")) as f:
                 self.pyccda_dictionary = json.load(f)
 
         return
