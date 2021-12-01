@@ -11,7 +11,7 @@
 
 from comrad import (CApplication, CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QRect, QAbstractTableModel, QEventLoop, QCoreApplication, QTimer)
+from PyQt5.QtCore import (QSize, Qt, QRect, QAbstractTableModel, QEventLoop, QCoreApplication)
 from PyQt5.QtWidgets import (QTableView, QSizePolicy, QAbstractItemView, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QFrame, QWidget, QProgressDialog)
 
 # OTHER IMPORTS
@@ -24,8 +24,6 @@ import numpy as np
 from general_utils import createCustomTempDir, getSystemTempDir
 import jpype as jp
 import json
-from datetime import datetime, timedelta, timezone
-from copy import deepcopy
 
 ########################################################
 ########################################################
@@ -35,7 +33,7 @@ from copy import deepcopy
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "preview_summary.ui"
-ACCEPTANCE_FACTOR = 2.00
+ACCEPTANCE_FACTOR = 1.50
 TURN_TIME_LHC = 89.0000 # microseconds
 TURN_TIME_SPS = 23.0543 # microseconds
 
@@ -44,13 +42,14 @@ TURN_TIME_SPS = 23.0543 # microseconds
 
 class TableModel(QAbstractTableModel):
 
-    def __init__(self, data, header_labels_horizontal, header_labels_vertical, error_dict={}):
+    def __init__(self, data, header_labels_horizontal, header_labels_vertical, errors = [], error_messages = []):
 
         super(TableModel, self).__init__()
         self._data = data
         self._header_labels_horizontal = header_labels_horizontal
         self._header_labels_vertical = header_labels_vertical
-        self.error_dict = error_dict
+        self.errors = errors
+        self.error_messages = error_messages
 
         return
 
@@ -72,14 +71,14 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             value = self._data[row][col]
             return value
-        elif role == Qt.ToolTipRole and self.error_dict[row][col] != "":
-            return self.error_dict[row][col]
-        elif role == Qt.ForegroundRole and self.error_dict[row][col] != "":
+        elif role == Qt.ToolTipRole and (row, col) in self.errors and self.error_messages[row]:
+            return self.error_messages[row]
+        elif role == Qt.ForegroundRole and (row, col) in self.errors:
             if self._data[row][col] == "-":
                 return QBrush(QColor("red"))
             else:
                 return QBrush(QColor("#FF6C00"))
-        elif role == Qt.BackgroundRole and self.error_dict[row][col] != "":
+        elif role == Qt.BackgroundRole and (row, col) in self.errors:
             if self._data[row][col] == "-":
                 return QBrush(QColor("#FFE2E2"))
             else:
@@ -208,7 +207,19 @@ class MyDisplay(CDisplay):
 
         # init model data list of lists
         self.summary_data = []
-        self.error_dict = {}
+        self.error_indexes = []
+        self.error_messages = []
+
+        # selectorOverride for the working modules table has to be a specific selector
+        # use an empty selector for LHC devices
+        if self.current_accelerator == "LHC":
+            selectorOverride = ""
+        # use SPS.USER.ALL for SPS devices
+        elif self.current_accelerator == "SPS":
+            selectorOverride = "SPS.USER.SFTPRO1"
+        # use an empty selector for the others
+        else:
+            selectorOverride = ""
 
         # counter for the dialog progress bar
         dialog_counter = 0
@@ -219,9 +230,6 @@ class MyDisplay(CDisplay):
             # init row list
             row_list = []
 
-            # init error dict for that row
-            self.error_dict[r] = {}
-
             # operate as a field
             if r < len(self.field_list):
 
@@ -230,7 +238,6 @@ class MyDisplay(CDisplay):
 
                 # append first element which is the field / mode
                 row_list.append(str(field))
-                self.error_dict[r][0] = ""
 
                 # iterate over devices
                 for c, device in enumerate(self.device_list):
@@ -245,7 +252,6 @@ class MyDisplay(CDisplay):
                         try:
                             field_value = self.japc.getParam("{}/{}#{}".format(device, "GeneralInformation", field), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
                             row_list.append(str(field_value))
-                            self.error_dict[r][c+1] = ""
                         except:
                             pass
 
@@ -254,7 +260,8 @@ class MyDisplay(CDisplay):
 
                         # update the list with null information
                         row_list.append("-")
-                        self.error_dict[r][c+1] = ""
+                        self.error_indexes.append((r, c + 1))
+                        self.error_messages.append("")
 
             # operate as a mode
             else:
@@ -266,9 +273,36 @@ class MyDisplay(CDisplay):
                 if property == "GeneralInformation":
                     continue
 
+                # get nturns
+                try:
+
+                    # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
+                    # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
+                    if property == "AcquisitionHistogram":
+                        nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                    elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
+                        nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                    elif property == "AcquisitionTurnLoss":
+                        nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                    elif property == "Capture":
+                        pass
+                    else:
+                        print("{} - Error (unknown property {})".format(UI_FILENAME, property))
+                    if self.current_accelerator == "LHC":
+                        turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
+                    elif self.current_accelerator == "SPS":
+                        turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
+                    else:
+                        turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
+
+                # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
+                except:
+
+                    # pass
+                    pass
+
                 # append first element which is the field / mode
                 row_list.append(str(property))
-                self.error_dict[r][0] = ""
 
                 # iterate over devices
                 for c, device in enumerate(self.device_list):
@@ -281,127 +315,22 @@ class MyDisplay(CDisplay):
                     # if the device IS working
                     if device in self.working_devices:
 
-                        # selectorOverride for the working modules table has to be a specific selector
-                        # use an empty selector for LHC devices
-                        if self.current_accelerator == "LHC":
-                            selectorOverride = ""
-                        # use SPS.USER.ALL for SPS devices
-                        elif self.current_accelerator == "SPS":
-                            selectorOverride = "SPS.USER.SFTPRO1"
-                        # use an empty selector for the others
-                        else:
-                            selectorOverride = ""
-
-                        # get nturns
-                        try:
-
-                            # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
-                            # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
-                            if property == "AcquisitionHistogram":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossHistogramSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossIntegralSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "AcquisitionTurnLoss":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["TurnLossMeasurementSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "Capture":
-                                pass
-                            else:
-                                print("{} - Error (unknown property {})".format(UI_FILENAME, property))
-                            if self.current_accelerator == "LHC":
-                                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-                            elif self.current_accelerator == "SPS":
-                                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-                            else:
-                                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-
-                        # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
-                        except Exception as xcp:
-
-                            # pass and print exception
-                            print(xcp)
-                            pass
-
-                        # selectorOverride for the working modules table has to be a specific selector
-                        # use an empty selector for LHC devices
-                        if self.current_accelerator == "LHC":
-                            selectorOverride = ""
-                        # use SPS.USER.ALL for SPS devices
-                        elif self.current_accelerator == "SPS":
-                            selectorOverride = "SPS.USER.SFTPRO1"
-                        # use an empty selector for the others
-                        else:
-                            selectorOverride = ""
-
                         # do a GET request via japc
                         try:
-
-                            # get the fields
                             field_values = self.japc.getParam("{}/{}".format(device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
-
-                            # get timestamps
-                            get_ts = field_values[1]["acqStamp"]
-                            current_ts = datetime.now(timezone.utc)
-
-                            # for the capture do not care about timestamps
-                            if property == "Capture":
-
-                                # if the buffer is not empty
-                                if field_values[0]["rawBuf0"].size > 0:
-
-                                    # if the try did not give an error then it is working
-                                    row_list.append(str(field_values[1]["acqStamp"]))
-                                    self.error_dict[r][c + 1] = ""
-
-                                # if buffers are empty show a custom error
-                                else:
-
-                                    # BUFFERS_ARE_EMPTY
-                                    row_list.append("BUFFERS_ARE_EMPTY")
-                                    self.error_dict[r][c + 1] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
-
-                            # for the others we should care about timestamps
-                            else:
-
-                                # show a custom error if nturns is 0
-                                if nturns == 0:
-
-                                    # NTURNS_IS_ZERO
-                                    row_list.append("NTURNS_IS_ZERO")
-                                    self.error_dict[r][c + 1] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-                                # normal procedure
-                                else:
-
-                                    # compare timestamps
-                                    if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-                                        row_list.append("MODE_BEING_ANALYZED")
-                                        self.error_dict[r][c + 1] = "custom.message.error: MODE_BEING_ANALYZED: The mode {} is still being analyzed in a different thread. Wait a few seconds until a decision about its availability is made.".format(property)
-                                    else:
-                                        row_list.append("TS_TOO_OLD")
-                                        self.error_dict[r][c + 1] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-                        # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
+                            row_list.append(str(field_values[1]["acqStamp"]))
                         except self.cern.japc.core.ParameterException as xcp:
-
-                            # NO_DATA_AVAILABLE_FOR_USER
                             row_list.append(str(xcp.getMessage()).split(":")[0])
-                            self.error_dict[r][c + 1] = str(xcp)
+                            self.error_indexes.append((r, c + 1))
+                            self.error_messages.append(str(xcp))
 
                     # if the device IS not working
                     else:
 
                         # update the list with null information
                         row_list.append("-")
-                        self.error_dict[r][c + 1] = ""
+                        self.error_indexes.append((r, c + 1))
+                        self.error_messages.append("")
 
                     # update dialog counter
                     dialog_counter += 1
@@ -413,7 +342,7 @@ class MyDisplay(CDisplay):
         self.summary_header_labels_horizontal = ["Field / Mode"] + self.device_list
 
         # summary model
-        self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
+        self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], errors=self.error_indexes, error_messages=self.error_messages)
         self.tableView_summary.setModel(self.model_summary)
         self.tableView_summary.update()
         self.tableView_summary.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
@@ -437,129 +366,6 @@ class MyDisplay(CDisplay):
 
         # nothing to do here
         pass
-
-        # set up a timer to load the QThread premain updates
-        self.timer_load_txt_with_qthread_premain_updates = QTimer(self)
-        self.timer_load_txt_with_qthread_premain_updates.setInterval(1000)
-        self.timer_load_txt_with_qthread_premain_updates.timeout.connect(self.updateWorkingModes)
-        self.timer_load_txt_with_qthread_premain_updates.start()
-
-        return
-
-    #----------------------------------------------#
-
-    # function that updates the working modes
-    def updateWorkingModes(self):
-
-        # init new variables
-        error_dict_new = {}
-        summary_data_new = []
-
-        # iterate over fields and properties
-        for r in range(0, len(self.field_list) + len(self.property_list)):
-
-            # init row list
-            row_list = []
-
-            # init error dict for that row
-            error_dict_new[r] = {}
-
-            # operate as a field
-            if r < len(self.field_list):
-
-                # declare the field
-                field = self.field_list[r]
-
-                # append first element which is the field / mode
-                row_list.append(str(field))
-                error_dict_new[r][0] = ""
-
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
-
-                    # if the device IS working
-                    if device in self.working_devices:
-
-                        # copy existing table fields
-                        field_value = self.summary_data[r][c+1]
-                        row_list.append(str(field_value))
-                        error_dict_new[r][c+1] = self.error_dict[r][c+1]
-
-                    # if the device IS not working
-                    else:
-
-                        # update the list with null information
-                        row_list.append("-")
-                        error_dict_new[r][c+1] = ""
-
-            # operate as a mode
-            else:
-
-                # declare the property
-                property = self.property_list[r - len(self.field_list)]
-
-                # skip general information property
-                if property == "GeneralInformation":
-                    continue
-
-                # append first element which is the field / mode
-                row_list.append(str(property))
-                error_dict_new[r][0] = ""
-
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
-
-                    # if the device IS working
-                    if device in self.working_devices:
-
-                        # check dirs exist
-                        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) and os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))):
-
-                            # load the new data
-                            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) as f:
-                                modules_data_new = json.load(f)
-                            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))) as f:
-                                errors_new = json.load(f)
-
-                            # update with new json values
-                            if property in modules_data_new.keys():
-                                row_list.append(modules_data_new[property])
-                                error_dict_new[r][c+1] = errors_new[property]
-                            else:
-                                row_list.append(self.summary_data[r][c+1])
-                                error_dict_new[r][c+1] = self.error_dict[r][c+1]
-
-                        # dont get value from json (get it from previous table)
-                        else:
-
-                            # copy existing table values
-                            row_list.append(self.summary_data[r][c+1])
-                            error_dict_new[r][c+1] = self.error_dict[r][c+1]
-
-                    # if the device IS not working
-                    else:
-
-                        # update the list with null information
-                        row_list.append("-")
-                        error_dict_new[r][c+1] = ""
-
-            # append the row to the full summary data
-            summary_data_new.append(row_list)
-
-        # if nothing changed just skip
-        if self.summary_data == summary_data_new:
-            return
-
-        # update variables
-        self.summary_data = deepcopy(summary_data_new)
-        self.error_dict = deepcopy(error_dict_new)
-        del summary_data_new
-        del error_dict_new
-
-        # update table
-        self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
-        self.tableView_summary.setModel(self.model_summary)
-        self.tableView_summary.update()
 
         return
 

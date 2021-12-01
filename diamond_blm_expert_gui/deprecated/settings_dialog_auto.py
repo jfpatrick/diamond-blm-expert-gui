@@ -10,9 +10,9 @@
 # COMRAD AND PYQT IMPORTS
 
 from comrad import (CApplication, CContextFrame, CApplication, CLineEdit, CLabel, CCommandButton, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
-from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QRect, QTimer, QAbstractTableModel)
-from PyQt5.QtWidgets import (QTableView, QSizePolicy, QTableWidget, QAbstractItemView, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QMessageBox, QFrame, QWidget)
+from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont)
+from PyQt5.QtCore import (QSize, Qt, QRect, QTimer)
+from PyQt5.QtWidgets import (QSizePolicy, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QMessageBox, QFrame, QWidget)
 
 # OTHER IMPORTS
 
@@ -42,67 +42,6 @@ def can_be_converted_to_float(value):
         float(value)
         return True
     except ValueError:
-        return False
-
-########################################################
-########################################################
-
-class TableModel(QAbstractTableModel):
-
-    def __init__(self, data, header_labels, titles_set_window = False, three_column_window = False):
-
-        super(TableModel, self).__init__()
-        self._data = data
-        self._header_labels = header_labels
-        self.titles_set_window = titles_set_window
-        self.three_column_window = three_column_window
-
-        return
-
-    def headerData(self, section, orientation, role):
-
-        if self._header_labels:
-            if role == Qt.DisplayRole:
-                if orientation == Qt.Horizontal:
-                    return self._header_labels[section]
-
-    def data(self, index, role):
-
-        row = index.row()
-        col = index.column()
-
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
-        elif role == Qt.DisplayRole or role == Qt.EditRole:
-            value = self._data[row][col]
-            return value
-        elif role == Qt.BackgroundRole:
-            if self.titles_set_window:
-                return QBrush(QColor("#d2d2d2"))
-            if self.three_column_window and col == 2:
-                return QBrush(QColor("#ffffff"))
-
-    def rowCount(self, index):
-
-        return len(self._data)
-
-    def columnCount(self, index):
-
-        return len(self._data[0])
-
-    def flags(self, index):
-
-        if index.column() == 2:
-            return Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable
-        else:
-            return Qt.ItemIsEnabled
-
-    def setData(self, index, value, role):
-
-        if role == Qt.EditRole and index.column() == 2:
-            self._data[index.row()][index.column()] = value
-            return True
-
         return False
 
 ########################################################
@@ -166,12 +105,9 @@ class DialogThreeColumnSet(QDialog):
         self.labelDict = {}
         self.lineEditDict = {}
         self.commandButtonDict = {}
-        self.tableViewDict = {}
-        self.dataTableModelDict = {}
-        self.dataModelDict = {}
 
         # resize the dialog window
-        self.resize(400, 800)
+        self.resize(1000, 800)
 
         # vertical layout of the main form of the dialog
         self.vertical_layout_main_dialog = QVBoxLayout(self)
@@ -316,43 +252,30 @@ class DialogThreeColumnSet(QDialog):
         self.horizontal_layout_groupBox_for_titles = QHBoxLayout(self.groupBox_for_titles)
         self.horizontal_layout_groupBox_for_titles.setObjectName("horizontal_layout_groupBox_for_titles")
 
-        # set table titles
-        self.tableViewDict["titles"] = QTableView(self.groupBox_for_titles)
-        self.tableViewDict["titles"].setStyleSheet("QTableView{\n"
-                                                   "    background-color: rgb(243, 243, 243);\n"
-                                                   "    margin-top: 0;\n"
-                                                   "}")
-        self.tableViewDict["titles"].setFrameShape(QFrame.StyledPanel)
-        self.tableViewDict["titles"].setFrameShadow(QFrame.Plain)
-        self.tableViewDict["titles"].setDragEnabled(False)
-        self.tableViewDict["titles"].setAlternatingRowColors(True)
-        self.tableViewDict["titles"].setSelectionMode(QAbstractItemView.NoSelection)
-        self.tableViewDict["titles"].setShowGrid(True)
-        self.tableViewDict["titles"].setGridStyle(Qt.SolidLine)
-        self.tableViewDict["titles"].setObjectName("tableView_general_information")
-        self.tableViewDict["titles"].horizontalHeader().setVisible(False)
-        self.tableViewDict["titles"].horizontalHeader().setHighlightSections(False)
-        self.tableViewDict["titles"].verticalHeader().setDefaultSectionSize(0)
-        self.tableViewDict["titles"].horizontalHeader().setMinimumSectionSize(0)
-        self.tableViewDict["titles"].horizontalHeader().setStretchLastSection(True)
-        self.tableViewDict["titles"].horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-        self.tableViewDict["titles"].verticalHeader().setVisible(False)
-        self.tableViewDict["titles"].verticalHeader().setDefaultSectionSize(25)
-        self.tableViewDict["titles"].verticalHeader().setHighlightSections(False)
-        self.tableViewDict["titles"].verticalHeader().setMinimumSectionSize(25)
-        self.tableViewDict["titles"].verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableViewDict["titles"].horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableViewDict["titles"].setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tableViewDict["titles"].setFocusPolicy(Qt.NoFocus)
-        self.tableViewDict["titles"].setSelectionMode(QAbstractItemView.NoSelection)
-        self.tableViewDict["titles"].horizontalHeader().setFixedHeight(0)
-        self.tableViewDict["titles"].horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-        self.tableViewDict["titles"].show()
-        self.horizontal_layout_groupBox_for_titles.addWidget(self.tableViewDict["titles"])
-        self.dataTableModelDict["titles"] = TableModel(data=[["Name", "Current Value", "New Value"]], header_labels=[], titles_set_window = True)
-        self.tableViewDict["titles"].setModel(self.dataTableModelDict["titles"])
-        self.tableViewDict["titles"].update()
-        self.groupBox_for_titles.setFixedHeight(int(25 * (1 + 2)))
+        # set titles
+        self.label_1 = QLabel(self.groupBox_for_titles)
+        self.label_1.setObjectName("label_1")
+        self.label_1.setProperty("type", 2)
+        self.label_1.setAlignment(Qt.AlignCenter)
+        self.label_1.setText("{}".format("Name"))
+        self.label_1.setMinimumSize(QSize(120, 24))
+        self.horizontal_layout_groupBox_for_titles.addWidget(self.label_1)
+        self.label_2 = QLabel(self.groupBox_for_titles)
+        self.label_2.setObjectName("label_2")
+        self.label_2.setProperty("type", 2)
+        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2.setText("{}".format("Current value"))
+        self.label_2.setMinimumSize(QSize(120, 24))
+        self.horizontal_layout_groupBox_for_titles.addWidget(self.label_2)
+        self.label_3 = QLabel(self.groupBox_for_titles)
+        self.label_3.setObjectName("label_3")
+        self.label_3.setProperty("type", 2)
+        self.label_3.setAlignment(Qt.AlignCenter)
+        self.label_3.setAlignment(Qt.AlignCenter)
+        self.label_3.setText("{}".format("New value"))
+        self.label_3.setMinimumSize(QSize(120, 24))
+        self.horizontal_layout_groupBox_for_titles.addWidget(self.label_3)
         self.verticalLayout_scrollingContents_properties.addWidget(self.groupBox_for_titles)
 
         # font for groupbox
@@ -362,9 +285,6 @@ class DialogThreeColumnSet(QDialog):
 
         # create the group boxes
         for property in self.property_list:
-
-            # init data list
-            self.dataModelDict[property] = []
 
             # property groupbox
             self.groupBoxDict["{}".format(property)] = QGroupBox(self.scrollingContents_properties)
@@ -380,53 +300,49 @@ class DialogThreeColumnSet(QDialog):
             self.layoutDict["groupBox_{}".format(property)] = QGridLayout(self.groupBoxDict["{}".format(property)])
             self.layoutDict["groupBox_{}".format(property)].setObjectName("layout_groupBox_{}".format(property))
 
-            # create table
-            self.tableViewDict[property] = QTableView(self.groupBoxDict["{}".format(property)])
-            self.tableViewDict[property].setStyleSheet("QTableView{\n"
-                                                       "    background-color: rgb(243, 243, 243);\n"
-                                                       "    margin-top: 0;\n"
-                                                       "}")
-            self.tableViewDict[property].setFrameShape(QFrame.StyledPanel)
-            self.tableViewDict[property].setFrameShadow(QFrame.Plain)
-            self.tableViewDict[property].setDragEnabled(False)
-            self.tableViewDict[property].setAlternatingRowColors(True)
-            self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-            self.tableViewDict[property].setShowGrid(True)
-            self.tableViewDict[property].setGridStyle(Qt.SolidLine)
-            self.tableViewDict[property].setObjectName("tableView_general_information")
-            self.tableViewDict[property].horizontalHeader().setVisible(False)
-            self.tableViewDict[property].horizontalHeader().setHighlightSections(False)
-            self.tableViewDict[property].verticalHeader().setDefaultSectionSize(0)
-            self.tableViewDict[property].horizontalHeader().setMinimumSectionSize(0)
-            self.tableViewDict[property].horizontalHeader().setStretchLastSection(True)
-            self.tableViewDict[property].horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-            self.tableViewDict[property].verticalHeader().setVisible(False)
-            self.tableViewDict[property].verticalHeader().setDefaultSectionSize(25)
-            self.tableViewDict[property].verticalHeader().setHighlightSections(False)
-            self.tableViewDict[property].verticalHeader().setMinimumSectionSize(25)
-            self.tableViewDict[property].verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-            self.tableViewDict[property].horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-            self.tableViewDict[property].setFocusPolicy(Qt.NoFocus)
-            self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-            self.tableViewDict[property].horizontalHeader().setFixedHeight(0)
-            self.tableViewDict[property].horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-            self.tableViewDict[property].show()
-            self.layoutDict["groupBox_{}".format(property)].addWidget(self.tableViewDict[property])
+            # add labels and lineedits to the layout of the property groupbox
+            row = 0
+            for field in self.field_dict["{}".format(property)]:
 
-            # fill table
-            for field in self.field_dict[property]:
-                self.dataModelDict[property].append([str(field), str(self.field_values_macro_dict["{}".format(property)][field]), str(self.field_values_macro_dict["{}".format(property)][field])])
+                # set label name (column == 0)
+                column = 0
+                self.labelDict["label_name_{}_{}".format(property, field)] = QLabel(self.groupBoxDict["{}".format(property)])
+                self.labelDict["label_name_{}_{}".format(property, field)].setObjectName("label_name_{}_{}".format(property, field))
+                self.labelDict["label_name_{}_{}".format(property, field)].setProperty("type", 1)
+                self.labelDict["label_name_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                self.labelDict["label_name_{}_{}".format(property, field)].setText("{}".format(field))
+                self.labelDict["label_name_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                self.layoutDict["groupBox_{}".format(property)].addWidget(self.labelDict["label_name_{}_{}".format(property, field)], row, column, 1, 1)
 
-            # update model
-            self.dataTableModelDict[property] = TableModel(data=self.dataModelDict[property], header_labels=[], three_column_window = True)
-            self.tableViewDict[property].setModel(self.dataTableModelDict[property])
-            self.tableViewDict[property].update()
+                # set label old value (column == 1)
+                column = 1
+                self.labelDict["label_old_value_{}_{}".format(property, field)] = QLabel(self.groupBoxDict["{}".format(property)])
+                self.labelDict["label_old_value_{}_{}".format(property, field)].setObjectName("label_old_value_{}_{}".format(property, field))
+                self.labelDict["label_old_value_{}_{}".format(property, field)].setProperty("type", 1)
+                self.labelDict["label_old_value_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                self.labelDict["label_old_value_{}_{}".format(property, field)].setText("{}".format(self.field_values_macro_dict["{}".format(property)][field]))
+                self.labelDict["label_old_value_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                self.layoutDict["groupBox_{}".format(property)].addWidget(self.labelDict["label_old_value_{}_{}".format(property, field)], row, column, 1, 1)
 
-            # update groupbox size in function of the number of rows
-            self.groupBoxDict["{}".format(property)].setFixedHeight(int(25*(len(self.dataModelDict[property])+2)))
+                # set lineedit (column == 2)
+                column = 2
+                self.lineEditDict["{}_{}".format(property, field)] = QLineEdit(self.groupBoxDict["{}".format(property)])
+                self.lineEditDict["{}_{}".format(property, field)].setObjectName("lineEdit_{}_{}".format(property, field))
+                sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+                sizePolicy.setHorizontalStretch(0)
+                sizePolicy.setVerticalStretch(0)
+                sizePolicy.setHeightForWidth(self.lineEditDict["{}_{}".format(property, field)].sizePolicy().hasHeightForWidth())
+                self.lineEditDict["{}_{}".format(property, field)].setSizePolicy(sizePolicy)
+                self.lineEditDict["{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                self.lineEditDict["{}_{}".format(property, field)].setText("{}".format(self.field_values_macro_dict["{}".format(property)][field]))
+                self.lineEditDict["{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                self.layoutDict["groupBox_{}".format(property)].addWidget(self.lineEditDict["{}_{}".format(property, field)], row, column, 1, 1)
+
+                # get the next field
+                row += 1
 
         # set minimum dimensions for the main window according to the auto generated table
-        self.setMinimumWidth(self.scrollArea_properties.sizeHint().width() * 2)
+        self.setMinimumWidth(self.scrollArea_properties.sizeHint().width() * 2.5)
         self.setMinimumHeight(self.scrollArea_properties.sizeHint().height() * 1)
 
         return
@@ -525,11 +441,11 @@ class DialogThreeColumnSet(QDialog):
             areAllFieldsJustTheSame = True
 
             # iterate over all fields
-            for field_counter, field in enumerate(self.field_dict["{}".format(property)]):
+            for field in self.field_dict["{}".format(property)]:
 
                 # compare old and new values
                 old_value = self.field_values_macro_dict["{}".format(property)]["{}".format(field)]
-                new_value = self.tableViewDict[property].model()._data[field_counter][2]
+                new_value = self.lineEditDict["{}_{}".format(property, field)].text()
 
                 # check if both are booleans
                 if str(old_value) == "True" or str(old_value) == "False":
@@ -577,6 +493,8 @@ class DialogThreeColumnSet(QDialog):
 
         # if the current selector is generic and there were changes on a non-mux channel, force the user to use a non-generic selector
         if muxAndNotEmpty and isAllOrEmptySelector:
+
+            print(self.current_selector)
 
             # show warning message
             message_title = "WARNING"
@@ -647,6 +565,9 @@ class MyDisplay(CDisplay):
 
         # get temp dir
         self.app_temp_dir = os.path.join(getSystemTempDir(), TEMP_DIR_NAME)
+
+        # retrieve the app CApplication variable
+        self.app = CApplication.instance()
 
         # use this dict to store pyjapc subs data
         self.data_subs = {}
@@ -726,9 +647,6 @@ class MyDisplay(CDisplay):
         self.lineEditDict = {}
         self.commandButtonDict = {}
         self.contextFrameDict = {}
-        self.tableViewDict = {}
-        self.dataTableModelDict = {}
-        self.dataModelDict = {}
 
         # font for groupbox
         font_for_groupbox = QFont()
@@ -825,95 +743,65 @@ class MyDisplay(CDisplay):
             # in case the property is multiplexed, create a subscription kind of channel (i.e. use CLabel)
             if is_multiplexed == "True":
 
-                # use an empty selector for LHC devices
-                if self.current_accelerator == "LHC":
-                    selectorOverride = ""
-                # use SPS.USER.ALL for SPS devices
-                elif self.current_accelerator == "SPS":
-                    selectorOverride = "SPS.USER.ALL"
-                # use an empty selector for the others
-                else:
-                    selectorOverride = ""
-
-                # create subs
-                self.japc.subscribeParam("{}/{}".format(self.current_device, property), onValueReceived=self.subsCallback, onException=self.onException, timingSelectorOverride=selectorOverride)
+                self.japc.subscribeParam("{}/{}".format(self.current_device, property), onValueReceived=self.subsCallback, onException=self.onException)
                 self.japc.startSubscriptions()
 
-                # create table
-                self.tableViewDict[property] = QTableView(self.groupBoxDict["{}".format(property)])
-                self.tableViewDict[property].setStyleSheet("QTableView{\n"
-                                                                 "    background-color: rgb(243, 243, 243);\n"
-                                                                 "    margin-top: 0;\n"
-                                                                 "}")
-                self.tableViewDict[property].setFrameShape(QFrame.StyledPanel)
-                self.tableViewDict[property].setFrameShadow(QFrame.Plain)
-                self.tableViewDict[property].setDragEnabled(False)
-                self.tableViewDict[property].setAlternatingRowColors(True)
-                self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict[property].setShowGrid(True)
-                self.tableViewDict[property].setGridStyle(Qt.SolidLine)
-                self.tableViewDict[property].setObjectName("tableView_general_information")
-                self.tableViewDict[property].horizontalHeader().setVisible(False)
-                self.tableViewDict[property].horizontalHeader().setHighlightSections(False)
-                self.tableViewDict[property].verticalHeader().setDefaultSectionSize(0)
-                self.tableViewDict[property].horizontalHeader().setMinimumSectionSize(0)
-                self.tableViewDict[property].horizontalHeader().setStretchLastSection(True)
-                self.tableViewDict[property].horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-                self.tableViewDict[property].verticalHeader().setVisible(False)
-                self.tableViewDict[property].verticalHeader().setDefaultSectionSize(25)
-                self.tableViewDict[property].verticalHeader().setHighlightSections(False)
-                self.tableViewDict[property].verticalHeader().setMinimumSectionSize(25)
-                self.tableViewDict[property].verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict[property].horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict[property].setEditTriggers(QAbstractItemView.NoEditTriggers)
-                self.tableViewDict[property].setFocusPolicy(Qt.NoFocus)
-                self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict[property].horizontalHeader().setFixedHeight(0)
-                self.tableViewDict[property].horizontalHeader().setStyleSheet(
-                    "font-weight:bold; background-color: rgb(210, 210, 210);")
-                self.tableViewDict[property].show()
-                self.layoutDict["groupBox_{}".format(property)].addWidget(self.tableViewDict[property])
+                # add labels to the layout of the property groupbox
+                row = 0
+                for field in self.field_dict["{}".format(property)]:
+
+                    # set label (column == 0)
+                    column = 0
+                    self.labelDict["label_name_{}_{}".format(property, field)] = QLabel(self.groupBoxDict["{}".format(property)])
+                    self.labelDict["label_name_{}_{}".format(property, field)].setObjectName("label_name_{}_{}".format(property, field))
+                    self.labelDict["label_name_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.labelDict["label_name_{}_{}".format(property, field)].setText("{}".format(field))
+                    self.labelDict["label_name_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                    self.layoutDict["groupBox_{}".format(property)].addWidget(self.labelDict["label_name_{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # set label (column == 1)
+                    column = 1
+                    self.clabelDict["clabel_value_{}_{}".format(property, field)] = CLabel(self.groupBoxDict["{}".format(property)])
+                    self.clabelDict["clabel_value_{}_{}".format(property, field)].setObjectName("clabel_value_{}_{}".format(property, field))
+                    self.clabelDict["clabel_value_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.clabelDict["clabel_value_{}_{}".format(property, field)].setText("{}".format("Null"))
+                    self.clabelDict["clabel_value_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                    # self.clabelDict["clabel_value_{}_{}".format(property, field)].channel = "{}/{}#{}".format(self.current_device, property, field)
+                    self.layoutDict["groupBox_{}".format(property)].addWidget(self.clabelDict["clabel_value_{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # get the next field
+                    row += 1
 
             # in case the property is not multiplexed, create a GET kind of channel (i.e. use QLabel)
             else:
 
-                # create table
-                self.tableViewDict[property] = QTableView(self.groupBoxDict["{}".format(property)])
-                self.tableViewDict[property].setStyleSheet("QTableView{\n"
-                                                           "    background-color: rgb(243, 243, 243);\n"
-                                                           "    margin-top: 0;\n"
-                                                           "}")
-                self.tableViewDict[property].setFrameShape(QFrame.StyledPanel)
-                self.tableViewDict[property].setFrameShadow(QFrame.Plain)
-                self.tableViewDict[property].setDragEnabled(False)
-                self.tableViewDict[property].setAlternatingRowColors(True)
-                self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict[property].setShowGrid(True)
-                self.tableViewDict[property].setGridStyle(Qt.SolidLine)
-                self.tableViewDict[property].setObjectName("tableView_general_information")
-                self.tableViewDict[property].horizontalHeader().setVisible(False)
-                self.tableViewDict[property].horizontalHeader().setHighlightSections(False)
-                self.tableViewDict[property].verticalHeader().setDefaultSectionSize(0)
-                self.tableViewDict[property].horizontalHeader().setMinimumSectionSize(0)
-                self.tableViewDict[property].horizontalHeader().setStretchLastSection(True)
-                self.tableViewDict[property].horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-                self.tableViewDict[property].verticalHeader().setVisible(False)
-                self.tableViewDict[property].verticalHeader().setDefaultSectionSize(25)
-                self.tableViewDict[property].verticalHeader().setHighlightSections(False)
-                self.tableViewDict[property].verticalHeader().setMinimumSectionSize(25)
-                self.tableViewDict[property].verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict[property].horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict[property].setEditTriggers(QAbstractItemView.NoEditTriggers)
-                self.tableViewDict[property].setFocusPolicy(Qt.NoFocus)
-                self.tableViewDict[property].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict[property].horizontalHeader().setFixedHeight(0)
-                self.tableViewDict[property].horizontalHeader().setStyleSheet(
-                    "font-weight:bold; background-color: rgb(210, 210, 210);")
-                self.tableViewDict[property].show()
-                self.layoutDict["groupBox_{}".format(property)].addWidget(self.tableViewDict[property])
+                # add labels to the layout of the property groupbox
+                row = 0
+                for field in self.field_dict["{}".format(property)]:
+
+                    # set label (column == 0)
+                    column = 0
+                    self.labelDict["label_name_{}_{}".format(property, field)] = QLabel(self.groupBoxDict["{}".format(property)])
+                    self.labelDict["label_name_{}_{}".format(property, field)].setObjectName("label_name_{}_{}".format(property, field))
+                    self.labelDict["label_name_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.labelDict["label_name_{}_{}".format(property, field)].setText("{}".format(field))
+                    self.labelDict["label_name_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                    self.layoutDict["groupBox_{}".format(property)].addWidget(self.labelDict["label_name_{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # set label (column == 1)
+                    column = 1
+                    self.labelDict["label_value_{}_{}".format(property, field)] = QLabel(self.groupBoxDict["{}".format(property)])
+                    self.labelDict["label_value_{}_{}".format(property, field)].setObjectName("label_value_{}_{}".format(property, field))
+                    self.labelDict["label_value_{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.labelDict["label_value_{}_{}".format(property, field)].setText("{}".format("Null"))
+                    self.labelDict["label_value_{}_{}".format(property, field)].setMinimumSize(QSize(120, 24))
+                    self.layoutDict["groupBox_{}".format(property)].addWidget(self.labelDict["label_value_{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # get the next field
+                    row += 1
 
         # set minimum dimensions for the main window according to the auto generated table
-        self.setMinimumWidth(self.scrollArea_properties.sizeHint().width() * 2)
+        self.setMinimumWidth(self.scrollArea_properties.sizeHint().width() * 2.5)
         self.setMinimumHeight(self.scrollArea_properties.sizeHint().height() * 1)
 
         # make the scroll bar of the get and set panel invisible
@@ -943,7 +831,6 @@ class MyDisplay(CDisplay):
         # update boolean
         self.firstReceivedSubsPyjapcData[prop_name] = True
 
-        # print
         if verbose:
             print("{} - Received {} values...".format(UI_FILENAME, prop_name))
 
@@ -952,11 +839,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that handles pyjapc exceptions
-    def onException(self, parameterName, description, exception, verbose = True):
-
-        # print
-        if verbose:
-            print("{} - {}".format(UI_FILENAME, exception))
+    def onException(self, parameterName, description, exception):
 
         # nothing
         pass
@@ -1048,9 +931,6 @@ class MyDisplay(CDisplay):
         # iterate over all properties
         for property in self.property_list:
 
-            # init data list
-            self.dataModelDict[property] = []
-
             # check if the property is multiplexed
             is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"][property]["mux"]
 
@@ -1066,17 +946,9 @@ class MyDisplay(CDisplay):
                     # fill the dict and set text
                     try:
                         self.field_values_macro_dict["{}".format(property)][field] = self.data_subs[property][field]
-                        self.dataModelDict[property].append([str(field), str(self.data_subs[property][field])])
+                        self.clabelDict["clabel_value_{}_{}".format(property, field)].setText(str(self.data_subs[property][field]))
                     except:
-                        self.dataModelDict[property].append([str(field), "-"])
-
-                # update model
-                self.dataTableModelDict[property] = TableModel(data=self.dataModelDict[property], header_labels=[])
-                self.tableViewDict[property].setModel(self.dataTableModelDict[property])
-                self.tableViewDict[property].update()
-
-                # update groupbox size in function of the number of rows
-                self.groupBoxDict["{}".format(property)].setFixedHeight(int(25*(len(self.dataModelDict[property])+2)))
+                        pass
 
                 # skip the property
                 continue
@@ -1093,16 +965,8 @@ class MyDisplay(CDisplay):
                 # iterate over all fields
                 for field in self.field_dict["{}".format(property)]:
 
-                    # set text
-                    self.dataModelDict[property].append([str(field), str(field_values[field])])
-
-                # update model
-                self.dataTableModelDict[property] = TableModel(data=self.dataModelDict[property], header_labels=[])
-                self.tableViewDict[property].setModel(self.dataTableModelDict[property])
-                self.tableViewDict[property].update()
-
-                # update groupbox size in function of the number of rows
-                self.groupBoxDict["{}".format(property)].setFixedHeight(int(25*(len(self.dataModelDict[property])+2)))
+                    # get and set the text into the label
+                    self.labelDict["label_value_{}_{}".format(property, field)].setText("{}".format(field_values[field]))
 
         # status bar message
         if show_message:

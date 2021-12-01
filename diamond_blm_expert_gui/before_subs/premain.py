@@ -42,11 +42,9 @@ UI_FILENAME = "premain.ui"
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
 RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
 SHOW_COMMANDS_IN_SETTINGS = False
-ACCEPTANCE_FACTOR = 2.00
+ACCEPTANCE_FACTOR = 1.50
 TURN_TIME_LHC = 89.0000 # microseconds
 TURN_TIME_SPS = 23.0543 # microseconds
-LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY = {}
-DATA_SUBS_SUMMARY = {}
 
 ########################################################
 ########################################################
@@ -124,11 +122,6 @@ class TableModel(QAbstractTableModel):
 ########################################################
 
 class DialogThreeColumnSet(QDialog):
-
-    #----------------------------------------------#
-
-    # signals
-    nturns_changed = pyqtSignal(bool)
 
     #----------------------------------------------#
 
@@ -531,7 +524,6 @@ class DialogThreeColumnSet(QDialog):
         list_dict_to_inject = []
         list_needs_warning_message_box = []
         list_mux = []
-        nturn_changed = False
 
         # boolean
         types_are_wrong = False
@@ -571,11 +563,6 @@ class DialogThreeColumnSet(QDialog):
                 # if at least one field is different, do a SET of the whole dictionary
                 if str(old_value) != str(new_value):
                     areAllFieldsJustTheSame = False
-
-                # check nturns
-                if field == "blmNTurn" or field == "turnAvgCnt" or field == "turnTrackCnt":
-                    if not areAllFieldsJustTheSame:
-                        nturn_changed = True
 
                 # inject the value
                 dict_to_inject["{}".format(field)] = new_value
@@ -650,10 +637,6 @@ class DialogThreeColumnSet(QDialog):
         self.app.main_window.statusBar().showMessage("Command SET ran successfully!", 3*1000)
         self.app.main_window.statusBar().repaint()
 
-        # emit the signal if there has been changes to the nturns
-        if nturn_changed:
-            self.nturns_changed.emit(True)
-
         return
 
     #----------------------------------------------#
@@ -662,11 +645,6 @@ class DialogThreeColumnSet(QDialog):
 ########################################################
 
 class SettingsDialogAuto(QDialog):
-
-    #----------------------------------------------#
-
-    # signals
-    nturns_changed = pyqtSignal(bool)
 
     #----------------------------------------------#
 
@@ -1322,17 +1300,6 @@ class SettingsDialogAuto(QDialog):
         self.dialog_three_column_set = DialogThreeColumnSet(parent = self)
         self.dialog_three_column_set.setModal(True)
         self.dialog_three_column_set.show()
-        self.dialog_three_column_set.nturns_changed.connect(self.notifyParent)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that emits a signal to its parent
-    def notifyParent(self):
-
-        # emit the signal if there has been changes to the nturns
-        self.nturns_changed.emit(True)
 
         return
 
@@ -1353,399 +1320,7 @@ class SettingsDialogAuto(QDialog):
 ########################################################
 ########################################################
 
-class workingModesThreadWorkerSummary(QObject):
-
-    #----------------------------------------------#
-
-    # signals
-    finished = pyqtSignal()
-    processed = pyqtSignal(dict, dict, str)
-
-    #----------------------------------------------#
-
-    # init function
-    def __init__(self, current_device, acc_device_list, current_accelerator, japc, property_list, cern, pyccda_dictionary):
-
-        # inherit from QObject
-        QObject.__init__(self)
-
-        # declare timers
-        self.timer_watchdog_AcquisitionHistogram = QTimer(self)
-        self.timer_watchdog_AcquisitionIntegral = QTimer(self)
-        # self.timer_watchdog_AcquisitionIntegralDist = QTimer(self)
-        # self.timer_watchdog_AcquisitionRawDist = QTimer(self)
-        self.timer_watchdog_AcquisitionTurnLoss = QTimer(self)
-        self.timer_watchdog_Capture = QTimer(self)
-
-        # declare attributes
-        self.current_device = current_device
-        self.device_list = acc_device_list
-        self.current_accelerator = current_accelerator
-        self.japc = japc
-        self.property_list = property_list
-        self.cern = cern
-        self.exit_boolean = False
-        self.pyccda_dictionary = pyccda_dictionary
-
-        return
-
-    #----------------------------------------------#
-
-    # stop function
-    def stop(self):
-
-        # update stop variable
-        self.exit_boolean = True
-
-        # stop timers
-        # self.timer_watchdog_AcquisitionHistogram.stop()
-        # self.timer_watchdog_AcquisitionIntegral.stop()
-        # self.timer_watchdog_AcquisitionIntegralDist.stop()
-        # self.timer_watchdog_AcquisitionRawDist.stop()
-        # self.timer_watchdog_AcquisitionTurnLoss.stop()
-        # self.timer_watchdog_Capture.stop()
-        # del self.timer_watchdog_AcquisitionHistogram
-        # del self.timer_watchdog_AcquisitionIntegral
-        # del self.timer_watchdog_AcquisitionIntegralDist
-        # del self.timer_watchdog_AcquisitionRawDist
-        # del self.timer_watchdog_AcquisitionTurnLoss
-        # del self.timer_watchdog_Capture
-
-        # emit the finish signal
-        self.finished.emit()
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionHistogram(self):
-
-        # declare the property
-        property = "AcquisitionHistogram"
-
-        # init check
-        if self.current_device not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY.keys():
-            return
-        if property not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device].keys():
-            return
-
-        # get timestamps
-        get_ts = LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device][property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionHistogram
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionHistogram
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = "NTURNS_IS_ZERO"
-            self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = "{}".format(str(get_ts))
-                self.errors[property] = ""
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors, self.current_device)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionIntegral(self):
-
-        # declare the property
-        property = "AcquisitionIntegral"
-
-        # init check
-        if self.current_device not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY.keys():
-            return
-        if property not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device].keys():
-            return
-
-        # get timestamps
-        get_ts = LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device][property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionIntegral
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionIntegral
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = "NTURNS_IS_ZERO"
-            self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-            self.modules_data["AcquisitionIntegralDist"] = "NTURNS_IS_ZERO"
-            self.errors["AcquisitionIntegralDist"] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-            self.modules_data["AcquisitionRawDist"] = "NTURNS_IS_ZERO"
-            self.errors["AcquisitionRawDist"] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = "{}".format(str(get_ts))
-                self.errors[property] = ""
-                self.modules_data["AcquisitionIntegralDist"] = "{}".format(str(get_ts))
-                self.errors["AcquisitionIntegralDist"] = ""
-                self.modules_data["AcquisitionRawDist"] = "{}".format(str(get_ts))
-                self.errors["AcquisitionRawDist"] = ""
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionIntegralDist"] = "TS_TOO_OLD"
-                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionRawDist"] = "TS_TOO_OLD"
-                self.errors["AcquisitionRawDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors, self.current_device)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionTurnLoss(self):
-
-        # declare the property
-        property = "AcquisitionTurnLoss"
-
-        # init check
-        if self.current_device not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY.keys():
-            return
-        if property not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device].keys():
-            return
-
-        # get timestamps
-        get_ts = LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device][property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionTurnLoss
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionTurnLoss
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = "NTURNS_IS_ZERO"
-            self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = "{}".format(str(get_ts))
-                self.errors[property] = ""
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors, self.current_device)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsCapture(self):
-
-        # declare the property
-        property = "Capture"
-
-        # init check
-        if self.current_device not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY.keys():
-            return
-        if property not in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device].keys():
-            return
-
-        # get timestamps
-        get_ts = LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[self.current_device][property]
-        current_ts = datetime.now(timezone.utc)
-
-        # if the buffer is not empty
-        if DATA_SUBS_SUMMARY[self.current_device][property]["rawBuf0"].size > 0:
-
-            # if the try did not give an error then it is working
-            self.modules_data[property] = "{}".format(str(get_ts))
-            self.errors[property] = ""
-
-        # if buffers are empty show a custom error
-        else:
-
-            # BUFFERS_ARE_EMPTY
-            self.modules_data[property] = "BUFFERS_ARE_EMPTY"
-            self.errors[property] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors, self.current_device)
-
-        return
-
-    #----------------------------------------------#
-
-    # processing function
-    def start(self, verbose = False):
-
-        # print thread address
-        if verbose:
-            print("{} - Processing thread: {}".format(UI_FILENAME, QThread.currentThread()))
-
-        # init dicts for the table
-        self.modules_data = {}
-        self.errors = {}
-
-        # selectorOverride for the working modules table has to be a specific selector
-        # use an empty selector for LHC devices
-        if self.current_accelerator == "LHC":
-            selectorOverride = ""
-        # use SPS.USER.ALL for SPS devices
-        elif self.current_accelerator == "SPS":
-            selectorOverride = "SPS.USER.SFTPRO1"
-        # use an empty selector for the others
-        else:
-            selectorOverride = ""
-
-        # sleep a little bit to give some time to the subs callback
-        QThread.msleep(500)
-
-        # ACQUISITION HISTOGRAM
-
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossHistogramSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionHistogram = nturns
-            self.turn_time_in_seconds_AcquisitionHistogram = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
-
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionHistogram != 0:
-            self.timer_watchdog_AcquisitionHistogram.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionHistogram.timeout.connect(self.compareTimestampsAcquisitionHistogram)
-            self.timer_watchdog_AcquisitionHistogram.start()
-
-        # ACQUISITION INTEGRAL
-
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossIntegralSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionIntegral = nturns
-            self.turn_time_in_seconds_AcquisitionIntegral = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
-
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionIntegral != 0:
-            self.timer_watchdog_AcquisitionIntegral.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionIntegral.timeout.connect(self.compareTimestampsAcquisitionIntegral)
-
-        # ACQUISITION TURN LOSS
-
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["TurnLossMeasurementSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionTurnLoss = nturns
-            self.turn_time_in_seconds_AcquisitionTurnLoss = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
-
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionTurnLoss != 0:
-            self.timer_watchdog_AcquisitionTurnLoss.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionTurnLoss.timeout.connect(self.compareTimestampsAcquisitionTurnLoss)
-
-        # CAPTURE
-
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        self.timer_watchdog_Capture.setInterval(2 * 1000)
-        self.timer_watchdog_Capture.timeout.connect(self.compareTimestampsCapture)
-
-        # ALL TIMERS
-
-        # start all timers
-        if self.nturns_AcquisitionHistogram:
-            self.timer_watchdog_AcquisitionHistogram.start()
-        if self.nturns_AcquisitionIntegral:
-            self.timer_watchdog_AcquisitionIntegral.start()
-        if self.nturns_AcquisitionTurnLoss:
-            self.timer_watchdog_AcquisitionTurnLoss.start()
-        self.timer_watchdog_Capture.start()
-
-        return
-
-    #----------------------------------------------#
-
-########################################################
-########################################################
-
-class workingModesThreadWorkerPreview(QObject):
+class workingModesThreadWorker(QObject):
 
     #----------------------------------------------#
 
@@ -1756,18 +1331,10 @@ class workingModesThreadWorkerPreview(QObject):
     #----------------------------------------------#
 
     # init function
-    def __init__(self, current_device, current_accelerator, japc, property_list, cern, pyccda_dictionary):
+    def __init__(self, current_device, current_accelerator, japc, property_list, cern):
 
         # inherit from QObject
         QObject.__init__(self)
-
-        # declare timers
-        self.timer_watchdog_AcquisitionHistogram = QTimer(self)
-        self.timer_watchdog_AcquisitionIntegral = QTimer(self)
-        # self.timer_watchdog_AcquisitionIntegralDist = QTimer(self)
-        # self.timer_watchdog_AcquisitionRawDist = QTimer(self)
-        self.timer_watchdog_AcquisitionTurnLoss = QTimer(self)
-        self.timer_watchdog_Capture = QTimer(self)
 
         # declare attributes
         self.current_device = current_device
@@ -1776,7 +1343,6 @@ class workingModesThreadWorkerPreview(QObject):
         self.property_list = property_list
         self.cern = cern
         self.exit_boolean = False
-        self.pyccda_dictionary = pyccda_dictionary
 
         return
 
@@ -1788,350 +1354,8 @@ class workingModesThreadWorkerPreview(QObject):
         # update stop variable
         self.exit_boolean = True
 
-        # stop timers
-        # self.timer_watchdog_AcquisitionHistogram.stop()
-        # self.timer_watchdog_AcquisitionIntegral.stop()
-        # self.timer_watchdog_AcquisitionIntegralDist.stop()
-        # self.timer_watchdog_AcquisitionRawDist.stop()
-        # self.timer_watchdog_AcquisitionTurnLoss.stop()
-        # self.timer_watchdog_Capture.stop()
-        # del self.timer_watchdog_AcquisitionHistogram
-        # del self.timer_watchdog_AcquisitionIntegral
-        # del self.timer_watchdog_AcquisitionIntegralDist
-        # del self.timer_watchdog_AcquisitionRawDist
-        # del self.timer_watchdog_AcquisitionTurnLoss
-        # del self.timer_watchdog_Capture
-
         # emit the finish signal
         self.finished.emit()
-
-        return
-
-    #----------------------------------------------#
-
-    # function that handles pyjapc exceptions
-    def onException(self, parameterName, description, exception, verbose = True):
-
-        # print
-        if verbose:
-            print("{} - Exception: {}".format(UI_FILENAME, exception))
-
-        # nothing
-        pass
-
-        return
-
-    #----------------------------------------------#
-
-    # function to receive pyjapc subs data
-    def subsCallback(self, parameterName, dictValues, headerInfo, verbose = False):
-
-        # get property name
-        prop_name = parameterName.split("/")[1]
-
-        # ignore GeneralInformation
-        if prop_name == "GeneralInformation":
-            return
-
-        # store the data
-        self.data_subs[prop_name] = dictValues
-
-        # store last timestamp of the callback
-        self.LAST_TIMESTAMP_SUB_CALLBACK[prop_name] = headerInfo["acqStamp"]
-
-        # print
-        if verbose:
-            print("{} - Received {} values for {}...".format(UI_FILENAME, prop_name, self.current_device))
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionHistogram(self):
-
-        # declare the property
-        property = "AcquisitionHistogram"
-
-        # init check
-        if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-            return
-
-        # get timestamps
-        get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionHistogram
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionHistogram
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-            self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-                self.errors[property] = "-"
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionIntegral(self):
-
-        # declare the property
-        property = "AcquisitionIntegral"
-
-        # init check
-        if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-            return
-
-        # get timestamps
-        get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionIntegral
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionIntegral
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-            self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-            self.modules_data["AcquisitionIntegralDist"] = ["AcquisitionIntegralDist", "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-            self.errors["AcquisitionIntegralDist"] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-            self.modules_data["AcquisitionRawDist"] = ["AcquisitionRawDist", "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-            self.errors["AcquisitionRawDist"] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-                self.errors[property] = "-"
-                self.modules_data["AcquisitionIntegralDist"] = ["AcquisitionIntegralDist", "Yes", "-", "{}".format(str(get_ts))]
-                self.errors["AcquisitionIntegralDist"] = "-"
-                self.modules_data["AcquisitionRawDist"] = ["AcquisitionRawDist", "Yes", "-", "{}".format(str(get_ts))]
-                self.errors["AcquisitionRawDist"] = "-"
-
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionIntegralDist"] = ["AcquisitionIntegralDist", "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionRawDist"] = ["AcquisitionRawDist", "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors["AcquisitionRawDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors)
-
-        return
-
-    #----------------------------------------------#
-
-    # # function that compares the timestamps and determines if modes are running or not
-    # def compareTimestampsAcquisitionIntegralDist(self):
-    #
-    #     # declare the property
-    #     property = "AcquisitionIntegralDist"
-    #
-    #     # init check
-    #     if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-    #         return
-    #
-    #     # get timestamps
-    #     get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-    #     current_ts = datetime.now(timezone.utc)
-    #
-    #     # get nturns
-    #     nturns = self.nturns_AcquisitionIntegralDist
-    #     turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionIntegralDist
-    #
-    #     # show a custom error if nturns is 0
-    #     if nturns == 0:
-    #
-    #         # NTURNS_IS_ZERO
-    #         self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-    #         self.errors[
-    #             property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-    #
-    #     # normal procedure
-    #     else:
-    #
-    #         # compare timestamps
-    #         if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-    #
-    #             # WORKING MODE
-    #             self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-    #             self.errors[property] = "-"
-    #
-    #         # ts is too old
-    #         else:
-    #
-    #             # TS_TOO_OLD
-    #             self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-    #             self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-    #
-    #     return
-
-    #----------------------------------------------#
-
-    # # function that compares the timestamps and determines if modes are running or not
-    # def compareTimestampsAcquisitionRawDist(self):
-    #
-    #     # declare the property
-    #     property = "AcquisitionRawDist"
-    #
-    #     # init check
-    #     if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-    #         return
-    #
-    #     # get timestamps
-    #     get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-    #     current_ts = datetime.now(timezone.utc)
-    #
-    #     # get nturns
-    #     nturns = self.nturns_AcquisitionRawDist
-    #     turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionRawDist
-    #
-    #     # show a custom error if nturns is 0
-    #     if nturns == 0:
-    #
-    #         # NTURNS_IS_ZERO
-    #         self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-    #         self.errors[
-    #             property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-    #
-    #     # normal procedure
-    #     else:
-    #
-    #         # compare timestamps
-    #         if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-    #
-    #             # WORKING MODE
-    #             self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-    #             self.errors[property] = "-"
-    #
-    #         # ts is too old
-    #         else:
-    #
-    #             # TS_TOO_OLD
-    #             self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-    #             self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-    #
-    #     return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsAcquisitionTurnLoss(self):
-
-        # declare the property
-        property = "AcquisitionTurnLoss"
-
-        # init check
-        if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-            return
-
-        # get timestamps
-        get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-        current_ts = datetime.now(timezone.utc)
-
-        # get nturns
-        nturns = self.nturns_AcquisitionTurnLoss
-        turn_time_in_seconds = self.turn_time_in_seconds_AcquisitionTurnLoss
-
-        # show a custom error if nturns is 0
-        if nturns == 0:
-
-            # NTURNS_IS_ZERO
-            self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-            self.errors[
-                property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-        # normal procedure
-        else:
-
-            # compare timestamps
-            if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-
-                # WORKING MODE
-                self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-                self.errors[property] = "-"
-
-            # ts is too old
-            else:
-
-                # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that compares the timestamps and determines if modes are running or not
-    def compareTimestampsCapture(self):
-
-        # declare the property
-        property = "Capture"
-
-        # init check
-        if property not in self.LAST_TIMESTAMP_SUB_CALLBACK.keys():
-            return
-
-        # get timestamps
-        get_ts = self.LAST_TIMESTAMP_SUB_CALLBACK[property]
-        current_ts = datetime.now(timezone.utc)
-
-        # if the buffer is not empty
-        if self.data_subs[property]["rawBuf0"].size > 0:
-
-            # if the try did not give an error then it is working
-            self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-            self.errors[property] = "-"
-
-        # if buffers are empty show a custom error
-        else:
-
-            # BUFFERS_ARE_EMPTY
-            self.modules_data[property] = [property, "No", "BUFFERS_ARE_EMPTY", "{}".format(str(get_ts))]
-            self.errors[property] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
-
-        # emit the signal
-        self.processed.emit(self.modules_data, self.errors)
 
         return
 
@@ -2144,15 +1368,11 @@ class workingModesThreadWorkerPreview(QObject):
         if verbose:
             print("{} - Processing thread: {}".format(UI_FILENAME, QThread.currentThread()))
 
-        # init dicts for the table
+        # init the data model dict for the working modules table
         self.modules_data = {}
+
+        # store full errors
         self.errors = {}
-
-        # use this to store the timestamps of the callback
-        self.LAST_TIMESTAMP_SUB_CALLBACK = {}
-
-        # use this dict to store pyjapc subs data
-        self.data_subs = {}
 
         # selectorOverride for the working modules table has to be a specific selector
         # use an empty selector for LHC devices
@@ -2165,364 +1385,139 @@ class workingModesThreadWorkerPreview(QObject):
         else:
             selectorOverride = ""
 
-        # create subs
-        for property in self.property_list:
-            if property != "GeneralInformation":
-                self.japc.subscribeParam("{}/{}".format(self.current_device, property), onValueReceived=self.subsCallback, onException=self.onException, timingSelectorOverride=selectorOverride, getHeader=True)
-                self.japc.startSubscriptions()
+        # counter for the while
+        counter_property = 0
 
-        # sleep a little bit to give some time to the subs callback
-        QThread.msleep(500)
+        # continuously analyze the modes until stop is called
+        while not self.exit_boolean:
 
-        # ACQUISITION HISTOGRAM
+            # property declaration
+            if counter_property == len(self.property_list):
+                counter_property = 0
+            property = self.property_list[counter_property]
 
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossHistogramSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionHistogram = nturns
-            self.turn_time_in_seconds_AcquisitionHistogram = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
+            # skip general information property
+            if property == "GeneralInformation":
+                counter_property += 1
+                continue
 
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionHistogram != 0:
-            self.timer_watchdog_AcquisitionHistogram.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionHistogram.timeout.connect(self.compareTimestampsAcquisitionHistogram)
-            self.timer_watchdog_AcquisitionHistogram.start()
+            # get nturns
+            try:
 
-        # ACQUISITION INTEGRAL
+                # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
+                # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
+                if property == "AcquisitionHistogram":
+                    nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
+                    nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                elif property == "AcquisitionTurnLoss":
+                    nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                elif property == "Capture":
+                    pass
+                else:
+                    print("{} - Error (unknown property {})".format(UI_FILENAME, property))
+                if self.current_accelerator == "LHC":
+                    turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
+                elif self.current_accelerator == "SPS":
+                    turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
+                else:
+                    turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
 
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossIntegralSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionIntegral = nturns
-            self.turn_time_in_seconds_AcquisitionIntegral = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
+            # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
+            except:
 
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionIntegral != 0:
-            self.timer_watchdog_AcquisitionIntegral.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionIntegral.timeout.connect(self.compareTimestampsAcquisitionIntegral)
+                # pass
+                pass
 
-        # # ACQUISITION INTEGRAL DIST
-        #
-        # # get nturns
-        # try:
-        #     is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossIntegralSetting"]["mux"]
-        #     if is_multiplexed == "False":
-        #         selectorOverride = ""
-        #     nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-        #     if self.current_accelerator == "LHC":
-        #         turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-        #     elif self.current_accelerator == "SPS":
-        #         turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-        #     else:
-        #         turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-        #     self.nturns_AcquisitionIntegralDist = nturns
-        #     self.turn_time_in_seconds_AcquisitionIntegralDist = turn_time_in_seconds
-        # except Exception as xcp:
-        #     print(xcp)
-        #     pass
-        #
-        # # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        # if self.nturns_AcquisitionIntegralDist != 0:
-        #     self.timer_watchdog_AcquisitionIntegralDist.setInterval(turn_time_in_seconds * 1000)
-        #     self.timer_watchdog_AcquisitionIntegralDist.timeout.connect(self.compareTimestampsAcquisitionIntegralDist)
+            # do a GET request via japc
+            try:
 
-        # # ACQUISITION RAW DIST
-        #
-        # # get nturns
-        # try:
-        #     is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossIntegralSetting"]["mux"]
-        #     if is_multiplexed == "False":
-        #         selectorOverride = ""
-        #     nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-        #     if self.current_accelerator == "LHC":
-        #         turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-        #     elif self.current_accelerator == "SPS":
-        #         turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-        #     else:
-        #         turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-        #     self.nturns_AcquisitionRawDist = nturns
-        #     self.turn_time_in_seconds_AcquisitionRawDist = turn_time_in_seconds
-        # except Exception as xcp:
-        #     print(xcp)
-        #     pass
-        #
-        # # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        # if self.nturns_AcquisitionRawDist != 0:
-        #     self.timer_watchdog_AcquisitionRawDist.setInterval(turn_time_in_seconds * 1000)
-        #     self.timer_watchdog_AcquisitionRawDist.timeout.connect(self.compareTimestampsAcquisitionRawDist)
+                # get the fields
+                field_values = self.japc.getParam("{}/{}".format(self.current_device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
 
-        # ACQUISITION TURN LOSS
+                # get timestamps
+                get_ts = field_values[1]["acqStamp"]
+                current_ts = datetime.now(timezone.utc)
 
-        # get nturns
-        try:
-            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["TurnLossMeasurementSetting"]["mux"]
-            if is_multiplexed == "False":
-                selectorOverride = ""
-            nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-            if self.current_accelerator == "LHC":
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            elif self.current_accelerator == "SPS":
-                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-            else:
-                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-            self.nturns_AcquisitionTurnLoss = nturns
-            self.turn_time_in_seconds_AcquisitionTurnLoss = turn_time_in_seconds
-        except Exception as xcp:
-            print(xcp)
-            pass
+                # for the capture do not care about timestamps
+                if property == "Capture":
 
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        if self.nturns_AcquisitionTurnLoss != 0:
-            self.timer_watchdog_AcquisitionTurnLoss.setInterval(turn_time_in_seconds * 1000)
-            self.timer_watchdog_AcquisitionTurnLoss.timeout.connect(self.compareTimestampsAcquisitionTurnLoss)
+                    # if the buffer is not empty
+                    if field_values[0]["rawBuf0"].size > 0:
 
-        # CAPTURE
+                        # if the try did not give an error then it is working
+                        self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
+                        self.errors[property] = "-"
 
-        # init a timer that runs every Tnew * NumPeriods (number of periods in between checks)
-        self.timer_watchdog_Capture.setInterval(2 * 1000)
-        self.timer_watchdog_Capture.timeout.connect(self.compareTimestampsCapture)
+                    # if buffers are empty show a custom error
+                    else:
 
-        # ALL TIMERS
+                        # BUFFERS_ARE_EMPTY
+                        self.modules_data[property] = [property, "No", "BUFFERS_ARE_EMPTY", "{}".format(str(get_ts))]
+                        self.errors[property] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
 
-        # start all timers
-        if self.nturns_AcquisitionHistogram:
-            self.timer_watchdog_AcquisitionHistogram.start()
-        if self.nturns_AcquisitionIntegral:
-            self.timer_watchdog_AcquisitionIntegral.start()
-        # if self.nturns_AcquisitionIntegralDist:
-        #     self.timer_watchdog_AcquisitionIntegralDist.start()
-        # if self.nturns_AcquisitionRawDist:
-        #     self.timer_watchdog_AcquisitionRawDist.start()
-        if self.nturns_AcquisitionTurnLoss:
-            self.timer_watchdog_AcquisitionTurnLoss.start()
-        self.timer_watchdog_Capture.start()
+                # for the others we should care about timestamps
+                else:
+
+                    # show a custom error if nturns is 0
+                    if nturns == 0:
+
+                        # NTURNS_IS_ZERO
+                        self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
+                        self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
+
+                    # normal procedure
+                    else:
+
+                        # compare timestamps
+                        if current_ts - get_ts < timedelta(seconds = turn_time_in_seconds * ACCEPTANCE_FACTOR):
+
+                            # sleep a little bit
+                            QThread.msleep(int(turn_time_in_seconds*ACCEPTANCE_FACTOR*1000))
+
+                            # do a second GET
+                            field_values = self.japc.getParam("{}/{}".format(self.current_device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
+                            get_ts = field_values[1]["acqStamp"]
+                            current_ts = datetime.now(timezone.utc)
+
+                            # compare timestamps again
+                            if current_ts - get_ts < timedelta(seconds = turn_time_in_seconds * ACCEPTANCE_FACTOR):
+
+                                # WORKING MODE
+                                self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
+                                self.errors[property] = "-"
+
+                            # 2nd check still too old
+                            else:
+
+                                # TS_TOO_OLD
+                                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
+                                self.errors[property] = "custom.message.error.2nd.check: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+
+                        # 1st check too old
+                        else:
+
+                            # TS_TOO_OLD
+                            self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
+                            self.errors[property] = "custom.message.error.1st.check: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+
+            # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
+            except self.cern.japc.core.ParameterException as xcp:
+
+                # NO_DATA_AVAILABLE_FOR_USER
+                self.modules_data[property] = [property, "No", str(xcp.getMessage()).split(":")[0], "-"]
+                self.errors[property] = str(xcp)
+
+            # next iter
+            counter_property += 1
+
+            # emit the signal
+            self.processed.emit(self.modules_data, self.errors)
+
+            # sleep the thread a bit
+            QThread.msleep(100)
 
         return
-
-    #----------------------------------------------#
-
-# class workingModesThreadWorkerPreview(QObject):
-#
-#     #----------------------------------------------#
-#
-#     # signals
-#     finished = pyqtSignal()
-#     processed = pyqtSignal(dict, dict)
-#
-#     #----------------------------------------------#
-#
-#     # init function
-#     def __init__(self, current_device, current_accelerator, japc, property_list, cern):
-#
-#         # inherit from QObject
-#         QObject.__init__(self)
-#
-#         # declare attributes
-#         self.current_device = current_device
-#         self.current_accelerator = current_accelerator
-#         self.japc = japc
-#         self.property_list = property_list
-#         self.cern = cern
-#         self.exit_boolean = False
-#
-#         return
-#
-#     #----------------------------------------------#
-#
-#     # stop function
-#     def stop(self):
-#
-#         # update stop variable
-#         self.exit_boolean = True
-#
-#         # emit the finish signal
-#         self.finished.emit()
-#
-#         return
-#
-#     #----------------------------------------------#
-#
-#     # processing function
-#     def start(self, verbose = False):
-#
-#         # print thread address
-#         if verbose:
-#             print("{} - Processing thread: {}".format(UI_FILENAME, QThread.currentThread()))
-#
-#         # init the data model dict for the working modules table
-#         self.modules_data = {}
-#
-#         # store full errors
-#         self.errors = {}
-#
-#         # selectorOverride for the working modules table has to be a specific selector
-#         # use an empty selector for LHC devices
-#         if self.current_accelerator == "LHC":
-#             selectorOverride = ""
-#         # use SPS.USER.ALL for SPS devices
-#         elif self.current_accelerator == "SPS":
-#             selectorOverride = "SPS.USER.SFTPRO1"
-#         # use an empty selector for the others
-#         else:
-#             selectorOverride = ""
-#
-#         # counter for the while
-#         counter_property = 0
-#
-#         # continuously analyze the modes until stop is called
-#         while not self.exit_boolean:
-#
-#             # property declaration
-#             if counter_property == len(self.property_list):
-#                 counter_property = 0
-#             property = self.property_list[counter_property]
-#
-#             # skip general information property
-#             if property == "GeneralInformation":
-#                 counter_property += 1
-#                 continue
-#
-#             # get nturns
-#             try:
-#
-#                 # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
-#                 # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
-#                 if property == "AcquisitionHistogram":
-#                     nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-#                 elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
-#                     nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-#                 elif property == "AcquisitionTurnLoss":
-#                     nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-#                 elif property == "Capture":
-#                     pass
-#                 else:
-#                     print("{} - Error (unknown property {})".format(UI_FILENAME, property))
-#                 if self.current_accelerator == "LHC":
-#                     turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-#                 elif self.current_accelerator == "SPS":
-#                     turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-#                 else:
-#                     turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-#
-#             # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
-#             except:
-#
-#                 # pass
-#                 pass
-#
-#             # do a GET request via japc
-#             try:
-#
-#                 # get the fields
-#                 field_values = self.japc.getParam("{}/{}".format(self.current_device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
-#
-#                 # get timestamps
-#                 get_ts = field_values[1]["acqStamp"]
-#                 current_ts = datetime.now(timezone.utc)
-#
-#                 # for the capture do not care about timestamps
-#                 if property == "Capture":
-#
-#                     # if the buffer is not empty
-#                     if field_values[0]["rawBuf0"].size > 0:
-#
-#                         # if the try did not give an error then it is working
-#                         self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-#                         self.errors[property] = "-"
-#
-#                     # if buffers are empty show a custom error
-#                     else:
-#
-#                         # BUFFERS_ARE_EMPTY
-#                         self.modules_data[property] = [property, "No", "BUFFERS_ARE_EMPTY", "{}".format(str(get_ts))]
-#                         self.errors[property] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
-#
-#                 # for the others we should care about timestamps
-#                 else:
-#
-#                     # show a custom error if nturns is 0
-#                     if nturns == 0:
-#
-#                         # NTURNS_IS_ZERO
-#                         self.modules_data[property] = [property, "No", "NTURNS_IS_ZERO", "{}".format(str(get_ts))]
-#                         self.errors[property] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-#
-#                     # normal procedure
-#                     else:
-#
-#                         # compare timestamps
-#                         if current_ts - get_ts < timedelta(seconds = turn_time_in_seconds * ACCEPTANCE_FACTOR):
-#
-#                             # sleep a little bit
-#                             QThread.msleep(int(turn_time_in_seconds*ACCEPTANCE_FACTOR*1000))
-#
-#                             # do a second GET
-#                             field_values = self.japc.getParam("{}/{}".format(self.current_device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
-#                             get_ts = field_values[1]["acqStamp"]
-#                             current_ts = datetime.now(timezone.utc)
-#
-#                             # compare timestamps again
-#                             if current_ts - get_ts < timedelta(seconds = turn_time_in_seconds * ACCEPTANCE_FACTOR):
-#
-#                                 # WORKING MODE
-#                                 self.modules_data[property] = [property, "Yes", "-", "{}".format(str(get_ts))]
-#                                 self.errors[property] = "-"
-#
-#                             # 2nd check still too old
-#                             else:
-#
-#                                 # TS_TOO_OLD
-#                                 self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-#                                 self.errors[property] = "custom.message.error.2nd.check: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-#
-#                         # 1st check too old
-#                         else:
-#
-#                             # TS_TOO_OLD
-#                             self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-#                             self.errors[property] = "custom.message.error.1st.check: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-#
-#             # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
-#             except self.cern.japc.core.ParameterException as xcp:
-#
-#                 # NO_DATA_AVAILABLE_FOR_USER
-#                 self.modules_data[property] = [property, "No", str(xcp.getMessage()).split(":")[0], "-"]
-#                 self.errors[property] = str(xcp)
-#
-#             # next iter
-#             counter_property += 1
-#
-#             # emit the signal
-#             self.processed.emit(self.modules_data, self.errors)
-#
-#             # sleep the thread a bit
-#             QThread.msleep(100)
-#
-#         return
 
     #----------------------------------------------#
 
@@ -2672,9 +1667,6 @@ class MyDisplay(CDisplay):
 
         # init aux for qthread
         self.aux_thread_for_preview_one_device = 0
-        self.summary_thread_dict = {}
-        self.summary_worker_dict = {}
-        self.acc_device_list_summary = []
 
         # create the temporary directory to store all the aux variables
         self.app_temp_dir = createCustomTempDir(TEMP_DIR_NAME)
@@ -3287,17 +2279,6 @@ class MyDisplay(CDisplay):
 
         return
 
-    # function to handle thread stops
-    def finishThreadSummary(self):
-
-        # quit the threads
-        for device in self.acc_device_list_summary:
-            if device in self.summary_thread_dict.keys():
-                self.summary_thread_dict[device].quit()
-                self.summary_thread_dict[device].wait()
-
-        return
-
     #----------------------------------------------#
 
     # function that handles japc and UI stuff when rbac is disconnected
@@ -3590,24 +2571,11 @@ class MyDisplay(CDisplay):
                 if self.aux_thread_for_preview_one_device.isRunning():
                     self.aux_worker_for_preview_one_device.stop()
 
-            # stop old threads (summary)
-            were_threads_running = False
-            for device in self.acc_device_list_summary:
-                if device in self.working_devices:
-                    if device in self.summary_thread_dict.keys():
-                        if type(self.summary_thread_dict[device]) == QThread:
-                            if self.summary_thread_dict[device].isRunning():
-                                self.summary_worker_dict[device].stop()
-                                were_threads_running = True
-
-            # stop japc subs (summary)
-            if were_threads_running:
-                self.japc.stopSubscriptions()
-                self.japc.clearSubscriptions()
-
             # clear for new device
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
-                shutil.rmtree(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json")):
+                os.remove(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json"))
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json")):
+                os.remove(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json"))
 
             # open main container
             self.CEmbeddedDisplay.filename = ""
@@ -3627,14 +2595,14 @@ class MyDisplay(CDisplay):
 
                 # recheck if the modes are working each x seconds
                 self.aux_thread_for_preview_one_device = QThread(parent=self)
-                self.aux_worker_for_preview_one_device = workingModesThreadWorkerPreview(self.current_device, self.current_accelerator, self.japc, self.property_list, self.cern, self.pyccda_dictionary)
+                self.aux_worker_for_preview_one_device = workingModesThreadWorker(self.current_device, self.current_accelerator, self.japc, self.property_list, self.cern)
                 self.aux_worker_for_preview_one_device.moveToThread(self.aux_thread_for_preview_one_device)
                 self.aux_worker_for_preview_one_device.finished.connect(self.finishThreadPreviewOneDevice)
                 self.aux_thread_for_preview_one_device.started.connect(self.aux_worker_for_preview_one_device.start)
                 self.aux_thread_for_preview_one_device.start()
 
                 # update once the thread outputs the results
-                self.aux_worker_for_preview_one_device.processed.connect(self.sendUpdatesWorkingModesPreview)
+                self.aux_worker_for_preview_one_device.processed.connect(self.sendUpdatesWorkingModes)
 
             # update text label
             if self.current_device in self.working_devices:
@@ -3675,33 +2643,10 @@ class MyDisplay(CDisplay):
             self.app.main_window.statusBar().showMessage("Loading {} summary preview...".format(self.current_accelerator), 0)
             self.app.main_window.statusBar().repaint()
 
-            # get accelerator specific devices
-            acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == self.current_accelerator])
-            self.acc_device_list_summary = acc_device_list
-
             # stop old thread (preview_one_device)
             if type(self.aux_thread_for_preview_one_device) == QThread:
                 if self.aux_thread_for_preview_one_device.isRunning():
                     self.aux_worker_for_preview_one_device.stop()
-
-            # stop old threads (summary)
-            were_threads_running = False
-            for device in self.acc_device_list_summary:
-                if device in self.working_devices:
-                    if device in self.summary_thread_dict.keys():
-                        if type(self.summary_thread_dict[device]) == QThread:
-                            if self.summary_thread_dict[device].isRunning():
-                                self.summary_worker_dict[device].stop()
-                                were_threads_running = True
-
-            # stop japc subs (summary)
-            if were_threads_running:
-                self.japc.stopSubscriptions()
-                self.japc.clearSubscriptions()
-
-            # clear for new device
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
-                shutil.rmtree(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
 
             # open main container
             self.CEmbeddedDisplay.filename = ""
@@ -3709,54 +2654,6 @@ class MyDisplay(CDisplay):
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_summary.py"
             self.CEmbeddedDisplay.open_file()
-
-            # init summary thread and worker dict
-            self.summary_thread_dict = {}
-            self.summary_worker_dict = {}
-
-            # init subs aux variables
-            DATA_SUBS_SUMMARY = {}
-            LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY = {}
-
-            # selectorOverride for the working modules table has to be a specific selector
-            # use an empty selector for LHC devices
-            if self.current_accelerator == "LHC":
-                selectorOverride = ""
-            # use SPS.USER.ALL for SPS devices
-            elif self.current_accelerator == "SPS":
-                selectorOverride = "SPS.USER.SFTPRO1"
-            # use an empty selector for the others
-            else:
-                selectorOverride = ""
-
-            # threads for summary view
-            for device in acc_device_list:
-
-                # check device works
-                if device in self.working_devices:
-
-                    # get the property list
-                    property_list = list(self.pyccda_dictionary[self.current_accelerator][device]["acquisition"].keys())
-
-                    # order the property list
-                    property_list.sort()
-
-                    # create subs
-                    for property in property_list:
-                        if property != "GeneralInformation":
-                            self.japc.subscribeParam("{}/{}".format(device, property), onValueReceived=self.subsCallbackSummary, onException=self.onExceptionSummary, timingSelectorOverride=selectorOverride, getHeader=True)
-                            self.japc.startSubscriptions()
-
-                    # recheck if the modes are working each x seconds
-                    self.summary_thread_dict[device] = QThread(parent=self)
-                    self.summary_worker_dict[device] = workingModesThreadWorkerSummary(device, acc_device_list, self.current_accelerator, self.japc, property_list, self.cern, self.pyccda_dictionary)
-                    self.summary_worker_dict[device].moveToThread(self.summary_thread_dict[device])
-                    self.summary_worker_dict[device].finished.connect(self.finishThreadSummary)
-                    self.summary_thread_dict[device].started.connect(self.summary_worker_dict[device].start)
-                    self.summary_thread_dict[device].start()
-
-                    # update once the thread outputs the results
-                    self.summary_worker_dict[device].processed.connect(self.sendUpdatesWorkingModesSummary)
 
             # update text label
             self.label_device_panel.setText("DEVICE PANEL <font color=black>{}</font> : <font color=black>{}</font>".format(selected_text, "SUMMARY"))
@@ -3769,53 +2666,6 @@ class MyDisplay(CDisplay):
 
             # update the current window
             self.current_window = "summary"
-
-    #----------------------------------------------#
-
-    # function that handles pyjapc exceptions
-    def onExceptionSummary(self, parameterName, description, exception, verbose = True):
-
-        # print
-        if verbose:
-            print("{} - Exception: {}".format(UI_FILENAME, exception))
-
-        # nothing
-        pass
-
-        return
-
-    #----------------------------------------------#
-
-    # function to receive pyjapc subs data
-    def subsCallbackSummary(self, parameterName, dictValues, headerInfo, verbose = True):
-
-        # get device name
-        dev_name = parameterName.split("/")[0]
-
-        # get property name
-        prop_name = parameterName.split("/")[1]
-
-        # ignore GeneralInformation
-        if prop_name == "GeneralInformation":
-            return
-
-        # init keys
-        if not dev_name in DATA_SUBS_SUMMARY.keys():
-            DATA_SUBS_SUMMARY[dev_name] = {}
-        if not dev_name in LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY.keys():
-            LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[dev_name] = {}
-
-        # store the data
-        DATA_SUBS_SUMMARY[dev_name][prop_name] = dictValues
-
-        # store last timestamp of the callback
-        LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY[dev_name][prop_name] = headerInfo["acqStamp"]
-
-        # print
-        if verbose:
-            print("{} - Received {} values for {}...".format(UI_FILENAME, prop_name, dev_name))
-
-        return
 
     #----------------------------------------------#
 
@@ -3836,21 +2686,6 @@ class MyDisplay(CDisplay):
             if type(self.aux_thread_for_preview_one_device) == QThread:
                 if self.aux_thread_for_preview_one_device.isRunning():
                     self.aux_worker_for_preview_one_device.stop()
-
-            # stop old threads (summary)
-            were_threads_running = False
-            for device in self.acc_device_list_summary:
-                if device in self.working_devices:
-                    if device in self.summary_thread_dict.keys():
-                        if type(self.summary_thread_dict[device]) == QThread:
-                            if self.summary_thread_dict[device].isRunning():
-                                self.summary_worker_dict[device].stop()
-                                were_threads_running = True
-
-            # stop japc subs (summary)
-            if were_threads_running:
-                self.japc.stopSubscriptions()
-                self.japc.clearSubscriptions()
 
             # update main panel
             self.CEmbeddedDisplay.filename = ""
@@ -3903,7 +2738,6 @@ class MyDisplay(CDisplay):
             self.settings_dialog_auto = SettingsDialogAuto(parent=self)
             self.settings_dialog_auto.setModal(False)
             self.settings_dialog_auto.show()
-            self.settings_dialog_auto.nturns_changed.connect(self.notifyNturnChanged)
 
             # disable and enable tool buttons
             # self.toolButton_main_settings.setEnabled(False)
@@ -3913,29 +2747,6 @@ class MyDisplay(CDisplay):
 
             # update the current window
             # self.current_window = "settings"
-
-    #----------------------------------------------#
-
-    # function that notifies preview workers if nturn changed in the settings menu after a set call
-    def notifyNturnChanged(self):
-
-        # print
-        print("{} - The parameter nturn changed!".format(UI_FILENAME))
-
-        # stop old thread and restart (preview_one_device)
-        if type(self.aux_thread_for_preview_one_device) == QThread:
-            if self.aux_thread_for_preview_one_device.isRunning():
-                self.aux_worker_for_preview_one_device.stop()
-                sleep(0.1)
-                self.aux_thread_for_preview_one_device = QThread(parent=self)
-                self.aux_worker_for_preview_one_device = workingModesThreadWorkerPreview(self.current_device, self.current_accelerator, self.japc, self.property_list, self.cern, self.pyccda_dictionary)
-                self.aux_worker_for_preview_one_device.moveToThread(self.aux_thread_for_preview_one_device)
-                self.aux_worker_for_preview_one_device.finished.connect(self.finishThreadPreviewOneDevice)
-                self.aux_thread_for_preview_one_device.started.connect(self.aux_worker_for_preview_one_device.start)
-                self.aux_thread_for_preview_one_device.start()
-                self.aux_worker_for_preview_one_device.processed.connect(self.sendUpdatesWorkingModesPreview)
-
-        return
 
     #----------------------------------------------#
 
@@ -3959,21 +2770,6 @@ class MyDisplay(CDisplay):
                 if type(self.aux_thread_for_preview_one_device) == QThread:
                     if self.aux_thread_for_preview_one_device.isRunning():
                         self.aux_worker_for_preview_one_device.stop()
-
-                # stop old threads (summary)
-                were_threads_running = False
-                for device in self.acc_device_list_summary:
-                    if device in self.working_devices:
-                        if device in self.summary_thread_dict.keys():
-                            if type(self.summary_thread_dict[device]) == QThread:
-                                if self.summary_thread_dict[device].isRunning():
-                                    self.summary_worker_dict[device].stop()
-                                    were_threads_running = True
-
-                # stop japc subs (summary)
-                if were_threads_running:
-                    self.japc.stopSubscriptions()
-                    self.japc.clearSubscriptions()
 
                 # update main panel
                 self.CEmbeddedDisplay.filename = ""
@@ -4006,24 +2802,11 @@ class MyDisplay(CDisplay):
                     if self.aux_thread_for_preview_one_device.isRunning():
                         self.aux_worker_for_preview_one_device.stop()
 
-                # stop old threads (summary)
-                were_threads_running = False
-                for device in self.acc_device_list_summary:
-                    if device in self.working_devices:
-                        if device in self.summary_thread_dict.keys():
-                            if type(self.summary_thread_dict[device]) == QThread:
-                                if self.summary_thread_dict[device].isRunning():
-                                    self.summary_worker_dict[device].stop()
-                                    were_threads_running = True
-
-                # stop japc subs (summary)
-                if were_threads_running:
-                    self.japc.stopSubscriptions()
-                    self.japc.clearSubscriptions()
-
                 # clear for new device
-                if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
-                    shutil.rmtree(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
+                if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json")):
+                    os.remove(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json"))
+                if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json")):
+                    os.remove(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json"))
 
                 # update main panel
                 self.CEmbeddedDisplay.filename = ""
@@ -4043,14 +2826,14 @@ class MyDisplay(CDisplay):
 
                     # recheck if the modes are working each x seconds
                     self.aux_thread_for_preview_one_device = QThread(parent=self)
-                    self.aux_worker_for_preview_one_device = workingModesThreadWorkerPreview(self.current_device, self.current_accelerator, self.japc, self.property_list, self.cern, self.pyccda_dictionary)
+                    self.aux_worker_for_preview_one_device = workingModesThreadWorker(self.current_device, self.current_accelerator, self.japc, self.property_list, self.cern)
                     self.aux_worker_for_preview_one_device.moveToThread(self.aux_thread_for_preview_one_device)
                     self.aux_worker_for_preview_one_device.finished.connect(self.finishThreadPreviewOneDevice)
                     self.aux_thread_for_preview_one_device.started.connect(self.aux_worker_for_preview_one_device.start)
                     self.aux_thread_for_preview_one_device.start()
 
                     # update once the thread outputs the results
-                    self.aux_worker_for_preview_one_device.processed.connect(self.sendUpdatesWorkingModesPreview)
+                    self.aux_worker_for_preview_one_device.processed.connect(self.sendUpdatesWorkingModes)
 
                 # disable and enable tool buttons
                 self.toolButton_main_settings.setEnabled(True)
@@ -4092,21 +2875,6 @@ class MyDisplay(CDisplay):
                 if type(self.aux_thread_for_preview_one_device) == QThread:
                     if self.aux_thread_for_preview_one_device.isRunning():
                         self.aux_worker_for_preview_one_device.stop()
-
-                # stop old threads (summary)
-                were_threads_running = False
-                for device in self.acc_device_list_summary:
-                    if device in self.working_devices:
-                        if device in self.summary_thread_dict.keys():
-                            if type(self.summary_thread_dict[device]) == QThread:
-                                if self.summary_thread_dict[device].isRunning():
-                                    self.summary_worker_dict[device].stop()
-                                    were_threads_running = True
-
-                # stop japc subs (summary)
-                if were_threads_running:
-                    self.japc.stopSubscriptions()
-                    self.japc.clearSubscriptions()
 
                 # open main container
                 self.CEmbeddedDisplay.filename = ""
@@ -4210,37 +2978,18 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that writes the mode updates to an aux json file
-    def sendUpdatesWorkingModesPreview(self, modules_data, errors):
+    def sendUpdatesWorkingModes(self, modules_data, errors):
 
         # create the saving dir in case it does not exist
-        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
-            os.mkdir(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
+        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons")):
+            os.mkdir(os.path.join(self.app_temp_dir, "aux_jsons"))
 
         # write the file: modules_data_for_preview_one_device
-        with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_for_preview_one_device.json"), "w") as fp:
+        with open(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json"), "w") as fp:
             json.dump(modules_data, fp, sort_keys=True, indent=4)
 
         # write the file: errors_for_preview_one_device
-        with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_for_preview_one_device.json"), "w") as fp:
-            json.dump(errors, fp, sort_keys=True, indent=4)
-
-        return
-
-    #----------------------------------------------#
-
-    # function that writes the mode updates to an aux json file
-    def sendUpdatesWorkingModesSummary(self, modules_data, errors, current_device):
-
-        # create the saving dir in case it does not exist
-        if not os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
-            os.mkdir(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
-
-        # write the file
-        with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(current_device)), "w") as fp:
-            json.dump(modules_data, fp, sort_keys=True, indent=4)
-
-        # write the file
-        with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(current_device)), "w") as fp:
+        with open(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json"), "w") as fp:
             json.dump(errors, fp, sort_keys=True, indent=4)
 
         return

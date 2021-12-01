@@ -10,9 +10,9 @@
 # COMRAD AND PYQT IMPORTS
 
 from comrad import (CValueAggregator, CDisplay, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, CContextFrame, CStaticPlot, CLabel, CCommandButton, rbac)
-from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QRect, QAbstractTableModel, QEventLoop, QCoreApplication, QTimer)
-from PyQt5.QtWidgets import (QHeaderView, QTableView, QAbstractItemView, QSizePolicy, QWidget, QHBoxLayout, QHBoxLayout, QVBoxLayout, QSpacerItem, QFrame, QGridLayout, QLabel, QTabWidget)
+from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QBrush)
+from PyQt5.QtCore import (QSize, Qt, QTimer)
+from PyQt5.QtWidgets import (QSizePolicy, QWidget, QHBoxLayout, QHBoxLayout, QVBoxLayout, QSpacerItem, QFrame, QGridLayout, QLabel, QTabWidget)
 import pyqtgraph as pg
 
 # OTHER IMPORTS
@@ -38,53 +38,6 @@ TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "main_auto.ui"
 CAPTURE_TAB = True
-
-########################################################
-########################################################
-
-class TableModel(QAbstractTableModel):
-
-    def __init__(self, data, header_labels_horizontal, header_labels_vertical, errors = [], error_messages = []):
-
-        super(TableModel, self).__init__()
-        self._data = data
-        self._header_labels_horizontal = header_labels_horizontal
-        self._header_labels_vertical = header_labels_vertical
-        self.errors = errors
-        self.error_messages = error_messages
-
-        return
-
-    def headerData(self, section, orientation, role):
-
-        if role == Qt.DisplayRole:
-            if orientation == Qt.Horizontal and self._header_labels_horizontal:
-                return self._header_labels_horizontal[section]
-            elif orientation == Qt.Vertical and self._header_labels_vertical:
-                return self._header_labels_vertical[section]
-
-    def data(self, index, role):
-
-        row = index.row()
-        col = index.column()
-
-        if role == Qt.TextAlignmentRole:
-            return Qt.AlignCenter
-        elif role == Qt.DisplayRole:
-            value = self._data[row][col]
-            return value
-        elif role == Qt.ForegroundRole and "-" in self._data[row][:]:
-            return QBrush(QColor("#FF6C00"))
-        elif role == Qt.BackgroundRole and "-" in self._data[row][:]:
-            return QBrush(QColor("#F8F0DD"))
-
-    def rowCount(self, index):
-
-        return len(self._data)
-
-    def columnCount(self, index):
-
-        return len(self._data[0])
 
 ########################################################
 ########################################################
@@ -122,7 +75,6 @@ class MyDisplay(CDisplay):
 
         # init aux booleans and variables
         self.data_aux_time = math.inf
-        self.firstTimeGeneralInformationShown = False
         self.bufferFirstPlotsPainted = False
         self.bufferUcapFirstPlotsPainted = False
         self.compute_time_vector_first_time = True
@@ -206,7 +158,7 @@ class MyDisplay(CDisplay):
 
         # load and set the channels
         print("{} - Setting all channels...".format(UI_FILENAME))
-        # self.setChannels()
+        self.setChannels()
 
         # status bar message
         self.app.main_window.statusBar().showMessage("CaptureTab - Waiting to receive any data...", 0)
@@ -230,9 +182,6 @@ class MyDisplay(CDisplay):
         self.pyqtPlotDict = {}
         self.cvalueAggregatorDict = {}
         self.frameDict = {}
-        self.tableViewDict = {}
-        self.tableModelDict = {}
-        self.tableDataModelDict = {}
 
         # iterate over the property tabs
         for property in self.property_list:
@@ -246,87 +195,23 @@ class MyDisplay(CDisplay):
             # custom tab
             if str(property) in self.exception_list:
 
-                # if general information
-                if str(property) == "GeneralInformation":
+                # CAPTURE TAB - change cursors of CRelatedDisplayButton to normal ArrowCursor
+                self.CRelatedDisplayButton_rawBuf0.setCursor(QCursor(Qt.ArrowCursor))
+                self.CRelatedDisplayButton_rawBuf0_FFT.setCursor(QCursor(Qt.ArrowCursor))
+                self.CRelatedDisplayButton_rawBuf1.setCursor(QCursor(Qt.ArrowCursor))
+                self.CRelatedDisplayButton_rawBuf1_FFT.setCursor(QCursor(Qt.ArrowCursor))
 
-                    # get the field list
-                    self.field_list_general_information = list(self.pyccda_dictionary[self.current_accelerator][self.current_device]["acquisition"][property]["scalar"].keys())
-                    self.field_list_general_information += list(self.pyccda_dictionary[self.current_accelerator][self.current_device]["acquisition"][property]["other"].keys())
-                    self.field_list_general_information[self.field_list_general_information.index("monitorNames")] = "MonitorNames"
-                    self.field_list_general_information.sort()
+                # CAPTURE TAB - make push buttons invisible just to make the grid look nicer
+                sp_retain0 = self.pushButton_invisible_0.sizePolicy()
+                sp_retain0.setRetainSizeWhenHidden(True)
+                self.pushButton_invisible_0.setSizePolicy(sp_retain0)
+                self.pushButton_invisible_0.hide()
+                sp_retain1 = self.pushButton_invisible_1.sizePolicy()
+                sp_retain1.setRetainSizeWhenHidden(True)
+                self.pushButton_invisible_1.setSizePolicy(sp_retain1)
+                self.pushButton_invisible_1.hide()
 
-                    # format the data model
-                    self.general_information_data = [[str(field_name),"-"] for field_name in self.field_list_general_information]
-
-                    # general information model
-                    self.model_general_information = TableModel(data=self.general_information_data, header_labels_horizontal=["Fields", "Values"], header_labels_vertical=[])
-                    self.tableView_general_information.setModel(self.model_general_information)
-                    self.tableView_general_information.update()
-                    self.tableView_general_information.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_general_information.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_general_information.setEditTriggers(QAbstractItemView.NoEditTriggers)
-                    self.tableView_general_information.setFocusPolicy(Qt.NoFocus)
-                    self.tableView_general_information.setSelectionMode(QAbstractItemView.NoSelection)
-                    self.tableView_general_information.horizontalHeader().setFixedHeight(30)
-                    self.tableView_general_information.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-                    self.tableView_general_information.show()
-
-                    # aggregator for the property general information
-                    self.cvalueAggregatorDict["{}".format(property)] = CValueAggregator(self)
-                    self.cvalueAggregatorDict["{}".format(property)].setProperty("inputChannels", ['{}/{}'.format(self.current_device, property)])
-                    self.cvalueAggregatorDict["{}".format(property)].setObjectName("CValueAggregator_{}".format(property))
-                    self.cvalueAggregatorDict["{}".format(property)].setValueTransformation("try:\n"
-                                                                                            "    output(next(iter(values.values())))\n"
-                                                                                            "except:\n"
-                                                                                            "    output(0)")
-                    self.verticalLayout_context_general_information.addWidget(self.cvalueAggregatorDict["{}".format(property)])
-
-                # else it is the capture tab
-                else:
-
-                    # overtones0 model
-                    self.capture_overtones0_data = [["1st", "-"], ["2nd", "-"], ["3rd", "-"], ["4th", "-"], ["5th", "-"], ["6th", "-"], ["7th", "-"]]
-                    self.model_overtones0 = TableModel(data=self.capture_overtones0_data, header_labels_horizontal=["Overtones", "Frequency"], header_labels_vertical=[])
-                    self.tableView_overtones_0.setModel(self.model_overtones0)
-                    self.tableView_overtones_0.update()
-                    self.tableView_overtones_0.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_overtones_0.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_overtones_0.setEditTriggers(QAbstractItemView.NoEditTriggers)
-                    self.tableView_overtones_0.setFocusPolicy(Qt.NoFocus)
-                    self.tableView_overtones_0.setSelectionMode(QAbstractItemView.NoSelection)
-                    self.tableView_overtones_0.horizontalHeader().setFixedHeight(30)
-                    self.tableView_overtones_0.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-                    self.tableView_overtones_0.show()
-
-                    # overtones1 model
-                    self.capture_overtones1_data = [["1st", "-"], ["2nd", "-"], ["3rd", "-"], ["4th", "-"], ["5th", "-"], ["6th", "-"], ["7th", "-"]]
-                    self.model_overtones1 = TableModel(data=self.capture_overtones1_data, header_labels_horizontal=["Overtones", "Frequency"], header_labels_vertical=[])
-                    self.tableView_overtones_1.setModel(self.model_overtones1)
-                    self.tableView_overtones_1.update()
-                    self.tableView_overtones_1.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_overtones_1.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                    self.tableView_overtones_1.setEditTriggers(QAbstractItemView.NoEditTriggers)
-                    self.tableView_overtones_1.setFocusPolicy(Qt.NoFocus)
-                    self.tableView_overtones_1.setSelectionMode(QAbstractItemView.NoSelection)
-                    self.tableView_overtones_1.horizontalHeader().setFixedHeight(30)
-                    self.tableView_overtones_1.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-                    self.tableView_overtones_1.show()
-
-                    # CAPTURE TAB - change cursors of CRelatedDisplayButton to normal ArrowCursor
-                    self.CRelatedDisplayButton_rawBuf0.setCursor(QCursor(Qt.ArrowCursor))
-                    self.CRelatedDisplayButton_rawBuf0_FFT.setCursor(QCursor(Qt.ArrowCursor))
-                    self.CRelatedDisplayButton_rawBuf1.setCursor(QCursor(Qt.ArrowCursor))
-                    self.CRelatedDisplayButton_rawBuf1_FFT.setCursor(QCursor(Qt.ArrowCursor))
-
-                    # CAPTURE TAB - make push buttons invisible just to make the grid look nicer
-                    sp_retain0 = self.pushButton_invisible_0.sizePolicy()
-                    sp_retain0.setRetainSizeWhenHidden(True)
-                    self.pushButton_invisible_0.setSizePolicy(sp_retain0)
-                    self.pushButton_invisible_0.hide()
-                    sp_retain1 = self.pushButton_invisible_1.sizePolicy()
-                    sp_retain1.setRetainSizeWhenHidden(True)
-                    self.pushButton_invisible_1.setSizePolicy(sp_retain1)
-                    self.pushButton_invisible_1.hide()
+                pass
 
             # generic tab
             else:
@@ -370,35 +255,9 @@ class MyDisplay(CDisplay):
                 self.frameDict["frame_information_area_{}".format(property)].setFrameShape(QFrame.NoFrame)
                 self.frameDict["frame_information_area_{}".format(property)].setFrameShadow(QFrame.Plain)
 
-                # vertical layout of the frame information area
-                self.layoutDict["vertical_layout_frame_information_area_{}".format(property)] = QVBoxLayout(self.frameDict["frame_information_area_{}".format(property)])
-                self.layoutDict["vertical_layout_frame_information_area_{}".format(property)].setObjectName("vertical_layout_frame_information_area_{}".format(property))
-
-                # table view for the generic frame information area
-                self.tableViewDict["table_view_{}".format(property)] = QTableView(self.frameDict["frame_information_area_{}".format(property)])
-                self.tableViewDict["table_view_{}".format(property)].setStyleSheet("QTableView{\n"
-                                                                                   "    background-color: rgb(243, 243, 243);\n"
-                                                                                   "}")
-                self.tableViewDict["table_view_{}".format(property)].setFrameShape(QFrame.StyledPanel)
-                self.tableViewDict["table_view_{}".format(property)].setFrameShadow(QFrame.Plain)
-                self.tableViewDict["table_view_{}".format(property)].setDragEnabled(False)
-                self.tableViewDict["table_view_{}".format(property)].setAlternatingRowColors(True)
-                self.tableViewDict["table_view_{}".format(property)].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict["table_view_{}".format(property)].setShowGrid(True)
-                self.tableViewDict["table_view_{}".format(property)].setGridStyle(Qt.SolidLine)
-                self.tableViewDict["table_view_{}".format(property)].setObjectName("tableView_summary")
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setHighlightSections(False)
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setMinimumSectionSize(50)
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setStretchLastSection(True)
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setVisible(False)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setDefaultSectionSize(25)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setHighlightSections(False)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setMinimumSectionSize(25)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setStretchLastSection(True)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setDefaultAlignment(Qt.AlignCenter)
-                self.tableViewDict["table_view_{}".format(property)].setMinimumHeight(300)
-                self.layoutDict["vertical_layout_frame_information_area_{}".format(property)].addWidget(self.tableViewDict["table_view_{}".format(property)])
+                # grid layout for the generic table
+                self.layoutDict["grid_layout_tab_information_area_{}".format(property)] = QGridLayout(self.frameDict["frame_information_area_{}".format(property)])
+                self.layoutDict["grid_layout_tab_information_area_{}".format(property)].setObjectName("grid_layout_tab_information_area_{}".format(property))
 
                 # retrieve the field names
                 self.field_dict["{}".format(property)] = {}
@@ -417,6 +276,29 @@ class MyDisplay(CDisplay):
                     to_remove = ["turnLossBuf0_compressed", "turnLossBuf1_compressed", "turnLossBuf0_indexes", "turnLossBuf1_indexes"]
                     self.field_dict["{}".format(property)]["fields_that_are_arrays"] = list(set(self.field_dict["{}".format(property)]["fields_that_are_arrays"]).difference(to_remove))
 
+                # add the top title labels (the first row of the table)
+                row = 0
+
+                # set fields label (column == 0)
+                column = 0
+                self.labelDict["{}_{}".format(property, "title_fields")] = QLabel(self.frameDict["frame_information_area_{}".format(property)])
+                self.labelDict["{}_{}".format(property, "title_fields")].setObjectName("label_{}_{}".format(property, "title_fields"))
+                self.labelDict["{}_{}".format(property, "title_fields")].setMinimumSize(QSize(0, 30))
+                self.labelDict["{}_{}".format(property, "title_fields")].setAlignment(Qt.AlignCenter)
+                self.labelDict["{}_{}".format(property, "title_fields")].setText("{}".format("Fields"))
+                self.labelDict["{}_{}".format(property, "title_fields")].setStyleSheet("background-color: rgb(210, 210, 210);")
+                self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.labelDict["{}_{}".format(property, "title_fields")], row, column, 1, 1)
+
+                # set values label (column == 1)
+                column = 1
+                self.labelDict["{}_{}".format(property, "title_values")] = QLabel(self.frameDict["frame_information_area_{}".format(property)])
+                self.labelDict["{}_{}".format(property, "title_values")].setObjectName("label_{}_{}".format(property, "title_values"))
+                self.labelDict["{}_{}".format(property, "title_values")].setMinimumSize(QSize(0, 30))
+                self.labelDict["{}_{}".format(property, "title_values")].setAlignment(Qt.AlignCenter)
+                self.labelDict["{}_{}".format(property, "title_values")].setText("{}".format("Values"))
+                self.labelDict["{}_{}".format(property, "title_values")].setStyleSheet("background-color: rgb(210, 210, 210);")
+                self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.labelDict["{}_{}".format(property, "title_values")], row, column, 1, 1)
+
                 # aggregator for the property
                 self.cvalueAggregatorDict["{}".format(property)] = CValueAggregator(self)
                 self.cvalueAggregatorDict["{}".format(property)].setProperty("inputChannels", ['{}/{}'.format(self.current_device, property)])
@@ -427,26 +309,90 @@ class MyDisplay(CDisplay):
                                                                      "    output(0)")
                 self.horizontalLayout_CValueAggregators.addWidget(self.cvalueAggregatorDict["{}".format(property)])
 
-                # init model data list of lists
-                self.tableDataModelDict["data_{}".format(property)] = []
-
-                # iterate over fields
+                # add the labels to the table
+                row = 1
                 for field in self.field_dict["{}".format(property)]["fields_that_are_not_arrays"]:
-                    self.tableDataModelDict["data_{}".format(property)].append([str(field), "-"])
 
-                # show table and update model
-                self.tableModelDict["table_model_{}".format(property)] = TableModel(data=self.tableDataModelDict["data_{}".format(property)], header_labels_horizontal=["Fields", "Values"], header_labels_vertical=[])
-                self.tableViewDict["table_view_{}".format(property)].setModel(self.tableModelDict["table_model_{}".format(property)])
-                self.tableViewDict["table_view_{}".format(property)].update()
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-                self.tableViewDict["table_view_{}".format(property)].setEditTriggers(QAbstractItemView.NoEditTriggers)
-                self.tableViewDict["table_view_{}".format(property)].setFocusPolicy(Qt.NoFocus)
-                self.tableViewDict["table_view_{}".format(property)].setSelectionMode(QAbstractItemView.NoSelection)
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setFixedHeight(30)
-                self.tableViewDict["table_view_{}".format(property)].horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-                self.tableViewDict["table_view_{}".format(property)].verticalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-                self.tableViewDict["table_view_{}".format(property)].show()
+                    # init generic data fields
+                    self.data_generic_dict[property][field] = "Null"
+
+                    # set label (column == 0)
+                    column = 0
+                    self.labelDict["{}_{}".format(property, field)] = QLabel(self.frameDict["frame_information_area_{}".format(property)])
+                    self.labelDict["{}_{}".format(property, field)].setObjectName("label_{}_{}".format(property, field))
+                    self.labelDict["{}_{}".format(property, field)].setMinimumSize(QSize(0, 30))
+                    self.labelDict["{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.labelDict["{}_{}".format(property, field)].setText("{}".format(field))
+                    self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.labelDict["{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # set clabel (column == 1)
+                    column = 1
+                    self.clabelDict["{}_{}".format(property, field)] = CLabel(self.frameDict["frame_information_area_{}".format(property)])
+                    self.clabelDict["{}_{}".format(property, field)].setObjectName("clabel_{}_{}".format(property, field))
+                    self.clabelDict["{}_{}".format(property, field)].setProperty("type", 1)
+                    self.clabelDict["{}_{}".format(property, field)].setMinimumSize(QSize(0, 30))
+                    self.clabelDict["{}_{}".format(property, field)].setAlignment(Qt.AlignCenter)
+                    self.clabelDict["{}_{}".format(property, field)].setText("Null")
+                    self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.clabelDict["{}_{}".format(property, field)], row, column, 1, 1)
+
+                    # get the next field
+                    row += 1
+
+                # add the commands to the table
+                for index_command, command_substring in enumerate(self.command_list_substrings_removed):
+
+                    # check if the command has to do with the property tab
+                    if command_substring in property:
+
+                        # set the command
+                        command = self.command_list[index_command]
+
+                        # context frame and layout of the command button (column == 0)
+                        self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)] = CContextFrame(self.frameDict["frame_information_area_{}".format(property)])
+                        self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)].setObjectName("CContextFrame_command_button_column_0_{}_{}".format(property, command))
+                        self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)].inheritSelector = False
+                        self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)].selector = ""
+                        self.layoutDict["layout_command_button_{}".format(property, command)] = QVBoxLayout(self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)])
+                        self.layoutDict["layout_command_button_{}".format(property, command)].setObjectName("layout_command_button_{}".format(property, command))
+                        self.layoutDict["layout_command_button_{}".format(property, command)].setContentsMargins(0, 0, 0, 0)
+
+                        # set label (column == 0)
+                        column = 0
+                        self.labelDict["{}_{}".format(property, command)] = QLabel(self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)])
+                        self.labelDict["{}_{}".format(property, command)].setObjectName("label_{}_{}".format(property, command))
+                        self.labelDict["{}_{}".format(property, command)].setMinimumSize(QSize(0, 30))
+                        self.labelDict["{}_{}".format(property, command)].setAlignment(Qt.AlignCenter)
+                        self.labelDict["{}_{}".format(property, command)].setText("{}".format(command))
+                        self.layoutDict["layout_command_button_{}".format(property, command)].addWidget(self.labelDict["{}_{}".format(property, command)])
+                        self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)], row, column, 1, 1)
+
+                        # context frame and layout of the command button (column == 1)
+                        self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)] = CContextFrame(self.frameDict["frame_information_area_{}".format(property)])
+                        self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)].setObjectName("CContextFrame_command_button_column_1_{}_{}".format(property, command))
+                        self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)].inheritSelector = False
+                        self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)].selector = ""
+                        self.layoutDict["layout_command_button_{}".format(property, command)] = QVBoxLayout(self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)])
+                        self.layoutDict["layout_command_button_{}".format(property, command)].setObjectName("layout_command_button_{}".format(property, command))
+                        self.layoutDict["layout_command_button_{}".format(property, command)].setContentsMargins(0, 0, 0, 0)
+
+                        # set ccommandbutton (column == 1)
+                        column = 1
+                        self.commandButtonDict["{}_{}".format(property, command)] = CCommandButton(self.contextFrameDict["CContextFrame_command_button_column_0_{}_{}".format(property, command)])
+                        self.commandButtonDict["{}_{}".format(property, command)].setObjectName("ccommandbutton_{}_{}".format(property, command))
+                        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
+                        sizePolicy.setHorizontalStretch(0)
+                        sizePolicy.setVerticalStretch(0)
+                        sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format(property, command)].sizePolicy().hasHeightForWidth())
+                        self.commandButtonDict["{}_{}".format(property, command)].setSizePolicy(sizePolicy)
+                        self.commandButtonDict["{}_{}".format(property, command)].setText("{}".format(" Run"))
+                        self.commandButtonDict["{}_{}".format(property, command)].setIcon(QIcon(SAVING_PATH + "/icons/command.png"))
+                        self.commandButtonDict["{}_{}".format(property, command)].setMinimumSize(QSize(0, 30))
+                        self.commandButtonDict["{}_{}".format(property, command)].channel = "{}/{}".format(self.current_device, command)
+                        self.layoutDict["layout_command_button_{}".format(property, command)].addWidget(self.commandButtonDict["{}_{}".format(property, command)])
+                        self.layoutDict["grid_layout_tab_information_area_{}".format(property)].addWidget(self.contextFrameDict["CContextFrame_command_button_column_1_{}_{}".format(property, command)], row, column, 1, 1)
+
+                        # get the next command
+                        row += 1
 
                 # setup a frame to host the acq timestamp and cycle name header fields
                 self.frameDict["frame_for_header_data_{}".format(property)] = QFrame(self.contextFrameDict["CStaticPlot_area_{}".format(property)])
@@ -468,8 +414,8 @@ class MyDisplay(CDisplay):
                 self.clabelDict["{}_AcqTimestamp".format(property)].setObjectName("{}_AcqTimestamp".format(property))
                 self.clabelDict["{}_AcqTimestamp".format(property)].setProperty("type", 2)
                 self.clabelDict["{}_AcqTimestamp".format(property)].setTextFormat(Qt.RichText)
-                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<font color=\"#FF6C00\"><b>acqStamp:</b> -  </color>")
-                self.data_generic_dict[property]["acqStamp"] = "-"
+                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> Null UTC  ")
+                self.data_generic_dict[property]["acqStamp"] = "Null"
                 self.clabelDict["{}_AcqTimestamp".format(property)].setAlignment(Qt.AlignCenter)
                 minWidth = self.clabelDict["{}_AcqTimestamp".format(property)].fontMetrics().boundingRect(self.clabelDict["{}_AcqTimestamp".format(property)].text()).width()
                 self.clabelDict["{}_AcqTimestamp".format(property)].setMinimumSize(QSize(minWidth, 0))
@@ -480,8 +426,8 @@ class MyDisplay(CDisplay):
                 self.clabelDict["{}_CycleName".format(property)].setObjectName("{}_CycleName".format(property))
                 self.clabelDict["{}_CycleName".format(property)].setProperty("type", 2)
                 self.clabelDict["{}_CycleName".format(property)].setTextFormat(Qt.RichText)
-                self.clabelDict["{}_CycleName".format(property)].setText("<font color=\"#FF6C00\"><b>cycleName:</b> -</color>")
-                self.data_generic_dict[property]["cycleName"] = "-"
+                self.clabelDict["{}_CycleName".format(property)].setText("<b>cycleName:</b> Null  ")
+                self.data_generic_dict[property]["cycleName"] = "Null"
                 self.clabelDict["{}_CycleName".format(property)].setAlignment(Qt.AlignCenter)
                 minWidth = self.clabelDict["{}_CycleName".format(property)].fontMetrics().boundingRect(self.clabelDict["{}_CycleName".format(property)].text()).width()
                 self.clabelDict["{}_CycleName".format(property)].setMinimumSize(QSize(minWidth, 0))
@@ -764,9 +710,6 @@ class MyDisplay(CDisplay):
             if str(property) not in self.exception_list:
                 self.cvalueAggregatorDict["{}".format(property)].updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromGenericProperty)
 
-        # aggregator signal for general information
-        self.cvalueAggregatorDict["{}".format("GeneralInformation")].updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromGeneralInformation)
-
         # singleshot qtimer for adding a delay to the timer_keep_calling_capture_function_until_stamps_are_the_same timer
         self.single_shot_timer = QTimer(self)
 
@@ -801,9 +744,6 @@ class MyDisplay(CDisplay):
             # check it is a generic property
             if str(self.current_tab_name) not in self.exception_list:
 
-                # init new data model
-                new_table_data_model = []
-
                 # iterate over fields
                 for field in self.field_dict["{}".format(self.current_tab_name)]["fields_that_are_not_arrays"]:
 
@@ -811,14 +751,7 @@ class MyDisplay(CDisplay):
                     if field in self.data_generic_dict[self.current_tab_name].keys():
 
                         # update fields
-                        new_table_data_model.append([str(field), str(self.data_generic_dict[self.current_tab_name][field])])
-
-                # update the table if there is a new data model
-                if new_table_data_model:
-                    self.tableDataModelDict["data_{}".format(self.current_tab_name)] = new_table_data_model
-                    self.tableModelDict["table_model_{}".format(self.current_tab_name)] = TableModel(data=self.tableDataModelDict["data_{}".format(self.current_tab_name)], header_labels_horizontal=["Fields", "Values"], header_labels_vertical=[])
-                    self.tableViewDict["table_view_{}".format(self.current_tab_name)].setModel(self.tableModelDict["table_model_{}".format(self.current_tab_name)])
-                    self.tableViewDict["table_view_{}".format(self.current_tab_name)].update()
+                        self.clabelDict["{}_{}".format(self.current_tab_name, field)].setText("{}".format(self.data_generic_dict[self.current_tab_name][field]))
 
                 # iterate over arrays
                 for field in self.field_dict["{}".format(self.current_tab_name)]["fields_that_are_arrays"]:
@@ -835,87 +768,14 @@ class MyDisplay(CDisplay):
                         self.firstPlotPaintedDict[self.current_tab_name][field] = True
 
                         # set up the acq timestamp and cyclename
-                        if self.data_generic_dict[self.current_tab_name]["acqStamp"] == "-":
-                            self.clabelDict["{}_AcqTimestamp".format(self.current_tab_name)].setText("<font color=\"#FF6C00\"><b>acqStamp:</b> {}  </color>".format(self.data_generic_dict[self.current_tab_name]["acqStamp"]))
-                            self.clabelDict["{}_CycleName".format(self.current_tab_name)].setText("<font color=\"#FF6C00\"><b>cycleName:</b> {}</color>".format(self.data_generic_dict[self.current_tab_name]["cycleName"]))
-                        else:
-                            self.clabelDict["{}_AcqTimestamp".format(self.current_tab_name)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[self.current_tab_name]["acqStamp"]))
-                            self.clabelDict["{}_CycleName".format(self.current_tab_name)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[self.current_tab_name]["cycleName"]))
+                        self.clabelDict["{}_AcqTimestamp".format(self.current_tab_name)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[self.current_tab_name]["acqStamp"]))
+                        self.clabelDict["{}_CycleName".format(self.current_tab_name)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[self.current_tab_name]["cycleName"]))
 
         # update items when tab changes (CAPTURE TAB)
         elif self.current_tab_name == "Capture":
 
             # plot the data
             self.plotCaptureFunction()
-
-        return
-
-    #----------------------------------------------#
-
-    # connect function
-    def receiveDataFromGeneralInformation(self, data, verbose = False):
-
-        # print
-        if verbose:
-            print("{} - Data received for property {}...".format(UI_FILENAME, "GeneralInformation"))
-
-        # init new data model
-        new_table_data_model = []
-
-        # take into account the tab for updating the info (not for the first time updating)
-        if self.firstTimeGeneralInformationShown:
-
-            # iterate over fields
-            for field in self.field_list_general_information:
-
-                # freeze in case we are not in the right tab
-                if self.current_tab_name == "GeneralInformation":
-
-                    # update fields
-                    if field == "MonitorNames":
-                        final_field_value = ""
-                        new_val = data["monitorNames"]
-                        for i in range(0, len(new_val)):
-                            string = new_val[i]
-                            if i > 0:
-                                final_field_value = final_field_value + ", " + string
-                            else:
-                                final_field_value = string
-                        final_field_value = "  {}  ".format(final_field_value)
-                        new_table_data_model.append(["MonitorNames", final_field_value])
-                    else:
-                        data_f = data[field]
-                        new_table_data_model.append([str(field), str(data_f)])
-
-        # first time updating
-        else:
-
-            # iterate over fields
-            for field in self.field_list_general_information:
-
-                # update fields no matter if the tab is different
-                if field == "MonitorNames":
-                    final_field_value = ""
-                    new_val = data["monitorNames"]
-                    for i in range(0, len(new_val)):
-                        string = new_val[i]
-                        if i > 0:
-                            final_field_value = final_field_value + ", " + string
-                        else:
-                            final_field_value = string
-                    final_field_value = "  {}  ".format(final_field_value)
-                    new_table_data_model.append(["MonitorNames", final_field_value])
-                else:
-                    data_f = data[field]
-                    new_table_data_model.append([str(field), str(data_f)])
-
-        # update the table if there is a new data model
-        if new_table_data_model:
-            self.general_information_data = new_table_data_model
-            self.model_general_information = TableModel(data=self.general_information_data, header_labels_horizontal=["Fields", "Values"], header_labels_vertical=[])
-            self.tableView_general_information.setModel(self.model_general_information)
-            self.tableView_general_information.update()
-            self.firstTimeGeneralInformationShown = True
 
         return
 
@@ -941,9 +801,6 @@ class MyDisplay(CDisplay):
                     self.data_generic_dict[property]["acqStamp"] = data["acqStamp"]
                     self.data_generic_dict[property]["cycleName"] = data["cycleName"]
 
-                    # init new data model
-                    new_table_data_model = []
-
                     # iterate over fields
                     for field in self.field_dict["{}".format(property)]["fields_that_are_not_arrays"]:
 
@@ -957,14 +814,7 @@ class MyDisplay(CDisplay):
                             if self.current_tab_name == property:
 
                                 # update fields
-                                new_table_data_model.append([str(field), str(self.data_generic_dict[property][field])])
-
-                    # update the table if there is a new data model
-                    if new_table_data_model:
-                        self.tableDataModelDict["data_{}".format(property)] = new_table_data_model
-                        self.tableModelDict["table_model_{}".format(property)] = TableModel(data=self.tableDataModelDict["data_{}".format(property)], header_labels_horizontal=["Fields", "Values"], header_labels_vertical=[])
-                        self.tableViewDict["table_view_{}".format(property)].setModel(self.tableModelDict["table_model_{}".format(property)])
-                        self.tableViewDict["table_view_{}".format(property)].update()
+                                self.clabelDict["{}_{}".format(property, field)].setText("{}".format(self.data_generic_dict[property][field]))
 
                     # iterate over arrays
                     for field in self.field_dict["{}".format(property)]["fields_that_are_arrays"]:
@@ -992,12 +842,8 @@ class MyDisplay(CDisplay):
                                 self.firstPlotPaintedDict[property][field] = True
 
                                 # set up the acq timestamp and cyclename
-                                if self.data_generic_dict[self.current_tab_name]["acqStamp"] == "-":
-                                    self.clabelDict["{}_AcqTimestamp".format(property)].setText("<font color=\"#FF6C00\"><b>acqStamp:</b> {}  </color>".format(self.data_generic_dict[property]["acqStamp"]))
-                                    self.clabelDict["{}_CycleName".format(property)].setText("<font color=\"#FF6C00\"><b>cycleName:</b> {}</color>".format(self.data_generic_dict[property]["cycleName"]))
-                                else:
-                                    self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[property]["acqStamp"]))
-                                    self.clabelDict["{}_CycleName".format(property)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[property]["cycleName"]))
+                                self.clabelDict["{}_AcqTimestamp".format(property)].setText("<b>acqStamp:</b> {} UTC  ".format(self.data_generic_dict[property]["acqStamp"]))
+                                self.clabelDict["{}_CycleName".format(property)].setText("<b>cycleName:</b> {}".format(self.data_generic_dict[property]["cycleName"]))
 
                     # stop iterating properties
                     break
@@ -1170,16 +1016,13 @@ class MyDisplay(CDisplay):
                         self.current_inf_lines_pos_0 = self.inf_lines_pos_0
 
                         # set the text fields of the frequency peaks
-                        self.capture_overtones0_data = [["1st", "{0:.2f} kHz".format(self.data_peaks_freq0[0])],
-                                                        ["2nd", "{0:.2f} kHz".format(self.data_peaks_freq0[1])],
-                                                        ["3rd", "{0:.2f} kHz".format(self.data_peaks_freq0[2])],
-                                                        ["4th", "{0:.2f} kHz".format(self.data_peaks_freq0[3])],
-                                                        ["5th", "{0:.2f} kHz".format(self.data_peaks_freq0[4])],
-                                                        ["6th", "{0:.2f} kHz".format(self.data_peaks_freq0[5])],
-                                                        ["7th", "{0:.2f} kHz".format(self.data_peaks_freq0[6])]]
-                        self.model_overtones0 = TableModel(data=self.capture_overtones0_data, header_labels_horizontal=["Overtones", "Frequency"], header_labels_vertical=[])
-                        self.tableView_overtones_0.setModel(self.model_overtones0)
-                        self.tableView_overtones_0.update()
+                        self.CLabel_Overtones0_1.setText("{0:.2f} kHz".format(self.data_peaks_freq0[0]))
+                        self.CLabel_Overtones0_2.setText("{0:.2f} kHz".format(self.data_peaks_freq0[1]))
+                        self.CLabel_Overtones0_3.setText("{0:.2f} kHz".format(self.data_peaks_freq0[2]))
+                        self.CLabel_Overtones0_4.setText("{0:.2f} kHz".format(self.data_peaks_freq0[3]))
+                        self.CLabel_Overtones0_5.setText("{0:.2f} kHz".format(self.data_peaks_freq0[4]))
+                        self.CLabel_Overtones0_6.setText("{0:.2f} kHz".format(self.data_peaks_freq0[5]))
+                        self.CLabel_Overtones0_7.setText("{0:.2f} kHz".format(self.data_peaks_freq0[6]))
 
                         # plot the data for buf1
                         self.plot_rawbuf1.getPlotItem().clear()
@@ -1206,16 +1049,13 @@ class MyDisplay(CDisplay):
                         self.current_inf_lines_pos_1 = self.inf_lines_pos_1
 
                         # set the text fields of the frequency peaks
-                        self.capture_overtones1_data = [["1st", "{0:.2f} kHz".format(self.data_peaks_freq1[0])],
-                                                        ["2nd", "{0:.2f} kHz".format(self.data_peaks_freq1[1])],
-                                                        ["3rd", "{0:.2f} kHz".format(self.data_peaks_freq1[2])],
-                                                        ["4th", "{0:.2f} kHz".format(self.data_peaks_freq1[3])],
-                                                        ["5th", "{0:.2f} kHz".format(self.data_peaks_freq1[4])],
-                                                        ["6th", "{0:.2f} kHz".format(self.data_peaks_freq1[5])],
-                                                        ["7th", "{0:.2f} kHz".format(self.data_peaks_freq1[6])]]
-                        self.model_overtones1 = TableModel(data=self.capture_overtones1_data, header_labels_horizontal=["Overtones", "Frequency"], header_labels_vertical=[])
-                        self.tableView_overtones_1.setModel(self.model_overtones1)
-                        self.tableView_overtones_1.update()
+                        self.CLabel_Overtones1_1.setText("{0:.2f} kHz".format(self.data_peaks_freq1[0]))
+                        self.CLabel_Overtones1_2.setText("{0:.2f} kHz".format(self.data_peaks_freq1[1]))
+                        self.CLabel_Overtones1_3.setText("{0:.2f} kHz".format(self.data_peaks_freq1[2]))
+                        self.CLabel_Overtones1_4.setText("{0:.2f} kHz".format(self.data_peaks_freq1[3]))
+                        self.CLabel_Overtones1_5.setText("{0:.2f} kHz".format(self.data_peaks_freq1[4]))
+                        self.CLabel_Overtones1_6.setText("{0:.2f} kHz".format(self.data_peaks_freq1[5]))
+                        self.CLabel_Overtones1_7.setText("{0:.2f} kHz".format(self.data_peaks_freq1[6]))
 
                         # set cycle information
                         self.CLabel_acqStamp_Capture_0.setText("<b>acqStamp:</b> {} UTC  ".format(self.data_acqStamp))

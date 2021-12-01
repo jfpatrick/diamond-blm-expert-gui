@@ -34,7 +34,7 @@ from datetime import datetime, timedelta, timezone
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 UI_FILENAME = "preview_one_device.ui"
-ACCEPTANCE_FACTOR = 2.00
+ACCEPTANCE_FACTOR = 1.50
 TURN_TIME_LHC = 89.0000 # microseconds
 TURN_TIME_SPS = 23.0543 # microseconds
 
@@ -353,19 +353,10 @@ class MyDisplay(CDisplay):
                     # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
                     # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
                     if property == "AcquisitionHistogram":
-                        is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossHistogramSetting"]["mux"]
-                        if is_multiplexed == "False":
-                            selectorOverride = ""
                         nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
                     elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
-                        is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["BeamLossIntegralSetting"]["mux"]
-                        if is_multiplexed == "False":
-                            selectorOverride = ""
                         nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
                     elif property == "AcquisitionTurnLoss":
-                        is_multiplexed = self.pyccda_dictionary[self.current_accelerator][self.current_device]["setting"]["TurnLossMeasurementSetting"]["mux"]
-                        if is_multiplexed == "False":
-                            selectorOverride = ""
                         nturns = float(self.japc.getParam("{}/{}#{}".format(self.current_device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
                     elif property == "Capture":
                         pass
@@ -383,17 +374,6 @@ class MyDisplay(CDisplay):
 
                     # pass
                     pass
-
-                # selectorOverride for the working modules table has to be a specific selector
-                # use an empty selector for LHC devices
-                if self.current_accelerator == "LHC":
-                    selectorOverride = ""
-                # use SPS.USER.ALL for SPS devices
-                elif self.current_accelerator == "SPS":
-                    selectorOverride = "SPS.USER.SFTPRO1"
-                # use an empty selector for the others
-                else:
-                    selectorOverride = ""
 
                 # do a GET request via japc
                 try:
@@ -513,7 +493,7 @@ class MyDisplay(CDisplay):
 
         # set up a timer to load the QThread premain updates
         self.timer_load_txt_with_qthread_premain_updates = QTimer(self)
-        self.timer_load_txt_with_qthread_premain_updates.setInterval(500)
+        self.timer_load_txt_with_qthread_premain_updates.setInterval(250)
         self.timer_load_txt_with_qthread_premain_updates.timeout.connect(self.updateWorkingModes)
         self.timer_load_txt_with_qthread_premain_updates.start()
 
@@ -528,16 +508,16 @@ class MyDisplay(CDisplay):
         if self.current_device in self.working_devices:
 
             # check dirs exist
-            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_for_preview_one_device.json")) and os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_for_preview_one_device.json")):
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json")) and os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json")):
 
                 # load the new data
-                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_for_preview_one_device.json")) as f:
+                with open(os.path.join(self.app_temp_dir, "aux_jsons", "modules_data_for_preview_one_device.json")) as f:
                     modules_data_new = json.load(f)
-                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_for_preview_one_device.json")) as f:
+                with open(os.path.join(self.app_temp_dir, "aux_jsons", "errors_for_preview_one_device.json")) as f:
                     errors_new = json.load(f)
 
                 # if there were no changes just skip
-                if self.modules_data == modules_data_new:
+                if self.modules_data == modules_data_new and self.errors == errors_new:
 
                     # skip
                     return

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>600</width>
-    <height>800</height>
+    <width>1320</width>
+    <height>880</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -54,8 +54,8 @@
         </property>
         <property name="styleSheet">
          <string notr="true">QScrollArea{
-	margin-left: 50px;
-	margin-right: 50px;
+	margin-left: 340px;
+	margin-right: 340px;
 	background-color: rgb(227, 227, 227);
 }
 
@@ -101,9 +101,9 @@ CCommandButton:pressed{
          <property name="geometry">
           <rect>
            <x>0</x>
-           <y>50</y>
-           <width>454</width>
-           <height>575</height>
+           <y>340</y>
+           <width>594</width>
+           <height>75</height>
           </rect>
          </property>
          <property name="sizePolicy">
@@ -189,7 +189,7 @@ QGroupBox{
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>556</width>
+           <width>1276</width>
            <height>68</height>
           </rect>
          </property>
@@ -230,7 +230,7 @@ QGroupBox{
             <property name="styleSheet">
              <string notr="true">QPushButton{
 	background-color: rgb(255, 255, 255);
-	border: 2px solid #A6A6A6;
+	border: 1px solid black;
 }
 
 QPushButton:hover{
@@ -263,7 +263,7 @@ QPushButton:pressed{
             <property name="styleSheet">
              <string notr="true">QPushButton{
 	background-color: rgb(255, 255, 255);
-	border: 2px solid #A6A6A6;
+	border: 1px solid black;
 }
 
 QPushButton:hover{
