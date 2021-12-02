@@ -28,7 +28,7 @@ import json
 import numpy as np
 import shutil
 import faulthandler
-from general_utils import createCustomTempDir, getSystemTempDir
+from general_utils import createCustomTempDir, getSystemTempDir, removeAppDir, readJSONConfigFile
 from datetime import datetime, timedelta, timezone
 
 ########################################################
@@ -36,15 +36,25 @@ from datetime import datetime, timedelta, timezone
 
 # GLOBALS
 
+# ui file
+UI_FILENAME = "premain.ui"
+
+# paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
-UI_FILENAME = "premain.ui"
+
+# constants
+JSON_CONFIG_DICT = readJSONConfigFile(SAVING_PATH)
+RECHECK_DEVICES_PERIOD = float(JSON_CONFIG_DICT["RECHECK_DEVICES_PERIOD"]) # each 1 minute
+ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
+TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
+TURN_TIME_SPS = float(JSON_CONFIG_DICT["TURN_TIME_SPS"]) # microseconds
+
+# query for the devices
 QUERY = '((global==false) and (deviceClassInfo.name=="BLMDIAMONDVFC") and (timingDomain=="LHC" or timingDomain=="SPS")) or (name=="*dBLM.TEST*")'
-RECHECK_DEVICES_PERIOD = 1*60 # each 1 minute
+
+# others
 SHOW_COMMANDS_IN_SETTINGS = False
-ACCEPTANCE_FACTOR = 2.00
-TURN_TIME_LHC = 89.0000 # microseconds
-TURN_TIME_SPS = 23.0543 # microseconds
 LAST_TIMESTAMP_SUB_CALLBACK_SUMMARY = {}
 DATA_SUBS_SUMMARY = {}
 
@@ -2664,6 +2674,53 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
+    # closeEvent to ensure threads do finish correctly
+    def closeEvent(self, event):
+
+        # print
+        print("{} - Closing the application...".format(UI_FILENAME))
+
+        # do not do anything in case app was not yet initialized
+        try:
+            if self.aux_thread_for_preview_one_device:
+                pass
+            if self.acc_device_list_summary:
+                pass
+            if self.working_devices:
+                pass
+            if self.japc:
+                pass
+        except:
+            return
+
+        # stop old thread (preview_one_device)
+        if type(self.aux_thread_for_preview_one_device) == QThread:
+            if self.aux_thread_for_preview_one_device.isRunning():
+                self.aux_worker_for_preview_one_device.stop()
+
+        # stop old threads (summary)
+        were_threads_running = False
+        for device in self.acc_device_list_summary:
+            if device in self.working_devices:
+                if device in self.summary_thread_dict.keys():
+                    if type(self.summary_thread_dict[device]) == QThread:
+                        if self.summary_thread_dict[device].isRunning():
+                            self.summary_worker_dict[device].stop()
+                            were_threads_running = True
+
+        # stop japc subs (summary)
+        if were_threads_running:
+            self.japc.stopSubscriptions()
+            self.japc.clearSubscriptions()
+
+        # finally clean up tmp data
+        removeAppDir(TEMP_DIR_NAME)
+
+        return
+
+    #----------------------------------------------#
+
+
     # init function
     def __init__(self, *args, **kwargs):
 
@@ -2687,6 +2744,9 @@ class MyDisplay(CDisplay):
 
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
+
+        # update closeEvent to ensure threads finish in the right way
+        self.app.main_window.closeEvent = self.closeEvent
 
         # status bar message
         self.app.main_window.statusBar().showMessage("Loading main application window...", 0)

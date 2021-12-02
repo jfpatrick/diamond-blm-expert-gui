@@ -20,7 +20,7 @@ import sys
 import os
 from time import sleep
 import pyjapc
-from general_utils import createCustomTempDir, getSystemTempDir
+from general_utils import createCustomTempDir, getSystemTempDir, readJSONConfigFile
 import collections
 import json
 import jpype as jp
@@ -31,12 +31,18 @@ from datetime import datetime, timedelta, timezone
 
 # GLOBALS
 
+# ui file
+UI_FILENAME = "preview_one_device.ui"
+
+# paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
-UI_FILENAME = "preview_one_device.ui"
-ACCEPTANCE_FACTOR = 2.00
-TURN_TIME_LHC = 89.0000 # microseconds
-TURN_TIME_SPS = 23.0543 # microseconds
+
+# constants
+JSON_CONFIG_DICT = readJSONConfigFile(SAVING_PATH)
+ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
+TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
+TURN_TIME_SPS = float(JSON_CONFIG_DICT["TURN_TIME_SPS"]) # microseconds
 
 ########################################################
 ########################################################

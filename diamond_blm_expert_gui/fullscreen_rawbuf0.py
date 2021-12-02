@@ -28,9 +28,12 @@ from general_utils import createCustomTempDir, getSystemTempDir
 
 # GLOBALS
 
+# ui file
+UI_FILENAME = "fullscreen_rawbuf0.ui"
+
+# paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
-UI_FILENAME = "fullscreen_rawbuf0.ui"
 
 ########################################################
 ########################################################

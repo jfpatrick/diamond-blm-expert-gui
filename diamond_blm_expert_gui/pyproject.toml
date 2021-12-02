@@ -1,6 +1,6 @@
 [project]
 name = "diamond-blm-expert-gui"
-version = "1.4.1"
+version = "1.4.2"
 dependencies = [ "comrad==0.1.4", "pyqtgraph==0.12.3",]
 description = "Expert GUI for the DIAMOND BLM devices."
 [[project.maintainers]]
