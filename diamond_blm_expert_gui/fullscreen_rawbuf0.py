@@ -272,6 +272,7 @@ class MyDisplay(CDisplay):
         idx_flags_five_six = np.where((self.data_rawBufFlags0 == 5) | (self.data_rawBufFlags0 == 6))[0]
         flags_five_six = np.zeros(self.data_rawBufFlags0.shape)
         flags_five_six[idx_flags_five_six] = 1
+        self.inf_lines_pos_0 = self.time_vector[idx_flags_five_six]
 
         # line equation parameters
         offset_for_timestamps = 0
@@ -295,7 +296,10 @@ class MyDisplay(CDisplay):
             if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
             if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                for line_pos in self.inf_lines_pos_0:
+                    infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                    self.plot_rawbuf0.addItem(infinite_line)
             self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
             self.plot_rawbuf0.show()
 
@@ -343,7 +347,10 @@ class MyDisplay(CDisplay):
                 if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                     self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    for line_pos in self.inf_lines_pos_0:
+                        infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                        self.plot_rawbuf0.addItem(infinite_line)
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
@@ -357,7 +364,10 @@ class MyDisplay(CDisplay):
             if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf0.getPlotItem().clear()
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    for line_pos in self.inf_lines_pos_0:
+                        infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                        self.plot_rawbuf0.addItem(infinite_line)
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
@@ -386,7 +396,10 @@ class MyDisplay(CDisplay):
                 if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                     self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
-                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                    for line_pos in self.inf_lines_pos_0:
+                        infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                        self.plot_rawbuf0.addItem(infinite_line)
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 

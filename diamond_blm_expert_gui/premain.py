@@ -1810,7 +1810,7 @@ class workingModesThreadWorkerPreview(QObject):
     #----------------------------------------------#
 
     # function that handles pyjapc exceptions
-    def onException(self, parameterName, description, exception, verbose = True):
+    def onException(self, parameterName, description, exception, verbose = False):
 
         # print
         if verbose:
@@ -3773,7 +3773,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function that handles pyjapc exceptions
-    def onExceptionSummary(self, parameterName, description, exception, verbose = True):
+    def onExceptionSummary(self, parameterName, description, exception, verbose = False):
 
         # print
         if verbose:
