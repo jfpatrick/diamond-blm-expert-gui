@@ -72,10 +72,10 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.DisplayRole:
             value = self._data[row][col]
             return value
-        elif role == Qt.ToolTipRole and self.error_dict[row][col] != "":
+        elif role == Qt.ToolTipRole and self.error_dict[row][col] != "" and self._data[row][col] != "-":
             return self.error_dict[row][col]
         elif role == Qt.ForegroundRole and self.error_dict[row][col] != "":
-            if self._data[row][col] == "-":
+            if self._data[row][col] == "-" and self.error_dict[row][col] == "NOT_WORKING_DEVICE":
                 return QBrush(QColor("red"))
             else:
                 return QBrush(QColor("#FF6C00"))
@@ -254,7 +254,7 @@ class MyDisplay(CDisplay):
 
                         # update the list with null information
                         row_list.append("-")
-                        self.error_dict[r][c+1] = ""
+                        self.error_dict[r][c+1] = "NOT_WORKING_DEVICE"
 
             # operate as a mode
             else:
@@ -401,7 +401,7 @@ class MyDisplay(CDisplay):
 
                         # update the list with null information
                         row_list.append("-")
-                        self.error_dict[r][c + 1] = ""
+                        self.error_dict[r][c + 1] = "NOT_WORKING_DEVICE"
 
                     # update dialog counter
                     dialog_counter += 1
@@ -490,7 +490,7 @@ class MyDisplay(CDisplay):
 
                         # update the list with null information
                         row_list.append("-")
-                        error_dict_new[r][c+1] = ""
+                        error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
 
             # operate as a mode
             else:
@@ -541,7 +541,7 @@ class MyDisplay(CDisplay):
 
                         # update the list with null information
                         row_list.append("-")
-                        error_dict_new[r][c+1] = ""
+                        error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
 
             # append the row to the full summary data
             summary_data_new.append(row_list)

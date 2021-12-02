@@ -3787,7 +3787,7 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function to receive pyjapc subs data
-    def subsCallbackSummary(self, parameterName, dictValues, headerInfo, verbose = True):
+    def subsCallbackSummary(self, parameterName, dictValues, headerInfo, verbose = False):
 
         # get device name
         dev_name = parameterName.split("/")[0]
