@@ -9,10 +9,13 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData)
-from PyQt5.QtGui import (QIcon, QColor)
-from PyQt5.QtCore import (QSize, Qt, QTimer)
+from comrad import (CCommandButton, CContextFrame, CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, rbac)
+from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel)
+from PyQt5.QtWidgets import (QSplitter, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
+from PyQt5.Qt import QItemSelectionModel, QMenu
 import pyqtgraph as pg
+import pyjapc
 
 # OTHER IMPORTS
 
@@ -22,6 +25,7 @@ import time
 import numpy as np
 import math
 from general_utils import createCustomTempDir, getSystemTempDir
+import json
 
 ########################################################
 ########################################################
@@ -34,6 +38,78 @@ UI_FILENAME = "fullscreen_rawbuf1.ui"
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
+
+########################################################
+########################################################
+
+# util function
+def can_be_converted_to_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+########################################################
+########################################################
+
+class TableModel(QAbstractTableModel):
+
+    def __init__(self, data, header_labels, titles_set_window = False, three_column_window = False):
+
+        super(TableModel, self).__init__()
+        self._data = data
+        self._header_labels = header_labels
+        self.titles_set_window = titles_set_window
+        self.three_column_window = three_column_window
+
+        return
+
+    def headerData(self, section, orientation, role):
+
+        if self._header_labels:
+            if role == Qt.DisplayRole:
+                if orientation == Qt.Horizontal:
+                    return self._header_labels[section]
+
+    def data(self, index, role):
+
+        row = index.row()
+        col = index.column()
+
+        if role == Qt.TextAlignmentRole:
+            return Qt.AlignCenter
+        elif role == Qt.DisplayRole or role == Qt.EditRole:
+            value = self._data[row][col]
+            return value
+        elif role == Qt.BackgroundRole:
+            if self.titles_set_window:
+                return QBrush(QColor("#d2d2d2"))
+            if self.three_column_window and col == 2:
+                return QBrush(QColor("#ffffff"))
+
+    def rowCount(self, index):
+
+        return len(self._data)
+
+    def columnCount(self, index):
+
+        return len(self._data[0])
+
+    def flags(self, index):
+
+        if index.column() == 2:
+            return Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable
+        else:
+            return Qt.ItemIsEnabled
+
+    def setData(self, index, value, role):
+
+        if role == Qt.EditRole and index.column() == 2:
+            self._data[index.row()][index.column()] = value
+            return True
+
+        return False
 
 ########################################################
 ########################################################
@@ -83,8 +159,11 @@ class MyDisplay(CDisplay):
         self.sync_wrt_main = True
 
         # set current device
-        self.current_device = "SP.BA1.BLMDIAMOND.2"
+        self.current_device = "SP.BA2.BLMDIAMOND.2"
         self.LoadDeviceFromTxt()
+
+        # retrieve the pyccda json info file
+        self.readPyCCDAJsonFile()
 
         # retrieve the app CApplication variable
         self.app = CApplication.instance()
@@ -95,6 +174,9 @@ class MyDisplay(CDisplay):
         # status bar message
         self.app.main_window.statusBar().showMessage("Successfully opened window for {}!".format(self.current_device), 30*1000)
         self.app.main_window.statusBar().repaint()
+
+        # create japc object
+        self.japc = pyjapc.PyJapc()
 
         # load the file
         print("{} - Loading the GUI file...".format(UI_FILENAME))
@@ -144,12 +226,378 @@ class MyDisplay(CDisplay):
                                                              "    output(0)")
         self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_Capture)
 
+        # splitter to separate both panels
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter.addWidget(self.frame_left)
+        self.splitter.addWidget(self.frame_right)
+        self.splitter.setHandleWidth(0)
+        self.splitter.setStretchFactor(0, 80)
+        self.splitter.setStretchFactor(1, 20)
+        # self.splitter.setStyleSheet("QSplitter::handle { background-color: rgb(200,200,200);}")
+        self.horizontalLayout_frame_after_main_form.addWidget(self.splitter)
+
+        # add a spacer
+        spacerItem_1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.verticalLayout_phasing.addItem(spacerItem_1)
+
+        # context frame of the groupbox
+        self.CContextFrame_Commands = CContextFrame(self.frame_phasing)
+        self.CContextFrame_Commands.setObjectName("CContextFrame_Commands")
+        self.CContextFrame_Commands.inheritSelector = False
+        self.CContextFrame_Commands.selector = ""
+
+        # layout of the context frame (0 margin)
+        self.layoutContextFrame = QVBoxLayout(self.CContextFrame_Commands)
+        self.layoutContextFrame.setObjectName("layoutContextFrame")
+        self.layoutContextFrame.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_phasing.addWidget(self.CContextFrame_Commands)
+
+        # font for groupbox
+        font_for_groupbox = QFont()
+        font_for_groupbox.setBold(True)
+        font_for_groupbox.setWeight(75)
+
+        # groupbox for Commands
+        self.groupbox_commands = QGroupBox(self.CContextFrame_Commands)
+        self.groupbox_commands.setObjectName("groupBox_Commands")
+        self.groupbox_commands.setAlignment(Qt.AlignCenter)
+        self.groupbox_commands.setFlat(True)
+        self.groupbox_commands.setCheckable(False)
+        self.groupbox_commands.setTitle("Commands")
+        self.groupbox_commands.setFont(font_for_groupbox)
+        self.layoutContextFrame.addWidget(self.groupbox_commands)
+
+        # groupbox layout
+        self.layout_groupbox_commands = QGridLayout(self.groupbox_commands)
+        self.layout_groupbox_commands.setObjectName("layout_groupBox_Commands")
+
+        # commands
+        self.ccommandbutton_1 = CCommandButton(self.groupbox_commands)
+        icon = QIcon()
+        # icon.addPixmap(QPixmap(SAVING_PATH + "/icons/command.png"), QIcon.Normal, QIcon.Off)
+        self.ccommandbutton_1.setIcon(icon)
+        self.ccommandbutton_1.setAutoDefault(False)
+        self.ccommandbutton_1.setDefault(False)
+        self.ccommandbutton_1.setFlat(False)
+        self.ccommandbutton_1.setProperty("channel", "{}/{}".format(self.current_device, "TriggerCapture"))
+        self.ccommandbutton_1.setObjectName("ccommandbutton_1")
+        self.ccommandbutton_1.setText("TriggerCapture")
+        self.ccommandbutton_1.setMinimumSize(QSize(0, 25))
+        self.ccommandbutton_1.setStyleSheet("CCommandButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    margin-left: 12px;\n"
+                                          "    margin-right: 12px;\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "}\n"
+                                          "\n"
+                                          "CCommandButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "CCommandButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.layout_groupbox_commands.addWidget(self.ccommandbutton_1)
+
+        # commands
+        self.ccommandbutton_2 = CCommandButton(self.groupbox_commands)
+        icon = QIcon()
+        # icon.addPixmap(QPixmap(SAVING_PATH + "/icons/command.png"), QIcon.Normal, QIcon.Off)
+        self.ccommandbutton_2.setIcon(icon)
+        self.ccommandbutton_2.setAutoDefault(False)
+        self.ccommandbutton_2.setDefault(False)
+        self.ccommandbutton_2.setFlat(False)
+        self.ccommandbutton_2.setProperty("channel", "{}/{}".format(self.current_device, "ResetCapture"))
+        self.ccommandbutton_2.setObjectName("ccommandbutton_2")
+        self.ccommandbutton_2.setText("ResetCapture")
+        self.ccommandbutton_2.setMinimumSize(QSize(0, 25))
+        self.ccommandbutton_2.setStyleSheet("CCommandButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    margin-left: 12px;\n"
+                                          "    margin-right: 12px;\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "}\n"
+                                          "\n"
+                                          "CCommandButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "CCommandButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.layout_groupbox_commands.addWidget(self.ccommandbutton_2)
+
+        # update groupbox size in function of the number of rows
+        # self.groupbox_commands.setFixedHeight(int(20 * (2 + 2)))
+
+        # init data list
+        self.data_model_expert_setting = []
+
+        # font for groupbox
+        font_for_groupbox = QFont()
+        font_for_groupbox.setBold(True)
+        font_for_groupbox.setWeight(75)
+
+        # groupbox for ExpertSetting
+        self.groupbox_expert_setting = QGroupBox(self.frame_phasing)
+        self.groupbox_expert_setting.setObjectName("groupBox_ExpertSetting")
+        self.groupbox_expert_setting.setAlignment(Qt.AlignCenter)
+        self.groupbox_expert_setting.setFlat(True)
+        self.groupbox_expert_setting.setCheckable(False)
+        self.groupbox_expert_setting.setTitle("ExpertSetting")
+        self.groupbox_expert_setting.setFont(font_for_groupbox)
+        self.verticalLayout_phasing.addWidget(self.groupbox_expert_setting)
+
+        # groupbox layout
+        self.layout_groupbox_expert_setting = QGridLayout(self.groupbox_expert_setting)
+        self.layout_groupbox_expert_setting.setObjectName("layout_groupBox_ExpertSetting")
+
+        # create table
+        self.table_expert_setting = QTableView(self.groupbox_expert_setting)
+        self.table_expert_setting.setStyleSheet("QTableView{\n"
+                                                   "    background-color: rgb(243, 243, 243);\n"
+                                                   "    margin-top: 0;\n"
+                                                   "}")
+        self.table_expert_setting.setFrameShape(QFrame.StyledPanel)
+        self.table_expert_setting.setFrameShadow(QFrame.Plain)
+        self.table_expert_setting.setDragEnabled(False)
+        self.table_expert_setting.setAlternatingRowColors(True)
+        self.table_expert_setting.setSelectionMode(QAbstractItemView.NoSelection)
+        self.table_expert_setting.setShowGrid(True)
+        self.table_expert_setting.setGridStyle(Qt.SolidLine)
+        self.table_expert_setting.setObjectName("tableView_ExpertSetting")
+        self.table_expert_setting.horizontalHeader().setVisible(True)
+        self.table_expert_setting.horizontalHeader().setHighlightSections(False)
+        self.table_expert_setting.horizontalHeader().setDefaultSectionSize(0)
+        self.table_expert_setting.horizontalHeader().setMinimumSectionSize(0)
+        self.table_expert_setting.horizontalHeader().setStretchLastSection(True)
+        self.table_expert_setting.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
+        self.table_expert_setting.verticalHeader().setVisible(False)
+        self.table_expert_setting.verticalHeader().setDefaultSectionSize(30)
+        self.table_expert_setting.verticalHeader().setHighlightSections(False)
+        self.table_expert_setting.verticalHeader().setMinimumSectionSize(30)
+        self.table_expert_setting.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_expert_setting.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table_expert_setting.setFocusPolicy(Qt.NoFocus)
+        self.table_expert_setting.setSelectionMode(QAbstractItemView.NoSelection)
+        self.table_expert_setting.horizontalHeader().setFixedHeight(30)
+        self.table_expert_setting.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
+        self.table_expert_setting.show()
+        self.layout_groupbox_expert_setting.addWidget(self.table_expert_setting)
+
+        # fill table
+        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH0", "SYNCDELDEPTH"]:
+            try:
+                data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
+            except Exception as xcp:
+                data_from_pyjapc = "-"
+            self.data_model_expert_setting.append([str(field), str(data_from_pyjapc), str(data_from_pyjapc)])
+
+        # update model
+        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["Field", "Old Value", "New Value"], three_column_window=True)
+        self.table_expert_setting.setModel(self.data_table_model_expert_setting)
+        self.table_expert_setting.update()
+
+        # update groupbox size in function of the number of rows
+        self.groupbox_expert_setting.setFixedHeight(int(36 * (len(self.data_model_expert_setting) + 2)))
+
+        # frame for get and set buttons
+        self.frame_get_set = QFrame(self)
+        self.frame_get_set.setFrameShape(QFrame.NoFrame)
+        self.frame_get_set.setFrameShadow(QFrame.Plain)
+        self.frame_get_set.setObjectName("frame_get_set")
+        self.horizontalLayout_get_set = QHBoxLayout(self.frame_get_set)
+        self.horizontalLayout_get_set.setContentsMargins(120, 0, 120, 0)
+        self.horizontalLayout_get_set.setSpacing(6)
+        self.horizontalLayout_get_set.setObjectName("horizontalLayout_get_set")
+        self.pushButton_get = QPushButton(self.frame_get_set)
+        sizePolicy = QSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.pushButton_get.sizePolicy().hasHeightForWidth())
+        self.pushButton_get.setSizePolicy(sizePolicy)
+        self.pushButton_get.setMinimumSize(QSize(100, 32))
+        font = QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.pushButton_get.setFont(font)
+        self.pushButton_get.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+
+        self.pushButton_get.setObjectName("pushButton_get")
+        self.pushButton_get.setText("GET")
+        self.horizontalLayout_get_set.addWidget(self.pushButton_get)
+        self.pushButton_set = QPushButton(self.frame_get_set)
+        self.pushButton_set.setMinimumSize(QSize(100, 32))
+        font = QFont()
+        font.setBold(True)
+        font.setWeight(75)
+        self.pushButton_set.setFont(font)
+        self.pushButton_set.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.pushButton_set.setObjectName("pushButton_set")
+        self.pushButton_set.setText("SET")
+        self.horizontalLayout_get_set.addWidget(self.pushButton_set)
+        self.verticalLayout_phasing.addWidget(self.frame_get_set)
+
+        # add a spacer
+        spacerItem_2 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.verticalLayout_phasing.addItem(spacerItem_2)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that retrieves and displays the values of the fields
+    def getFunction(self, show_message = False):
+
+        # print the GET action
+        print("{} - Button GET pressed".format(UI_FILENAME))
+
+        # init data list
+        self.data_model_expert_setting = []
+
+        # fill table
+        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH0", "SYNCDELDEPTH"]:
+            try:
+                data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
+            except:
+                data_from_pyjapc = "-"
+            self.data_model_expert_setting.append([str(field), str(data_from_pyjapc), str(data_from_pyjapc)])
+
+        # update model
+        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["Field", "Old Value", "New Value"], three_column_window=True)
+        self.table_expert_setting.setModel(self.data_table_model_expert_setting)
+        self.table_expert_setting.update()
+
+        # update groupbox size in function of the number of rows
+        self.groupbox_expert_setting.setFixedHeight(int(36 * (len(self.data_model_expert_setting) + 2)))
+
+        # status bar message
+        if show_message:
+            self.app.main_window.statusBar().showMessage("Command GET ran successfully!", 3*1000)
+            self.app.main_window.statusBar().repaint()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that sets the values into the fields
+    def setFunction(self):
+
+        # print the SET action
+        print("{} - Button SET pressed".format(UI_FILENAME))
+
+        # boolean
+        types_are_wrong = False
+
+        # init the boolean
+        areAllFieldsJustTheSame = True
+
+        # create dictionary to inject
+        dict_to_inject = self.japc.getParam("{}/{}".format(self.current_device, "ExpertSetting"), timingSelectorOverride="", getHeader=False, noPyConversion=False)
+
+        # iterate over table
+        for row_values in self.data_model_expert_setting:
+
+            # retrieve values
+            field = row_values[0]
+            old_value = row_values[1]
+            new_value = row_values[2]
+
+            # check types are the same
+            if can_be_converted_to_float(str(old_value)) != can_be_converted_to_float(str(new_value)) or types_are_wrong:
+
+                # if the input type does not match with the field type just show an error and return
+                message_title = "WARNING"
+                message_text = "Please check that variable types are the same!"
+                self.message_box = QMessageBox.warning(self, message_title, message_text)
+
+                # break the set action
+                return
+
+            # if at least one field is different, do a SET of the whole dictionary
+            if str(old_value) != str(new_value):
+                areAllFieldsJustTheSame = False
+
+            # inject the value
+            dict_to_inject["{}".format(field)] = new_value
+
+        # do the SET
+        if not areAllFieldsJustTheSame:
+            self.japc.setParam("{}/{}".format(self.current_device, "ExpertSetting"), dict_to_inject, timingSelectorOverride="")
+
+        # update values in the table
+        self.getFunction(show_message = False)
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Command SET ran successfully!", 3*1000)
+        self.app.main_window.statusBar().repaint()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that handles japc and UI stuff when rbac is disconnected
+    def rbacLogoutSucceeded(self):
+
+        # print message
+        print("{} - RBAC logout succeeded...".format(UI_FILENAME))
+
+        # end pyjapc rbac connection
+        self.japc.rbacLogout()
+
+        return
+
+    #----------------------------------------------#
+
+    # this function gets activated whenever RBAC logins successfully
+    def rbacLoginSucceeded(self):
+
+        # print message
+        print("{} - RBAC login succeeded...".format(UI_FILENAME))
+
+        # save the token into the environmental variable so that we can read it with pyjapc
+        os.environ["RBAC_TOKEN_SERIALIZED"] = self.app._rbac.serialized_token
+
+        # now that we have a token try to login with japc too
+        self.japc.rbacLogin(readEnv=True)
+
         return
 
     #----------------------------------------------#
 
     # function that initializes signal-slot dependencies
     def bindWidgets(self):
+
+        # rbac login signal
+        self.app._rbac.login_succeeded.connect(self.rbacLoginSucceeded)
+
+        # dunno if it works
+        self.app._rbac._model.token_expired.connect(self.rbacLoginSucceeded)
+
+        # rbac logout signal
+        self.app._rbac.logout_finished.connect(self.rbacLogoutSucceeded)
 
         # checkbox for flags 1 and 2
         self.checkBox_bunch.stateChanged.connect(self.updateFlags_1_2)
@@ -163,7 +611,11 @@ class MyDisplay(CDisplay):
 
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
+        # self.checkBox_sync_main.hide()
+        self.checkBox_sync_main.setToolTip("This checkbox synchronizes the buffer plots of the main and fullscreen panels so that the received data is plotted simultaneously in both windows."
+                                           " It is usually required to compensate for the waiting times that UCAP imposes on the main window."
+                                           " For example, if it is checked and the freezing option is enabled in the main window, none of the plots will be updated to new values."
+                                           " When unchecked, data will be plotted as soon as it is received no matter what the current plot is shown in the main, which can be convenient when adjusting the phase of the signal or when using the TriggerCapture and ResetCapture commands.")
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCapture)
@@ -179,6 +631,27 @@ class MyDisplay(CDisplay):
         self.timer_hack_operations_after_comrad_is_fully_loaded.setInterval(1000)
         self.timer_hack_operations_after_comrad_is_fully_loaded.timeout.connect(self.doOperationsAfterComradIsFullyLoaded)
         self.timer_hack_operations_after_comrad_is_fully_loaded.start()
+
+        # getters
+        self.pushButton_get.clicked.connect(lambda: self.getFunction(show_message = True))
+
+        # setters
+        self.pushButton_set.clicked.connect(self.setFunction)
+
+        # commands
+        self.ccommandbutton_1.clicked.connect(self.commandClicked)
+        self.ccommandbutton_2.clicked.connect(self.commandClicked)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to handle command clicks
+    def commandClicked(self):
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Command clicked!", 3*1000)
+        self.app.main_window.statusBar().repaint()
 
         return
 
@@ -324,9 +797,15 @@ class MyDisplay(CDisplay):
     # function that loads the device from the aux txt file
     def LoadDeviceFromTxt(self):
 
+        # load current device
         if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_device.txt")):
             with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device.txt"), "r") as f:
                 self.current_device = f.read()
+
+        # load current accelerator
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator.txt")):
+            with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator.txt"), "r") as f:
+                self.current_accelerator = f.read()
 
         return
 
@@ -472,11 +951,26 @@ class MyDisplay(CDisplay):
             # change the logo
             self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
 
+            # init GET
+            self.getFunction(show_message=False)
+
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()
 
             # finally stop the timer
             self.timer_hack_operations_after_comrad_is_fully_loaded.stop()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that reads from the json file generated by the pyccda script
+    def readPyCCDAJsonFile(self):
+
+        # read pyccda info file
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")):
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")) as f:
+                self.pyccda_dictionary = json.load(f)
 
         return
 

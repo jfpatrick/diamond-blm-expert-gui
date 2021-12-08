@@ -156,7 +156,11 @@ class MyDisplay(CDisplay):
 
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
-        self.checkBox_sync_main.hide()
+        # self.checkBox_sync_main.hide()
+        self.checkBox_sync_main.setToolTip("This checkbox synchronizes the FFT plots of the main and fullscreen panels so that the received data is plotted simultaneously in both windows."
+                                           " It is usually required to compensate for the waiting times that UCAP imposes on the main window."
+                                           " For example, if it is checked and the freezing option is enabled in the main window, none of the plots will be updated to new values."
+                                           " When unchecked, data will be plotted as soon as it is received no matter what the current plot is shown in the main, which can be convenient when adjusting the phase of the signal or when using the TriggerCapture and ResetCapture commands.")
 
         # capture tab aggregator signals
         self.CValueAggregator_Capture_FFT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromCaptureFFT)

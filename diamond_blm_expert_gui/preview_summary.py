@@ -392,8 +392,8 @@ class MyDisplay(CDisplay):
                                         row_list.append("MODE_BEING_ANALYZED")
                                         self.error_dict[r][c + 1] = "custom.message.error: MODE_BEING_ANALYZED: The mode {} is still being analyzed in a different thread. Wait a few seconds until a decision about its availability is made.".format(property)
                                     else:
-                                        row_list.append("TS_TOO_OLD")
-                                        self.error_dict[r][c + 1] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                                        row_list.append("TIMESTAMP_TOO_OLD")
+                                        self.error_dict[r][c + 1] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
                         # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
                         except self.cern.japc.core.ParameterException as xcp:

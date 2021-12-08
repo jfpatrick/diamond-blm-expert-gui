@@ -31,142 +31,172 @@
   <layout class="QVBoxLayout" name="verticalLayout" stretch="95">
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout" stretch="15,85">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0">
-       <item>
-        <widget class="QFrame" name="frame_2">
-         <property name="styleSheet">
-          <string notr="true"/>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_8" stretch="5,95">
-          <item>
-           <widget class="QLabel" name="label">
-            <property name="font">
-             <font>
-              <pointsize>9</pointsize>
-              <weight>75</weight>
-              <bold>true</bold>
-             </font>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">background-color: rgb(220, 220, 220);
+      <widget class="QFrame" name="frame_device_selection">
+       <layout class="QVBoxLayout" name="verticalLayout_device_selection" stretch="0">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="frame_2">
+          <property name="styleSheet">
+           <string notr="true"/>
+          </property>
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_8" stretch="5,95">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="font">
+              <font>
+               <pointsize>9</pointsize>
+               <weight>75</weight>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">background-color: rgb(220, 220, 220);
 border: 2px solid #A6A6A6;</string>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="text">
-             <string>DEVICE SELECTION</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QTreeView" name="treeView">
-            <property name="styleSheet">
-             <string notr="true">QTreeView::item{
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="text">
+              <string>DEVICE SELECTION</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTreeView" name="treeView">
+             <property name="styleSheet">
+              <string notr="true">QTreeView::item{
 	padding: 2 2px;
 }
 
 QTreeView{
 	border: 2px solid #A6A6A6;
 }</string>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Plain</enum>
-            </property>
-            <property name="lineWidth">
-             <number>1</number>
-            </property>
-            <property name="editTriggers">
-             <set>QAbstractItemView::NoEditTriggers</set>
-            </property>
-            <property name="alternatingRowColors">
-             <bool>false</bool>
-            </property>
-            <property name="textElideMode">
-             <enum>Qt::ElideMiddle</enum>
-            </property>
-            <property name="indentation">
-             <number>10</number>
-            </property>
-            <property name="rootIsDecorated">
-             <bool>true</bool>
-            </property>
-            <property name="uniformRowHeights">
-             <bool>true</bool>
-            </property>
-            <property name="sortingEnabled">
-             <bool>false</bool>
-            </property>
-            <property name="animated">
-             <bool>false</bool>
-            </property>
-            <property name="allColumnsShowFocus">
-             <bool>false</bool>
-            </property>
-            <property name="wordWrap">
-             <bool>false</bool>
-            </property>
-            <property name="headerHidden">
-             <bool>true</bool>
-            </property>
-            <property name="expandsOnDoubleClick">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Plain</enum>
+             </property>
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
+             <property name="editTriggers">
+              <set>QAbstractItemView::NoEditTriggers</set>
+             </property>
+             <property name="alternatingRowColors">
+              <bool>false</bool>
+             </property>
+             <property name="textElideMode">
+              <enum>Qt::ElideMiddle</enum>
+             </property>
+             <property name="indentation">
+              <number>10</number>
+             </property>
+             <property name="rootIsDecorated">
+              <bool>true</bool>
+             </property>
+             <property name="uniformRowHeights">
+              <bool>true</bool>
+             </property>
+             <property name="sortingEnabled">
+              <bool>false</bool>
+             </property>
+             <property name="animated">
+              <bool>false</bool>
+             </property>
+             <property name="allColumnsShowFocus">
+              <bool>false</bool>
+             </property>
+             <property name="wordWrap">
+              <bool>false</bool>
+             </property>
+             <property name="headerHidden">
+              <bool>true</bool>
+             </property>
+             <property name="expandsOnDoubleClick">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_7" stretch="0">
-       <item>
-        <widget class="QFrame" name="frame_3">
-         <property name="frameShape">
-          <enum>QFrame::NoFrame</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Raised</enum>
-         </property>
-         <layout class="QVBoxLayout" name="verticalLayout_9" stretch="5,95">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,120,3,3,3">
-            <property name="sizeConstraint">
-             <enum>QLayout::SetDefaultConstraint</enum>
-            </property>
-            <item>
-             <widget class="QToolButton" name="toolButton_main_back">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton{
+      <widget class="QFrame" name="frame_main_panel">
+       <layout class="QVBoxLayout" name="verticalLayout_main_panel" stretch="0">
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QFrame" name="frame_3">
+          <property name="frameShape">
+           <enum>QFrame::NoFrame</enum>
+          </property>
+          <property name="frameShadow">
+           <enum>QFrame::Raised</enum>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_9" stretch="5,95">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,120,3,3,3">
+             <property name="sizeConstraint">
+              <enum>QLayout::SetDefaultConstraint</enum>
+             </property>
+             <item>
+              <widget class="QToolButton" name="toolButton_main_back">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QToolButton{
 	background-color: rgb(255, 255, 255);
 	border: 2px solid #A6A6A6;
 }
@@ -178,67 +208,67 @@ QToolButton:hover{
 QToolButton:pressed{
 	background-color: rgb(200, 200, 200);
 }</string>
-              </property>
-              <property name="text">
-               <string>Back</string>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</iconset>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QLabel" name="label_device_panel">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">background-color: rgb(220, 220, 220);
+               </property>
+               <property name="text">
+                <string>Back</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/back.png</iconset>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_device_panel">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">background-color: rgb(220, 220, 220);
 border: 2px solid #A6A6A6;</string>
-              </property>
-              <property name="frameShape">
-               <enum>QFrame::NoFrame</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Plain</enum>
-              </property>
-              <property name="lineWidth">
-               <number>1</number>
-              </property>
-              <property name="midLineWidth">
-               <number>0</number>
-              </property>
-              <property name="text">
-               <string>DEVICE PANEL &lt;font color=red&gt;NO SELECTED CYCLE&lt;/font&gt; : &lt;font color=red&gt;NO SELECTED DEVICE&lt;/font&gt;</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButton_freeze">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton{
+               </property>
+               <property name="frameShape">
+                <enum>QFrame::NoFrame</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Plain</enum>
+               </property>
+               <property name="lineWidth">
+                <number>1</number>
+               </property>
+               <property name="midLineWidth">
+                <number>0</number>
+               </property>
+               <property name="text">
+                <string>DEVICE PANEL &lt;font color=red&gt;NO SELECTED CYCLE&lt;/font&gt; : &lt;font color=red&gt;NO SELECTED DEVICE&lt;/font&gt;</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_freeze">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QToolButton{
 	background-color: rgb(255, 255, 255);
 	border: 2px solid #A6A6A6;
 }
@@ -246,118 +276,51 @@ border: 2px solid #A6A6A6;</string>
 QToolButton:hover{
 	background-color: rgb(230, 230, 230);
 }</string>
-              </property>
-              <property name="text">
-               <string>Freeze</string>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</normaloff>
-                <normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_2.png</normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</iconset>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::DelayedPopup</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-              <property name="arrowType">
-               <enum>Qt::NoArrow</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButton_main_settings">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton{
-	background-color: rgb(255, 255, 255);
-	border: 2px solid #A6A6A6;
-}
-
-QToolButton:hover{
-	background-color: rgb(230, 230, 230);
-}
-
-QToolButton:pressed{
-	background-color: rgb(200, 200, 200);
-}</string>
-              </property>
-              <property name="text">
-               <string>Settings</string>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="checkable">
-               <bool>false</bool>
-              </property>
-              <property name="checked">
-               <bool>false</bool>
-              </property>
-              <property name="popupMode">
-               <enum>QToolButton::DelayedPopup</enum>
-              </property>
-              <property name="toolButtonStyle">
-               <enum>Qt::ToolButtonIconOnly</enum>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-              <property name="arrowType">
-               <enum>Qt::NoArrow</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QToolButton" name="toolButton_main_close">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>16</width>
-                <height>16</height>
-               </size>
-              </property>
-              <property name="autoFillBackground">
-               <bool>false</bool>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">QToolButton{
+               </property>
+               <property name="text">
+                <string>Freeze</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</normaloff>
+                 <normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_2.png</normalon>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/freezing_1.png</iconset>
+               </property>
+               <property name="checkable">
+                <bool>true</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+               <property name="popupMode">
+                <enum>QToolButton::DelayedPopup</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+               <property name="arrowType">
+                <enum>Qt::NoArrow</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_main_settings">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QToolButton{
 	background-color: rgb(255, 255, 255);
 	border: 2px solid #A6A6A6;
 }
@@ -369,31 +332,98 @@ QToolButton:hover{
 QToolButton:pressed{
 	background-color: rgb(200, 200, 200);
 }</string>
-              </property>
-              <property name="text">
-               <string>Close</string>
-              </property>
-              <property name="icon">
-               <iconset>
-                <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</iconset>
-              </property>
-              <property name="autoRaise">
-               <bool>false</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="CEmbeddedDisplay" name="CEmbeddedDisplay">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="styleSheet">
-             <string notr="true">CEmbeddedDisplay{
+               </property>
+               <property name="text">
+                <string>Settings</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/settings.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="checkable">
+                <bool>false</bool>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+               <property name="popupMode">
+                <enum>QToolButton::DelayedPopup</enum>
+               </property>
+               <property name="toolButtonStyle">
+                <enum>Qt::ToolButtonIconOnly</enum>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+               <property name="arrowType">
+                <enum>Qt::NoArrow</enum>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QToolButton" name="toolButton_main_close">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>16</width>
+                 <height>16</height>
+                </size>
+               </property>
+               <property name="autoFillBackground">
+                <bool>false</bool>
+               </property>
+               <property name="styleSheet">
+                <string notr="true">QToolButton{
+	background-color: rgb(255, 255, 255);
+	border: 2px solid #A6A6A6;
+}
+
+QToolButton:hover{
+	background-color: rgb(230, 230, 230);
+}
+
+QToolButton:pressed{
+	background-color: rgb(200, 200, 200);
+}</string>
+               </property>
+               <property name="text">
+                <string>Close</string>
+               </property>
+               <property name="icon">
+                <iconset>
+                 <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/close.png</iconset>
+               </property>
+               <property name="autoRaise">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="CEmbeddedDisplay" name="CEmbeddedDisplay">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">CEmbeddedDisplay{
 	background-color: rgb(227, 227, 227);
 	border: 2px solid #A6A6A6;
 }
@@ -405,25 +435,26 @@ QTabWidget::tab-bar {
 QTabWidget{
 	background-color: rgb(227, 227, 227);
 }</string>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
-            </property>
-            <property name="filename" stdset="0">
-             <string/>
-            </property>
-            <property name="loadWhenShown" stdset="0">
-             <bool>true</bool>
-            </property>
-            <property name="disconnectWhenHidden" stdset="0">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-      </layout>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::NoFrame</enum>
+             </property>
+             <property name="filename" stdset="0">
+              <string/>
+             </property>
+             <property name="loadWhenShown" stdset="0">
+              <bool>true</bool>
+             </property>
+             <property name="disconnectWhenHidden" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </item>
     </layout>
    </item>

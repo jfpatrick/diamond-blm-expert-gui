@@ -12,7 +12,7 @@
 from comrad import (CDisplay, CContextFrame, CApplication, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont)
 from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel)
-from PyQt5.QtWidgets import (QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
+from PyQt5.QtWidgets import (QSplitter, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
 from PyQt5.Qt import QItemSelectionModel, QMenu
 
 # OTHER IMPORTS
@@ -1469,8 +1469,8 @@ class workingModesThreadWorkerSummary(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = "TIMESTAMP_TOO_OLD"
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors, self.current_device)
@@ -1528,12 +1528,12 @@ class workingModesThreadWorkerSummary(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionIntegralDist"] = "TS_TOO_OLD"
-                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionRawDist"] = "TS_TOO_OLD"
-                self.errors["AcquisitionRawDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = "TIMESTAMP_TOO_OLD"
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data["AcquisitionIntegralDist"] = "TIMESTAMP_TOO_OLD"
+                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data["AcquisitionRawDist"] = "TIMESTAMP_TOO_OLD"
+                self.errors["AcquisitionRawDist"] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors, self.current_device)
@@ -1583,8 +1583,8 @@ class workingModesThreadWorkerSummary(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = "TS_TOO_OLD"
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = "TIMESTAMP_TOO_OLD"
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors, self.current_device)
@@ -1896,8 +1896,8 @@ class workingModesThreadWorkerPreview(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = [property, "No", "TIMESTAMP_TOO_OLD", "{}".format(str(get_ts))]
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors)
@@ -1954,12 +1954,12 @@ class workingModesThreadWorkerPreview(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionIntegralDist"] = ["AcquisitionIntegralDist", "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-                self.modules_data["AcquisitionRawDist"] = ["AcquisitionRawDist", "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors["AcquisitionRawDist"] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = [property, "No", "TIMESTAMP_TOO_OLD", "{}".format(str(get_ts))]
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data["AcquisitionIntegralDist"] = ["AcquisitionIntegralDist", "No", "TIMESTAMP_TOO_OLD", "{}".format(str(get_ts))]
+                self.errors["AcquisitionIntegralDist"] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data["AcquisitionRawDist"] = ["AcquisitionRawDist", "No", "TIMESTAMP_TOO_OLD", "{}".format(str(get_ts))]
+                self.errors["AcquisitionRawDist"] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors)
@@ -2102,8 +2102,8 @@ class workingModesThreadWorkerPreview(QObject):
             else:
 
                 # TS_TOO_OLD
-                self.modules_data[property] = [property, "No", "TS_TOO_OLD", "{}".format(str(get_ts))]
-                self.errors[property] = "custom.message.error: TS_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+                self.modules_data[property] = [property, "No", "TIMESTAMP_TOO_OLD", "{}".format(str(get_ts))]
+                self.errors[property] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
 
         # emit the signal
         self.processed.emit(self.modules_data, self.errors)
@@ -2825,6 +2825,15 @@ class MyDisplay(CDisplay):
 
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
+
+        # splitter to separate both panels
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter.addWidget(self.frame_device_selection)
+        self.splitter.addWidget(self.frame_main_panel)
+        self.splitter.setHandleWidth(0)
+        self.splitter.setStretchFactor(0, 25)
+        self.splitter.setStretchFactor(1, 75)
+        self.horizontalLayout.addWidget(self.splitter)
 
         # build the device-list treeview
         self.model = QStandardItemModel()
