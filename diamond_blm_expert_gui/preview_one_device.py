@@ -163,6 +163,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         if True:
             self.progress_dialog = QProgressDialog("Opening preview for {}...".format(self.current_device), None, 0, len(self.property_list)-1)
+            self.progress_dialog.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog.setAutoClose(False)
             self.progress_dialog.setWindowTitle("Progress")
             self.progress_dialog.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))

@@ -105,7 +105,7 @@ class MyDisplay(CDisplay):
         self.buildCodeWidgets()
 
         # handle signals and slots
-        print("Handling signals and slots...")
+        print("{} - Handling signals and slots...".format(UI_FILENAME))
         self.bindWidgets()
 
         # at this point comrad should be fully loaded

@@ -11,7 +11,7 @@
 
 from comrad import (CApplication, CLineEdit, CCommandButton, CLabel, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, UpdateSource)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QFont, QBrush)
-from PyQt5.QtCore import (QSize, Qt, QRect, QAbstractTableModel, QEventLoop, QCoreApplication, QTimer)
+from PyQt5.QtCore import (QSize, Qt, QRect, QAbstractTableModel, QEventLoop, QCoreApplication, QTimer, QThread, pyqtSignal, QObject)
 from PyQt5.QtWidgets import (QTableView, QSizePolicy, QAbstractItemView, QTableWidget, QTableWidgetItem, QAbstractScrollArea, QHeaderView, QScrollArea, QSpacerItem, QPushButton, QGroupBox, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QLineEdit, QDialog, QFrame, QWidget, QProgressDialog)
 
 # OTHER IMPORTS
@@ -26,6 +26,7 @@ import jpype as jp
 import json
 from datetime import datetime, timedelta, timezone
 from copy import deepcopy
+import collections
 
 ########################################################
 ########################################################
@@ -116,6 +117,14 @@ class MyDisplay(CDisplay):
     # init function
     def __init__(self, *args, **kwargs):
 
+        # this becomes True when 1showup has finished
+        self.all_threads_finished = False
+
+        # init table variables
+        self.summary_data = None
+        self.error_dict = None
+        self.summary_header_labels_horizontal = None
+
         # get temp dir
         self.app_temp_dir = os.path.join(getSystemTempDir(), TEMP_DIR_NAME)
 
@@ -167,8 +176,49 @@ class MyDisplay(CDisplay):
         self.app.main_window.statusBar().showMessage("Device summary of {} loaded!".format(self.current_accelerator), 10*1000)
         self.app.main_window.statusBar().repaint()
 
-        # close progress bar
-        self.progress_dialog.close()
+        return
+
+    #----------------------------------------------#
+
+    # function that receives data from the threads and updates GUI
+    def table1ShowUp(self):
+
+        # load data
+        self.read1ShowUpJsons()
+
+        # if data received
+        if self.error_dict and self.summary_header_labels_horizontal and self.summary_data:
+
+            # transform string keys to integer keys for error_dict
+            new_error_dict = {}
+            for k1 in self.error_dict.keys():
+                new_error_dict[int(k1)] = {}
+                for k2 in self.error_dict[k1].keys():
+                    new_error_dict[int(k1)][int(k2)] = self.error_dict[k1][k2]
+            self.error_dict = new_error_dict
+
+            # summary model
+            self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
+            self.tableView_summary.setModel(self.model_summary)
+            self.tableView_summary.update()
+            self.tableView_summary.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+            for c in range(0, len(self.summary_header_labels_horizontal)):
+                self.tableView_summary.setColumnWidth(c, 200)
+            self.tableView_summary.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+            self.tableView_summary.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            self.tableView_summary.setFocusPolicy(Qt.NoFocus)
+            self.tableView_summary.setSelectionMode(QAbstractItemView.NoSelection)
+            self.tableView_summary.horizontalHeader().setFixedHeight(30)
+            self.tableView_summary.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
+            self.tableView_summary.verticalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
+            self.tableView_summary.show()
+
+            # stop timer
+            if self.timer_1_show_up.isActive():
+                self.timer_1_show_up.stop()
+
+            # update variable
+            self.all_threads_finished = True
 
         return
 
@@ -176,16 +226,6 @@ class MyDisplay(CDisplay):
 
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
-
-        # init progress bar
-        self.progress_dialog = QProgressDialog("Opening summary view for {} devices...".format(self.current_accelerator), None, 0, (len(self.property_list)-1)*len(self.device_list))
-        self.progress_dialog.setAutoClose(False)
-        self.progress_dialog.setWindowTitle("Progress")
-        self.progress_dialog.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
-        self.progress_dialog.setValue(0)
-        self.progress_dialog.show()
-        self.progress_dialog.repaint()
-        self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
 
         # create gui using pyuic5
         self.tableView_summary = QTableView(self.frame_summary)
@@ -212,243 +252,22 @@ class MyDisplay(CDisplay):
         self.tableView_summary.verticalHeader().setDefaultAlignment(Qt.AlignCenter)
         self.verticalLayout_frame_summary.addWidget(self.tableView_summary)
 
-        # init model data list of lists
-        self.summary_data = []
-        self.error_dict = {}
-
-        # counter for the dialog progress bar
-        dialog_counter = 0
-
-        # iterate over fields and properties
-        for r in range(0, len(self.field_list)+len(self.property_list)):
-
-            # init row list
-            row_list = []
-
-            # init error dict for that row
-            self.error_dict[r] = {}
-
-            # operate as a field
-            if r < len(self.field_list):
-
-                # declare the field
-                field = self.field_list[r]
-
-                # append first element which is the field / mode
-                row_list.append(str(field))
-                self.error_dict[r][0] = ""
-
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
-
-                    # if the device IS working
-                    if device in self.working_devices:
-
-                        # selectorOverride for GeneralInformation should be empty
-                        selectorOverride = ""
-
-                        # get field values via pyjapc
-                        try:
-                            field_value = self.japc.getParam("{}/{}#{}".format(device, "GeneralInformation", field), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
-                            row_list.append(str(field_value))
-                            self.error_dict[r][c+1] = ""
-                        except:
-                            pass
-
-                    # if the device IS not working
-                    else:
-
-                        # update the list with null information
-                        row_list.append("-")
-                        self.error_dict[r][c+1] = "NOT_WORKING_DEVICE"
-
-            # operate as a mode
-            else:
-
-                # declare the property
-                property = self.property_list[r-len(self.field_list)]
-
-                # skip general information property
-                if property == "GeneralInformation":
-                    continue
-
-                # append first element which is the field / mode
-                row_list.append(str(property))
-                self.error_dict[r][0] = ""
-
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
-
-                    # update progress bar
-                    self.progress_dialog.setValue(dialog_counter)
-                    self.progress_dialog.repaint()
-                    self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
-
-                    # if the device IS working
-                    if device in self.working_devices:
-
-                        # selectorOverride for the working modules table has to be a specific selector
-                        # use an empty selector for LHC devices
-                        if self.current_accelerator == "LHC":
-                            selectorOverride = ""
-                        # use SPS.USER.ALL for SPS devices
-                        elif self.current_accelerator == "SPS":
-                            selectorOverride = "SPS.USER.SFTPRO1"
-                        # use an empty selector for the others
-                        else:
-                            selectorOverride = ""
-
-                        # get nturns
-                        try:
-
-                            # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
-                            # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
-                            if property == "AcquisitionHistogram":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossHistogramSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossIntegralSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "AcquisitionTurnLoss":
-                                is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["TurnLossMeasurementSetting"]["mux"]
-                                if is_multiplexed == "False":
-                                    selectorOverride = ""
-                                nturns = float(self.japc.getParam("{}/{}#{}".format(device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
-                            elif property == "Capture":
-                                pass
-                            else:
-                                print("{} - Error (unknown property {})".format(UI_FILENAME, property))
-                            if self.current_accelerator == "LHC":
-                                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-                            elif self.current_accelerator == "SPS":
-                                turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
-                            else:
-                                turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
-
-                        # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
-                        except Exception as xcp:
-
-                            # pass and print exception
-                            print(xcp)
-                            pass
-
-                        # selectorOverride for the working modules table has to be a specific selector
-                        # use an empty selector for LHC devices
-                        if self.current_accelerator == "LHC":
-                            selectorOverride = ""
-                        # use SPS.USER.ALL for SPS devices
-                        elif self.current_accelerator == "SPS":
-                            selectorOverride = "SPS.USER.SFTPRO1"
-                        # use an empty selector for the others
-                        else:
-                            selectorOverride = ""
-
-                        # do a GET request via japc
-                        try:
-
-                            # get the fields
-                            field_values = self.japc.getParam("{}/{}".format(device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
-
-                            # get timestamps
-                            get_ts = field_values[1]["acqStamp"]
-                            current_ts = datetime.now(timezone.utc)
-
-                            # for the capture do not care about timestamps
-                            if property == "Capture":
-
-                                # if the buffer is not empty
-                                if field_values[0]["rawBuf0"].size > 0:
-
-                                    # if the try did not give an error then it is working
-                                    row_list.append(str(field_values[1]["acqStamp"]))
-                                    self.error_dict[r][c + 1] = ""
-
-                                # if buffers are empty show a custom error
-                                else:
-
-                                    # BUFFERS_ARE_EMPTY
-                                    row_list.append("BUFFERS_ARE_EMPTY")
-                                    self.error_dict[r][c + 1] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
-
-                            # for the others we should care about timestamps
-                            else:
-
-                                # show a custom error if nturns is 0
-                                if nturns == 0:
-
-                                    # NTURNS_IS_ZERO
-                                    row_list.append("NTURNS_IS_ZERO")
-                                    self.error_dict[r][c + 1] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
-
-                                # normal procedure
-                                else:
-
-                                    # compare timestamps
-                                    if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
-                                        row_list.append("MODE_BEING_ANALYZED")
-                                        self.error_dict[r][c + 1] = "custom.message.error: MODE_BEING_ANALYZED: The mode {} is still being analyzed in a different thread. Wait a few seconds until a decision about its availability is made.".format(property)
-                                    else:
-                                        row_list.append("TIMESTAMP_TOO_OLD")
-                                        self.error_dict[r][c + 1] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
-
-                        # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
-                        except self.cern.japc.core.ParameterException as xcp:
-
-                            # NO_DATA_AVAILABLE_FOR_USER
-                            row_list.append(str(xcp.getMessage()).split(":")[0])
-                            self.error_dict[r][c + 1] = str(xcp)
-
-                    # if the device IS not working
-                    else:
-
-                        # update the list with null information
-                        row_list.append("-")
-                        self.error_dict[r][c + 1] = "NOT_WORKING_DEVICE"
-
-                    # update dialog counter
-                    dialog_counter += 1
-
-            # append the row to the full summary data
-            self.summary_data.append(row_list)
-
-        # set the header names
-        self.summary_header_labels_horizontal = ["Field / Mode"] + self.device_list
-
-        # summary model
-        self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
-        self.tableView_summary.setModel(self.model_summary)
-        self.tableView_summary.update()
-        self.tableView_summary.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
-        for c in range(0, len(self.summary_header_labels_horizontal)):
-            self.tableView_summary.setColumnWidth(c, 200)
-        self.tableView_summary.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.tableView_summary.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.tableView_summary.setFocusPolicy(Qt.NoFocus)
-        self.tableView_summary.setSelectionMode(QAbstractItemView.NoSelection)
-        self.tableView_summary.horizontalHeader().setFixedHeight(30)
-        self.tableView_summary.horizontalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-        self.tableView_summary.verticalHeader().setStyleSheet("font-weight:bold; background-color: rgb(210, 210, 210);")
-        self.tableView_summary.show()
-
-        return
-
     #----------------------------------------------#
 
     # function that initializes signal-slot dependencies
     def bindWidgets(self):
-
-        # nothing to do here
-        pass
 
         # set up a timer to load the QThread premain updates
         self.timer_load_txt_with_qthread_premain_updates = QTimer(self)
         self.timer_load_txt_with_qthread_premain_updates.setInterval(1000)
         self.timer_load_txt_with_qthread_premain_updates.timeout.connect(self.updateWorkingModes)
         self.timer_load_txt_with_qthread_premain_updates.start()
+
+        # set up a timer to load 1 SHOW UP table updates from premain
+        self.timer_1_show_up = QTimer(self)
+        self.timer_1_show_up.setInterval(100)
+        self.timer_1_show_up.timeout.connect(self.table1ShowUp)
+        self.timer_1_show_up.start()
 
         return
 
@@ -457,115 +276,118 @@ class MyDisplay(CDisplay):
     # function that updates the working modes
     def updateWorkingModes(self):
 
-        # init new variables
-        error_dict_new = {}
-        summary_data_new = []
+        # only update if all threads from the preview_summary.py file finished their jobs
+        if self.all_threads_finished:
 
-        # iterate over fields and properties
-        for r in range(0, len(self.field_list) + len(self.property_list)):
+            # init new variables
+            error_dict_new = {}
+            summary_data_new = []
 
-            # init row list
-            row_list = []
+            # iterate over fields and properties
+            for r in range(0, len(self.field_list) + len(self.property_list)):
 
-            # init error dict for that row
-            error_dict_new[r] = {}
+                # init row list
+                row_list = []
 
-            # operate as a field
-            if r < len(self.field_list):
+                # init error dict for that row
+                error_dict_new[r] = {}
 
-                # declare the field
-                field = self.field_list[r]
+                # operate as a field
+                if r < len(self.field_list):
 
-                # append first element which is the field / mode
-                row_list.append(str(field))
-                error_dict_new[r][0] = ""
+                    # declare the field
+                    field = self.field_list[r]
 
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
+                    # append first element which is the field / mode
+                    row_list.append(str(field))
+                    error_dict_new[r][0] = ""
 
-                    # if the device IS working
-                    if device in self.working_devices:
+                    # iterate over devices
+                    for c, device in enumerate(self.device_list):
 
-                        # copy existing table fields
-                        field_value = self.summary_data[r][c+1]
-                        row_list.append(str(field_value))
-                        error_dict_new[r][c+1] = self.error_dict[r][c+1]
+                        # if the device IS working
+                        if device in self.working_devices:
 
-                    # if the device IS not working
-                    else:
+                            # copy existing table fields
+                            field_value = self.summary_data[r][c+1]
+                            row_list.append(str(field_value))
+                            error_dict_new[r][c+1] = self.error_dict[r][c+1]
 
-                        # update the list with null information
-                        row_list.append("-")
-                        error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
+                        # if the device IS not working
+                        else:
 
-            # operate as a mode
-            else:
+                            # update the list with null information
+                            row_list.append("-")
+                            error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
 
-                # declare the property
-                property = self.property_list[r - len(self.field_list)]
+                # operate as a mode
+                else:
 
-                # skip general information property
-                if property == "GeneralInformation":
-                    continue
+                    # declare the property
+                    property = self.property_list[r - len(self.field_list)]
 
-                # append first element which is the field / mode
-                row_list.append(str(property))
-                error_dict_new[r][0] = ""
+                    # skip general information property
+                    if property == "GeneralInformation":
+                        continue
 
-                # iterate over devices
-                for c, device in enumerate(self.device_list):
+                    # append first element which is the field / mode
+                    row_list.append(str(property))
+                    error_dict_new[r][0] = ""
 
-                    # if the device IS working
-                    if device in self.working_devices:
+                    # iterate over devices
+                    for c, device in enumerate(self.device_list):
 
-                        # check dirs exist
-                        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) and os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))):
+                        # if the device IS working
+                        if device in self.working_devices:
 
-                            # load the new data
-                            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) as f:
-                                modules_data_new = json.load(f)
-                            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))) as f:
-                                errors_new = json.load(f)
+                            # check dirs exist
+                            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) and os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))):
 
-                            # update with new json values
-                            if property in modules_data_new.keys():
-                                row_list.append(modules_data_new[property])
-                                error_dict_new[r][c+1] = errors_new[property]
+                                # load the new data
+                                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "modules_data_{}.json".format(device))) as f:
+                                    modules_data_new = json.load(f)
+                                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates", "errors_{}.json".format(device))) as f:
+                                    errors_new = json.load(f)
+
+                                # update with new json values
+                                if property in modules_data_new.keys():
+                                    row_list.append(modules_data_new[property])
+                                    error_dict_new[r][c+1] = errors_new[property]
+                                else:
+                                    row_list.append(self.summary_data[r][c+1])
+                                    error_dict_new[r][c+1] = self.error_dict[r][c+1]
+
+                            # dont get value from json (get it from previous table)
                             else:
+
+                                # copy existing table values
                                 row_list.append(self.summary_data[r][c+1])
                                 error_dict_new[r][c+1] = self.error_dict[r][c+1]
 
-                        # dont get value from json (get it from previous table)
+                        # if the device IS not working
                         else:
 
-                            # copy existing table values
-                            row_list.append(self.summary_data[r][c+1])
-                            error_dict_new[r][c+1] = self.error_dict[r][c+1]
+                            # update the list with null information
+                            row_list.append("-")
+                            error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
 
-                    # if the device IS not working
-                    else:
+                # append the row to the full summary data
+                summary_data_new.append(row_list)
 
-                        # update the list with null information
-                        row_list.append("-")
-                        error_dict_new[r][c+1] = "NOT_WORKING_DEVICE"
+            # if nothing changed just skip
+            if self.summary_data == summary_data_new:
+                return
 
-            # append the row to the full summary data
-            summary_data_new.append(row_list)
+            # update variables
+            self.summary_data = deepcopy(summary_data_new)
+            self.error_dict = deepcopy(error_dict_new)
+            del summary_data_new
+            del error_dict_new
 
-        # if nothing changed just skip
-        if self.summary_data == summary_data_new:
-            return
-
-        # update variables
-        self.summary_data = deepcopy(summary_data_new)
-        self.error_dict = deepcopy(error_dict_new)
-        del summary_data_new
-        del error_dict_new
-
-        # update table
-        self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
-        self.tableView_summary.setModel(self.model_summary)
-        self.tableView_summary.update()
+            # update table
+            self.model_summary = TableModel(data=self.summary_data, header_labels_horizontal=self.summary_header_labels_horizontal, header_labels_vertical=[], error_dict=self.error_dict)
+            self.tableView_summary.setModel(self.model_summary)
+            self.tableView_summary.update()
 
         return
 
@@ -604,6 +426,25 @@ class MyDisplay(CDisplay):
         if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")):
             with open(os.path.join(self.app_temp_dir, "aux_jsons", "pyccda_config.json")) as f:
                 self.pyccda_dictionary = json.load(f)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that reads from the json file generated by the pyccda script
+    def read1ShowUpJsons(self):
+
+        # read all files
+        if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up")):
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_data.json")):
+                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_data.json")) as f:
+                    self.summary_data = json.load(f)
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_header_labels_horizontal.json")):
+                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_header_labels_horizontal.json")) as f:
+                    self.summary_header_labels_horizontal = json.load(f)
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "error_dict.json")):
+                with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "error_dict.json")) as f:
+                    self.error_dict = json.load(f)
 
         return
 

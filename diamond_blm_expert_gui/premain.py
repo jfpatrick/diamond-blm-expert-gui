@@ -30,6 +30,8 @@ import shutil
 import faulthandler
 from general_utils import createCustomTempDir, getSystemTempDir, removeAppDir, readJSONConfigFile
 from datetime import datetime, timedelta, timezone
+import collections
+import random
 
 ########################################################
 ########################################################
@@ -1355,6 +1357,266 @@ class SettingsDialogAuto(QDialog):
         if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_selector.txt")):
             with open(os.path.join(self.app_temp_dir, "aux_txts", "current_selector.txt"), "r") as f:
                 self.current_selector = f.read()
+
+        return
+
+    #----------------------------------------------#
+
+
+########################################################
+########################################################
+
+class GetFieldInfoThreadWorker1ShowUp(QObject):
+
+    #----------------------------------------------#
+
+    # signals
+    finished = pyqtSignal()
+    processed = pyqtSignal(int, list, dict, bool)
+    iterated = pyqtSignal()
+
+    #----------------------------------------------#
+
+    # init function
+    def __init__(self, r, device_list, property_list, field_list, working_devices, current_accelerator, pyccda_dictionary, japc, cern):
+
+        # inherit from QObject
+        QObject.__init__(self)
+
+        # declare attributes
+        self.r = r
+        self.device_list = device_list
+        self.property_list = property_list
+        self.field_list = field_list
+        self.working_devices = working_devices
+        self.current_accelerator = current_accelerator
+        self.pyccda_dictionary = pyccda_dictionary
+        self.japc = japc
+        self.cern = cern
+
+        return
+
+    #----------------------------------------------#
+
+    # start function
+    def start(self):
+
+        # sleep the thread a bit in a random fashion
+        QThread.msleep(random.randint(250,750))
+
+        # get row
+        r = self.r
+
+        # boolean to skip general information
+        is_general_information = False
+
+        # init row list
+        row_list = []
+
+        # init error dict for that row
+        row_error_dict = {}
+
+        # operate as a field
+        if r < len(self.field_list):
+
+            # declare the field
+            field = self.field_list[r]
+
+            # append first element which is the field / mode
+            row_list.append(str(field))
+            row_error_dict[0] = ""
+
+            # iterate over devices
+            for c, device in enumerate(self.device_list):
+
+                # if the device IS working
+                if device in self.working_devices:
+
+                    # selectorOverride for GeneralInformation should be empty
+                    selectorOverride = ""
+
+                    # get field values via pyjapc
+                    try:
+                        field_value = self.japc.getParam("{}/{}#{}".format(device, "GeneralInformation", field), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False)
+                        row_list.append(str(field_value))
+                        row_error_dict[c+1] = ""
+                    except:
+                        pass
+
+                # if the device IS not working
+                else:
+
+                    # update the list with null information
+                    row_list.append("-")
+                    row_error_dict[c+1] = "NOT_WORKING_DEVICE"
+
+                # send signal to update the counter of the progress dialog
+                self.iterated.emit()
+
+        # operate as a mode
+        else:
+
+            # declare the property
+            property = self.property_list[r-len(self.field_list)]
+
+            # skip general information property
+            if property == "GeneralInformation":
+
+                # update boolean
+                is_general_information = True
+
+                # emit the signal with all the data
+                self.processed.emit(r, row_list, row_error_dict, is_general_information)
+
+                return
+
+            # append first element which is the field / mode
+            row_list.append(str(property))
+            row_error_dict[0] = ""
+
+            # iterate over devices
+            for c, device in enumerate(self.device_list):
+
+                # if the device IS working
+                if device in self.working_devices:
+
+                    # selectorOverride for the working modules table has to be a specific selector
+                    # use an empty selector for LHC devices
+                    if self.current_accelerator == "LHC":
+                        selectorOverride = ""
+                    # use SPS.USER.ALL for SPS devices
+                    elif self.current_accelerator == "SPS":
+                        selectorOverride = "SPS.USER.SFTPRO1"
+                    # use an empty selector for the others
+                    else:
+                        selectorOverride = ""
+
+                    # get nturns
+                    try:
+
+                        # in the LHC: 1 turn = 89 microseconds (updates each 1 second if nturn = 11245)
+                        # in the SPS: 1 turn = 23.0543 microseconds (updates each 0.1 second if nturn = 4338)
+                        if property == "AcquisitionHistogram":
+                            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossHistogramSetting"]["mux"]
+                            if is_multiplexed == "False":
+                                selectorOverride = ""
+                            nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossHistogramSetting", "blmNTurn"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                        elif property == "AcquisitionIntegral" or property == "AcquisitionIntegralDist" or property == "AcquisitionRawDist":
+                            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["BeamLossIntegralSetting"]["mux"]
+                            if is_multiplexed == "False":
+                                selectorOverride = ""
+                            nturns = float(self.japc.getParam("{}/{}#{}".format(device, "BeamLossIntegralSetting", "turnAvgCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                        elif property == "AcquisitionTurnLoss":
+                            is_multiplexed = self.pyccda_dictionary[self.current_accelerator][device]["setting"]["TurnLossMeasurementSetting"]["mux"]
+                            if is_multiplexed == "False":
+                                selectorOverride = ""
+                            nturns = float(self.japc.getParam("{}/{}#{}".format(device, "TurnLossMeasurementSetting", "turnTrackCnt"), timingSelectorOverride=selectorOverride, getHeader=False, noPyConversion=False))
+                        elif property == "Capture":
+                            nturns = 0
+                        else:
+                            print("{} - Error (unknown property {})".format(UI_FILENAME, property))
+                        if self.current_accelerator == "LHC":
+                            turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
+                        elif self.current_accelerator == "SPS":
+                            turn_time_in_seconds = nturns * TURN_TIME_SPS / 1000000
+                        else:
+                            turn_time_in_seconds = nturns * TURN_TIME_LHC / 1000000
+
+                    # if this does not work, then nothing should be working (NO_DATA_AVAILABLE_FOR_USER likely)
+                    except Exception as xcp:
+
+                        # pass and print exception
+                        print(xcp)
+                        pass
+
+                    # selectorOverride for the working modules table has to be a specific selector
+                    # use an empty selector for LHC devices
+                    if self.current_accelerator == "LHC":
+                        selectorOverride = ""
+                    # use SPS.USER.ALL for SPS devices
+                    elif self.current_accelerator == "SPS":
+                        selectorOverride = "SPS.USER.SFTPRO1"
+                    # use an empty selector for the others
+                    else:
+                        selectorOverride = ""
+
+                    # do a GET request via japc
+                    try:
+
+                        # get the fields
+                        field_values = self.japc.getParam("{}/{}".format(device, property), timingSelectorOverride=selectorOverride, getHeader=True, noPyConversion=False)
+
+                        # get timestamps
+                        get_ts = field_values[1]["acqStamp"]
+                        current_ts = datetime.now(timezone.utc)
+
+                        # for the capture do not care about timestamps
+                        if property == "Capture":
+
+                            # if the buffer is not empty
+                            if field_values[0]["rawBuf0"].size > 0:
+
+                                # if the try did not give an error then it is working
+                                row_list.append(str(field_values[1]["acqStamp"]))
+                                row_error_dict[c + 1] = ""
+
+                            # if buffers are empty show a custom error
+                            else:
+
+                                # BUFFERS_ARE_EMPTY
+                                row_list.append("BUFFERS_ARE_EMPTY")
+                                row_error_dict[c + 1] = "custom.message.error: BUFFERS_ARE_EMPTY: The buffers of the Capture property are empty arrays."
+
+                        # for the others we should care about timestamps
+                        else:
+
+                            # show a custom error if nturns is 0
+                            if nturns == 0:
+
+                                # NTURNS_IS_ZERO
+                                row_list.append("NTURNS_IS_ZERO")
+                                row_error_dict[c + 1] = "custom.message.error: NTURNS_IS_ZERO: The field nturns is 0 and hence the mode is not working."
+
+                            # normal procedure
+                            else:
+
+                                # compare timestamps
+                                if current_ts - get_ts < timedelta(seconds=turn_time_in_seconds * ACCEPTANCE_FACTOR):
+                                    row_list.append("MODE_BEING_ANALYZED")
+                                    row_error_dict[c + 1] = "custom.message.error: MODE_BEING_ANALYZED: The mode {} is still being analyzed in a different thread. Wait a few seconds until a decision about its availability is made.".format(property)
+                                else:
+                                    row_list.append("TIMESTAMP_TOO_OLD")
+                                    row_error_dict[c + 1] = "custom.message.error: TIMESTAMP_TOO_OLD: The ({}) timestamp of the GET call is at least {} seconds older than the current ({}) timestamp.".format(get_ts, turn_time_in_seconds * ACCEPTANCE_FACTOR, current_ts)
+
+                    # this exception is usually NO_DATA_AVAILABLE_FOR_USER (happens when it is not initialized yet)
+                    except self.cern.japc.core.ParameterException as xcp:
+
+                        # NO_DATA_AVAILABLE_FOR_USER
+                        row_list.append(str(xcp.getMessage()).split(":")[0])
+                        row_error_dict[c + 1] = str(xcp)
+
+                # if the device IS not working
+                else:
+
+                    # update the list with null information
+                    row_list.append("-")
+                    row_error_dict[c + 1] = "NOT_WORKING_DEVICE"
+
+                # send signal to update the counter of the progress dialog
+                self.iterated.emit()
+
+        # emit the signal with all the data
+        self.processed.emit(r, row_list, row_error_dict, is_general_information)
+
+        return
+
+    #----------------------------------------------#
+
+    # stop function
+    def stop(self):
+
+        # stop and emit the finish signal
+        self.finished.emit()
 
         return
 
@@ -2933,6 +3195,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
         self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
@@ -3006,6 +3269,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StartAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
         self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
@@ -3084,6 +3348,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StopAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
         self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
@@ -3367,6 +3632,17 @@ class MyDisplay(CDisplay):
 
         return
 
+    # function to handle thread stops
+    def finishThread1ShowUp(self):
+
+        # quit the threads
+        for r in range(0, self.len_iters_1_show_up):
+            if r in self.aux_thread_dict.keys():
+                self.aux_thread_dict[r].quit()
+                self.aux_thread_dict[r].wait()
+
+        return
+
     #----------------------------------------------#
 
     # function that handles japc and UI stuff when rbac is disconnected
@@ -3405,6 +3681,7 @@ class MyDisplay(CDisplay):
         # progress bar init
         counter_device = 0
         self.progress_dialog_after_rbac = QProgressDialog("Updating devices after a successful RBAC login...", None, 0, len(self.device_list))
+        self.progress_dialog_after_rbac.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_after_rbac.setAutoClose(False)
         self.progress_dialog_after_rbac.setWindowTitle("Progress")
         self.progress_dialog_after_rbac.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
@@ -3431,6 +3708,24 @@ class MyDisplay(CDisplay):
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
                 item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+
+        # HACK TO SPEED UP OPENING SUMMARY LATER ON
+
+        # get first working device of LHC
+        first_working_device = None
+        if "LHC" in self.acc_dev_list:
+            acc_device_list = list(np.array(self.device_list)[np.array(self.acc_dev_list) == "LHC"])
+            for dev in acc_device_list:
+                if dev in self.working_devices:
+                    first_working_device = dev
+                    break
+
+        # first subs
+        if first_working_device:
+            self.japc.subscribeParam("{}/{}".format(first_working_device, "AcquisitionHistogram"), onValueReceived=self.subsCallbackEmpty, onException=self.onExceptionEmpty, timingSelectorOverride="", getHeader=True)
+            self.japc.startSubscriptions()
+            self.japc.stopSubscriptions()
+            self.japc.clearSubscriptions()
 
         # close progress bar
         self.progress_dialog_after_rbac.close()
@@ -3772,12 +4067,82 @@ class MyDisplay(CDisplay):
             if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates")):
                 shutil.rmtree(os.path.join(self.app_temp_dir, "aux_jsons", "thread_device_updates"))
 
+            # START the processing of the FIRST SHOW UP of the summary (e.g. progress bar)
+
+            # clear previous summary data
+            if os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up")):
+                shutil.rmtree(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up"))
+
+            # init thread dicts
+            self.aux_thread_dict = {}
+            self.aux_worker_dict = {}
+
+            # init model data list of lists
+            self.summary_data_1_show_up = []
+            self.error_dict_1_show_up = {}
+            self.not_sort_summary_data_1_show_up = {}
+            self.received_rs = []
+
+            # variables needed for the first show up
+            field_list_1_show_up = ["BeamMomentum", "BstShift", "BunchSample", "FpgaCompilation", "FpgaFirmware", "FpgaStatus", "TurnBc", "TurnDropped", "TurnSample"]
+            property_list_1_show_up = list(self.pyccda_dictionary[self.current_accelerator][acc_device_list[0]]["acquisition"].keys())
+            property_list_1_show_up.sort()
+            self.len_iters_1_show_up = len(field_list_1_show_up) + len(property_list_1_show_up)
+            self.summary_header_labels_horizontal_1_show_up = ["Field / Mode"] + acc_device_list
+
+            # number of iterations of working devices
+            len_working_devices = 0
+            for device in self.acc_device_list_summary:
+                if device in self.working_devices:
+                    property_list = list(self.pyccda_dictionary[self.current_accelerator][device]["acquisition"].keys())
+                    for property in property_list:
+                        if property != "GeneralInformation":
+                            len_working_devices += 1
+
+            # init progress bar
+            self.progress_maximum_iters = (self.len_iters_1_show_up - 1) * len(acc_device_list) + len_working_devices + 5
+            self.progress_dialog_1_show_up = QProgressDialog("Opening summary view for {} devices...".format(self.current_accelerator), None, 0, self.progress_maximum_iters)
+            self.progress_dialog_1_show_up.setWindowModality(Qt.ApplicationModal)
+            self.progress_dialog_1_show_up.setAutoClose(False)
+            self.progress_dialog_1_show_up.setWindowTitle("Progress")
+            self.progress_dialog_1_show_up.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.progress_dialog_1_show_up.setValue(0)
+            self.progress_dialog_1_show_up.show()
+            self.progress_dialog_1_show_up.repaint()
+            self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
+            self.dialog_counter = 0
+
+            # iterate over fields and properties
+            for r in range(0, self.len_iters_1_show_up):
+
+                # create thread
+                self.aux_thread_dict[r] = QThread(parent=self)
+                self.aux_worker_dict[r] = GetFieldInfoThreadWorker1ShowUp(r, acc_device_list, property_list_1_show_up, field_list_1_show_up, self.working_devices, self.current_accelerator, self.pyccda_dictionary, self.japc, self.cern)
+                self.aux_worker_dict[r].moveToThread(self.aux_thread_dict[r])
+                self.aux_worker_dict[r].finished.connect(self.finishThread1ShowUp)
+                self.aux_thread_dict[r].started.connect(self.aux_worker_dict[r].start)
+                self.aux_thread_dict[r].start()
+
+                # bind thread
+                self.aux_worker_dict[r].processed.connect(self.updateModelDicts1ShowUp)
+                self.aux_worker_dict[r].iterated.connect(self.updateDialogCounter1ShowUp)
+
             # open main container
             self.CEmbeddedDisplay.filename = ""
             self.CEmbeddedDisplay.hide()
             self.CEmbeddedDisplay.show()
             self.CEmbeddedDisplay.filename = "preview_summary.py"
             self.CEmbeddedDisplay.open_file()
+
+            # update dialog counter
+            self.dialog_counter += 5
+
+            # update progress bar
+            self.progress_dialog_1_show_up.setValue(self.dialog_counter)
+            self.progress_dialog_1_show_up.repaint()
+            self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
+
+            # START the processing of the SECOND SHOW UP of the summary (e.g. QThreads for updating the table each 1 second)
 
             # init summary thread and worker dict
             self.summary_thread_dict = {}
@@ -3799,7 +4164,7 @@ class MyDisplay(CDisplay):
                 selectorOverride = ""
 
             # threads for summary view
-            for device in acc_device_list:
+            for device in self.acc_device_list_summary:
 
                 # check device works
                 if device in self.working_devices:
@@ -3812,13 +4177,29 @@ class MyDisplay(CDisplay):
 
                     # create subs
                     for property in property_list:
+
+                        # ignore general info
                         if property != "GeneralInformation":
+
+                            # start subs
                             self.japc.subscribeParam("{}/{}".format(device, property), onValueReceived=self.subsCallbackSummary, onException=self.onExceptionSummary, timingSelectorOverride=selectorOverride, getHeader=True)
                             self.japc.startSubscriptions()
 
+                            # update dialog counter
+                            self.dialog_counter += 1
+
+                            # update progress bar
+                            self.progress_dialog_1_show_up.setValue(self.dialog_counter)
+                            self.progress_dialog_1_show_up.repaint()
+                            self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
+
+                            # close progress bar
+                            if self.dialog_counter == self.progress_maximum_iters:
+                                self.progress_dialog_1_show_up.close()
+
                     # recheck if the modes are working each x seconds
                     self.summary_thread_dict[device] = QThread(parent=self)
-                    self.summary_worker_dict[device] = workingModesThreadWorkerSummary(device, acc_device_list, self.current_accelerator, self.japc, property_list, self.cern, self.pyccda_dictionary)
+                    self.summary_worker_dict[device] = workingModesThreadWorkerSummary(device, self.acc_device_list_summary, self.current_accelerator, self.japc, property_list, self.cern, self.pyccda_dictionary)
                     self.summary_worker_dict[device].moveToThread(self.summary_thread_dict[device])
                     self.summary_worker_dict[device].finished.connect(self.finishThreadSummary)
                     self.summary_thread_dict[device].started.connect(self.summary_worker_dict[device].start)
@@ -3838,6 +4219,74 @@ class MyDisplay(CDisplay):
 
             # update the current window
             self.current_window = "summary"
+            
+    #----------------------------------------------#
+
+    # function that updates the dialog counter of the progress bar
+    def updateDialogCounter1ShowUp(self):
+
+        # update dialog counter
+        self.dialog_counter += 1
+
+        # update progress bar
+        self.progress_dialog_1_show_up.setValue(self.dialog_counter)
+        self.progress_dialog_1_show_up.repaint()
+        self.app.processEvents(QEventLoop.ExcludeUserInputEvents)
+
+        # close progress bar
+        if self.dialog_counter == self.progress_maximum_iters:
+            self.progress_dialog_1_show_up.close()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that receives data from the threads and updates GUI on preview_summary.py
+    def updateModelDicts1ShowUp(self, r, row_list, row_error_dict, is_general_information):
+
+        # append r
+        self.received_rs.append(r)
+
+        # skip general information
+        if not is_general_information:
+
+            # insert data and error
+            self.not_sort_summary_data_1_show_up[r] = row_list
+            self.error_dict_1_show_up[r] = row_error_dict
+
+        # update the table when the last row is received
+        if len(self.received_rs) == self.len_iters_1_show_up:
+
+            # sort summary data
+            sort_dict = collections.OrderedDict(sorted(self.not_sort_summary_data_1_show_up.items()))
+            self.summary_data_1_show_up = [sort_dict[key] for key in sort_dict]
+
+            # stop all threads
+            for r in range(0, self.len_iters_1_show_up):
+                if r in self.aux_thread_dict.keys():
+                    if type(self.aux_thread_dict[r]) == QThread:
+                        if self.aux_thread_dict[r].isRunning():
+                            self.aux_worker_dict[r].stop()
+
+            # write all data to a json that preview_summary can read
+            if not os.path.exists(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up")):
+                os.mkdir(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up"))
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_data.json"), "w") as fp:
+                json.dump(self.summary_data_1_show_up, fp, sort_keys=True, indent=4)
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "error_dict.json"), "w") as fp:
+                json.dump(self.error_dict_1_show_up, fp, sort_keys=True, indent=4)
+            with open(os.path.join(self.app_temp_dir, "aux_jsons", "thread_1_show_up", "summary_header_labels_horizontal.json"), "w") as fp:
+                json.dump(self.summary_header_labels_horizontal_1_show_up, fp, sort_keys=True, indent=4)
+
+        return
+
+    #----------------------------------------------#
+
+    # empty handlers
+    def onExceptionEmpty(self):
+        return
+    def subsCallbackEmpty(self):
+        return
 
     #----------------------------------------------#
 
