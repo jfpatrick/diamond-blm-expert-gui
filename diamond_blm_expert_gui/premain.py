@@ -3230,7 +3230,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
-        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        # self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
         self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
@@ -3307,7 +3307,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StartAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
-        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        # self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
         self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
@@ -3389,7 +3389,7 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StopAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
-        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        # self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
         self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
