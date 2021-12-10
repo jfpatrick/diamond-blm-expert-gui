@@ -2936,6 +2936,41 @@ class MyDisplay(CDisplay):
 
     #----------------------------------------------#
 
+    # event for closing the window in a right way
+    def closeEventProgressDialog1ShowUp(self, evnt):
+
+        # close event
+        if self.progress_dialog_1_show_up_want_to_close:
+            pass
+        else:
+            evnt.ignore()
+
+        return
+
+    # event for closing the window in a right way
+    def closeEventProgressDialogAllCommands(self, evnt):
+
+        # close event
+        if self.progress_dialog_all_commands_want_to_close:
+            pass
+        else:
+            evnt.ignore()
+
+        return
+
+    # event for closing the window in a right way
+    def closeEventProgressDialogAfterRBAC(self, evnt):
+
+        # close event
+        if self.progress_dialog_after_rbac_want_to_close:
+            pass
+        else:
+            evnt.ignore()
+
+        return
+
+    #----------------------------------------------#
+
     # closeEvent to ensure threads do finish correctly
     def closeEvent(self, event):
 
@@ -3195,6 +3230,8 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running command {} on all {} devices...".format(command, selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
@@ -3223,6 +3260,7 @@ class MyDisplay(CDisplay):
                 exception_dev_list.append(selected_device)
 
         # close progress bar
+        self.progress_dialog_all_commands_want_to_close = True
         self.progress_dialog_all_commands.close()
 
         # status bar message
@@ -3269,6 +3307,8 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StartAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
@@ -3301,6 +3341,7 @@ class MyDisplay(CDisplay):
                     break
 
         # close progress bar
+        self.progress_dialog_all_commands_want_to_close = True
         self.progress_dialog_all_commands.close()
 
         # status bar message
@@ -3348,6 +3389,8 @@ class MyDisplay(CDisplay):
         # init progress bar
         counter_device = 0
         self.progress_dialog_all_commands = QProgressDialog("Running StopAll command on all {} devices...".format(selected_accelerator), None, 0, len(acc_device_list))
+        self.progress_dialog_all_commands.closeEvent = self.closeEventProgressDialogAllCommands
+        self.progress_dialog_all_commands_want_to_close = False
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
@@ -3380,6 +3423,7 @@ class MyDisplay(CDisplay):
                     break
 
         # close progress bar
+        self.progress_dialog_all_commands_want_to_close = True
         self.progress_dialog_all_commands.close()
 
         # status bar message
@@ -3681,6 +3725,8 @@ class MyDisplay(CDisplay):
         # progress bar init
         counter_device = 0
         self.progress_dialog_after_rbac = QProgressDialog("Updating devices after a successful RBAC login...", None, 0, len(self.device_list))
+        # self.progress_dialog_after_rbac.closeEvent = self.closeEventProgressDialogAfterRBAC
+        self.progress_dialog_after_rbac_want_to_close = False
         self.progress_dialog_after_rbac.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_after_rbac.setAutoClose(False)
         self.progress_dialog_after_rbac.setWindowTitle("Progress")
@@ -3700,15 +3746,6 @@ class MyDisplay(CDisplay):
         # get working devices again
         self.getWorkingDevices(verbose = False, from_rbac = True)
 
-        # update UI (tree icons and stuff like that)
-        for item in self.iterItems(self.model.invisibleRootItem()):
-            if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
-                item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
-            else:
-                item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
-
         # HACK TO SPEED UP OPENING SUMMARY LATER ON
 
         # get first working device of LHC
@@ -3727,7 +3764,17 @@ class MyDisplay(CDisplay):
             self.japc.stopSubscriptions()
             self.japc.clearSubscriptions()
 
+        # update UI (tree icons and stuff like that)
+        for item in self.iterItems(self.model.invisibleRootItem()):
+            if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
+                item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
+            else:
+                item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
+                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+
         # close progress bar
+        self.progress_dialog_after_rbac_want_to_close = True
         self.progress_dialog_after_rbac.close()
 
         # update UI (the preview panels)
@@ -4102,6 +4149,8 @@ class MyDisplay(CDisplay):
             # init progress bar
             self.progress_maximum_iters = (self.len_iters_1_show_up - 1) * len(acc_device_list) + len_working_devices + 5
             self.progress_dialog_1_show_up = QProgressDialog("Opening summary view for {} devices...".format(self.current_accelerator), None, 0, self.progress_maximum_iters)
+            self.progress_dialog_1_show_up.closeEvent = self.closeEventProgressDialog1ShowUp
+            self.progress_dialog_1_show_up_want_to_close = False
             self.progress_dialog_1_show_up.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog_1_show_up.setAutoClose(False)
             self.progress_dialog_1_show_up.setWindowTitle("Progress")
@@ -4195,6 +4244,7 @@ class MyDisplay(CDisplay):
 
                             # close progress bar
                             if self.dialog_counter == self.progress_maximum_iters:
+                                self.progress_dialog_1_show_up_want_to_close = True
                                 self.progress_dialog_1_show_up.close()
 
                     # recheck if the modes are working each x seconds
@@ -4235,6 +4285,7 @@ class MyDisplay(CDisplay):
 
         # close progress bar
         if self.dialog_counter == self.progress_maximum_iters:
+            self.progress_dialog_1_show_up_want_to_close = True
             self.progress_dialog_1_show_up.close()
 
         return

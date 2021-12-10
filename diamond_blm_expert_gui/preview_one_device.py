@@ -151,7 +151,21 @@ class MyDisplay(CDisplay):
 
         # close progress bar
         if True:
+            self.progress_dialog_want_to_close = True
             self.progress_dialog.close()
+
+        return
+
+    #----------------------------------------------#
+
+    # event for closing the window in a right way
+    def closeEventProgressDialog(self, evnt):
+
+        # close event
+        if self.progress_dialog_want_to_close:
+            pass
+        else:
+            evnt.ignore()
 
         return
 
@@ -163,6 +177,8 @@ class MyDisplay(CDisplay):
         # init progress bar
         if True:
             self.progress_dialog = QProgressDialog("Opening preview for {}...".format(self.current_device), None, 0, len(self.property_list)-1)
+            self.progress_dialog.closeEvent = self.closeEventProgressDialog
+            self.progress_dialog_want_to_close = False
             self.progress_dialog.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog.setAutoClose(False)
             self.progress_dialog.setWindowTitle("Progress")

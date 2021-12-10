@@ -31,7 +31,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QHBoxLayout" name="horizontalLayout_frame_after_main_form">
+     <layout class="QHBoxLayout" name="horizontalLayout_frame_after_main_form" stretch="80,20">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -49,6 +49,11 @@
       </property>
       <item>
        <widget class="QFrame" name="frame_left">
+        <property name="styleSheet">
+         <string notr="true">QFrame{
+	border-right: 1px solid rgb(184, 184, 184);
+}</string>
+        </property>
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
         </property>
@@ -76,13 +81,17 @@
            <property name="styleSheet">
             <string notr="true">QFrame{
 	background-color: rgb(226, 226, 216);
-}</string>
+	border-bottom : 1px solid rgb(184, 184, 184);
+	border-right : 1px solid rgb(184, 184, 184);
+}
+
+</string>
            </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
            <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
+            <enum>QFrame::Plain</enum>
            </property>
            <layout class="QHBoxLayout" name="horizontalLayout_4">
             <item>
@@ -92,6 +101,9 @@
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border: 0px;</string>
               </property>
               <property name="text">
                <string>PLOT</string>
@@ -109,6 +121,7 @@
            <property name="styleSheet">
             <string notr="true">QFrame{
 	background-color: rgb(236, 236, 226);
+	border-right : 1px solid rgb(184, 184, 184);
 }</string>
            </property>
            <property name="frameShape">
@@ -120,6 +133,11 @@
            <layout class="QVBoxLayout" name="verticalLayout">
             <item>
              <widget class="CContextFrame" name="CContextFrame_CaptureTab_rawBuf1">
+              <property name="styleSheet">
+               <string notr="true">border: 0px;
+margin-left: 7px;
+margin-right: 7px;</string>
+              </property>
               <layout class="QVBoxLayout" name="verticalLayout_Capture">
                <item>
                 <widget class="CContextFrame" name="CContextFrame_Stamps">
@@ -253,6 +271,12 @@
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
+        <property name="minimumSize">
+         <size>
+          <width>450</width>
+          <height>0</height>
+         </size>
+        </property>
         <property name="frameShape">
          <enum>QFrame::NoFrame</enum>
         </property>
@@ -280,6 +304,7 @@
            <property name="styleSheet">
             <string notr="true">QFrame{
 	background-color: rgb(216, 216, 216);
+    border-bottom : 1px solid rgb(184, 184, 184);
 }</string>
            </property>
            <property name="frameShape">
@@ -296,6 +321,9 @@
                 <weight>75</weight>
                 <bold>true</bold>
                </font>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border-bottom: 0px;</string>
               </property>
               <property name="text">
                <string>PHASING</string>
