@@ -113,7 +113,7 @@
            <item>
             <widget class="QCheckBox" name="checkBox_sync_main">
              <property name="text">
-              <string>Sync (main window)</string>
+              <string>Sync (UCAP)</string>
              </property>
              <property name="checked">
               <bool>true</bool>

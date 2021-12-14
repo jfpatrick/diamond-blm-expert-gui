@@ -9,10 +9,10 @@
 
 # COMRAD AND PYQT IMPORTS
 
-from comrad import (CCommandButton, CContextFrame, CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, rbac)
-from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont)
+from comrad import (CContextFrame, CCommandButton, CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, rbac)
+from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont, QDoubleValidator, QIntValidator)
 from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel)
-from PyQt5.QtWidgets import (QSplitter, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
+from PyQt5.QtWidgets import (QSplitter, QLineEdit, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
 from PyQt5.Qt import QItemSelectionModel, QMenu
 import pyqtgraph as pg
 import pyjapc
@@ -156,7 +156,7 @@ class MyDisplay(CDisplay):
         self.current_flags_dict = {"1,2":True, "5,6":True}
         self.data_save = {}
         self.is_buffer_plotted_in_the_main_window = "False"
-        self.sync_wrt_main = True
+        self.sync_wrt_main = False
 
         # set current device
         self.current_device = "SP.BA2.BLMDIAMOND.2"
@@ -208,7 +208,7 @@ class MyDisplay(CDisplay):
         self.plot_rawbuf1.getPlotItem().setAutoVisible()
         # self.plot_rawbuf1.getPlotItem().setMenuEnabled(enableMenu=False)
         self.plot_rawbuf1.getPlotItem().showButtons()
-        self.plot_rawbuf1.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
+        self.plot_rawbuf1.getPlotItem().showGrid(x=False, y=False, alpha=0.3)
         self.plot_rawbuf1.getPlotItem().setClipToView(True)
         self.plot_rawbuf1.setDownsampling(auto=True, mode="peak")
         self.plot_rawbuf1.getPlotItem().setLabel(axis='left', text='amplitude')
@@ -239,6 +239,181 @@ class MyDisplay(CDisplay):
         # add a spacer
         spacerItem_1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.verticalLayout_phasing.addItem(spacerItem_1)
+
+        # font for groupbox
+        font_for_groupbox = QFont()
+        font_for_groupbox.setBold(True)
+        font_for_groupbox.setWeight(75)
+
+        # groupbox for Zooming
+        self.groupbox_zooming = QGroupBox(self.frame_phasing)
+        self.groupbox_zooming.setObjectName("groupBox_Zooming")
+        self.groupbox_zooming.setAlignment(Qt.AlignCenter)
+        self.groupbox_zooming.setFlat(True)
+        self.groupbox_zooming.setCheckable(False)
+        self.groupbox_zooming.setTitle("Zooming")
+        self.groupbox_zooming.setFont(font_for_groupbox)
+        self.verticalLayout_phasing.addWidget(self.groupbox_zooming)
+
+        # layout for zooming
+        self.gridLayout_zooming = QGridLayout(self.groupbox_zooming)
+        self.gridLayout_zooming.setObjectName("gridLayout_Zooming")
+
+        # lineedits row 1
+        self.lineEdit_from_microseconds = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_from_microseconds.setAlignment(Qt.AlignCenter)
+        self.lineEdit_from_microseconds.setPlaceholderText("from (microseconds)")
+        self.lineEdit_from_microseconds.setObjectName("lineEdit_from_microseconds")
+        self.lineEdit_from_microseconds.setStyleSheet("QLineEdit{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_from_microseconds, 0, 0, 1, 1)
+        self.lineEdit_to_microseconds = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_to_microseconds.setAlignment(Qt.AlignCenter)
+        self.lineEdit_to_microseconds.setPlaceholderText("to (microseconds)")
+        self.lineEdit_to_microseconds.setObjectName("lineEdit_to_microseconds")
+        self.lineEdit_to_microseconds.setStyleSheet("QLineEdit{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_to_microseconds, 0, 1, 1, 1)
+        self.pushButton_microseconds = QPushButton(self.groupbox_zooming)
+        self.pushButton_microseconds.setObjectName("pushButton_microseconds")
+        self.pushButton_microseconds.setText("Apply")
+        self.pushButton_microseconds.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 4px;\n"
+                                          "    padding-bottom: 4px;\n"
+                                          "    padding-left: 6px;\n"
+                                          "    padding-right: 6px;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:focus{\n"
+                                          "    outline: none;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.pushButton_microseconds, 0, 2, 1, 1)
+
+        # lineedits row 2
+        self.lineEdit_from_turns = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_from_turns.setAlignment(Qt.AlignCenter)
+        self.lineEdit_from_turns.setPlaceholderText("from (turns)")
+        self.lineEdit_from_turns.setObjectName("lineEdit_from_turns")
+        self.lineEdit_from_turns.setStyleSheet("QLineEdit{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_from_turns, 1, 0, 1, 1)
+        self.lineEdit_to_turns = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_to_turns.setAlignment(Qt.AlignCenter)
+        self.lineEdit_to_turns.setPlaceholderText("to (turns)")
+        self.lineEdit_to_turns.setObjectName("lineEdit_to_turns")
+        self.lineEdit_to_turns.setStyleSheet("QLineEdit{\n" 
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_to_turns, 1, 1, 1, 1)
+        self.pushButton_turns = QPushButton(self.groupbox_zooming)
+        self.pushButton_turns.setObjectName("pushButton_turns")
+        self.pushButton_turns.setText("Apply")
+        self.pushButton_turns.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 4px;\n"
+                                          "    padding-bottom: 4px;\n"
+                                          "    padding-left: 6px;\n"
+                                          "    padding-right: 6px;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:focus{\n"
+                                          "    outline: none;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.pushButton_turns, 1, 2, 1, 1)
+
+        # lineedits row 3
+        self.lineEdit_from_bunchs = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_from_bunchs.setAlignment(Qt.AlignCenter)
+        self.lineEdit_from_bunchs.setPlaceholderText("from (bunchs)")
+        self.lineEdit_from_bunchs.setObjectName("lineEdit_from_bunchs")
+        self.lineEdit_from_bunchs.setStyleSheet("QLineEdit{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_from_bunchs, 2, 0, 1, 1)
+        self.lineEdit_to_bunchs = QLineEdit(self.groupbox_zooming)
+        self.lineEdit_to_bunchs.setAlignment(Qt.AlignCenter)
+        self.lineEdit_to_bunchs.setPlaceholderText("to (bunchs)")
+        self.lineEdit_to_bunchs.setObjectName("lineEdit_to_bunchs")
+        self.lineEdit_to_bunchs.setStyleSheet("QLineEdit{\n" 
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.lineEdit_to_bunchs, 2, 1, 1, 1)
+        self.pushButton_bunchs = QPushButton(self.groupbox_zooming)
+        self.pushButton_bunchs.setObjectName("pushButton_bunchs")
+        self.pushButton_bunchs.setText("Apply")
+        self.pushButton_bunchs.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 4px;\n"
+                                          "    padding-bottom: 4px;\n"
+                                          "    padding-left: 6px;\n"
+                                          "    padding-right: 6px;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:focus{\n"
+                                          "    outline: none;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.gridLayout_zooming.addWidget(self.pushButton_bunchs, 2, 2, 1, 1)
 
         # context frame of the groupbox
         self.CContextFrame_Commands = CContextFrame(self.frame_phasing)
@@ -608,6 +783,9 @@ class MyDisplay(CDisplay):
         # disable buttons until reception of data
         self.checkBox_bunch.setEnabled(False)
         self.checkBox_turn.setEnabled(False)
+        self.checkBox_bst.setEnabled(False)
+        self.checkBox_sync_main.setEnabled(False)
+        self.groupbox_zooming.setEnabled(False)
 
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
@@ -641,6 +819,105 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_1.clicked.connect(self.commandClicked)
         self.ccommandbutton_2.clicked.connect(self.commandClicked)
+
+        # zooming
+        self.pushButton_microseconds.clicked.connect(self.pushButtonZoomingMicroClicked)
+        self.pushButton_turns.clicked.connect(self.pushButtonZoomingTurnsClicked)
+        self.pushButton_bunchs.clicked.connect(self.pushButtonZoomingBunchsClicked)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to set the axis range
+    def pushButtonZoomingMicroClicked(self):
+
+        # check we have data
+        if self.bufferFirstPlotsPainted:
+
+            # check line edits are not empty
+            if self.lineEdit_from_microseconds.text() and self.lineEdit_to_microseconds.text():
+
+                # get lower and upper limit
+                lower_limit = self.lineEdit_from_microseconds.text()
+                upper_limit = self.lineEdit_to_microseconds.text()
+                lower_limit = float(lower_limit.replace(",", "."))
+                upper_limit = float(upper_limit.replace(",", "."))
+
+                # set range
+                self.plot_rawbuf1.setXRange(lower_limit, upper_limit, padding=0)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to set the axis range
+    def pushButtonZoomingBunchsClicked(self):
+
+        # check we have data
+        if self.bufferFirstPlotsPainted:
+
+            # check line edits are not empty
+            if self.lineEdit_from_bunchs.text() and self.lineEdit_to_bunchs.text():
+
+                # get lower and upper limit
+                lower_limit = self.lineEdit_from_bunchs.text()
+                upper_limit = self.lineEdit_to_bunchs.text()
+                lower_limit = int(lower_limit.replace(",", "."))
+                upper_limit = int(upper_limit.replace(",", "."))
+
+                # get the real bunch limits
+                if lower_limit == 0:
+                    bunchs_lower_limit = 0
+                elif lower_limit >= 1 and lower_limit <= len(self.idx_flags_one_two):
+                    bunchs_lower_limit = self.time_vector[self.idx_flags_one_two[lower_limit - 1]]
+                elif lower_limit > len(self.idx_flags_one_two):
+                    bunchs_lower_limit = self.time_vector[-1]
+                if upper_limit == 0:
+                    bunchs_upper_limit = 0
+                elif upper_limit >= 1 and upper_limit <= len(self.idx_flags_one_two):
+                    bunchs_upper_limit = self.time_vector[self.idx_flags_one_two[upper_limit - 1]]
+                elif upper_limit > len(self.idx_flags_one_two):
+                    bunchs_upper_limit = self.time_vector[-1]
+
+                # set range
+                self.plot_rawbuf1.setXRange(bunchs_lower_limit, bunchs_upper_limit, padding=0)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to set the axis range
+    def pushButtonZoomingTurnsClicked(self):
+
+        # check we have data
+        if self.bufferFirstPlotsPainted:
+
+            # check line edits are not empty
+            if self.lineEdit_from_turns.text() and self.lineEdit_to_turns.text():
+
+                # get lower and upper limit
+                lower_limit = self.lineEdit_from_turns.text()
+                upper_limit = self.lineEdit_to_turns.text()
+                lower_limit = int(lower_limit.replace(",", "."))
+                upper_limit = int(upper_limit.replace(",", "."))
+
+                # get the real turn limits
+                if lower_limit == 0:
+                    turns_lower_limit = 0
+                elif lower_limit >= 1 and lower_limit <= len(self.inf_lines_pos_1):
+                    turns_lower_limit = self.inf_lines_pos_1[lower_limit - 1]
+                elif lower_limit > len(self.inf_lines_pos_1):
+                    turns_lower_limit = self.time_vector[-1]
+                if upper_limit == 0:
+                    turns_upper_limit = 0
+                elif upper_limit >= 1 and upper_limit <= len(self.inf_lines_pos_1):
+                    turns_upper_limit = self.inf_lines_pos_1[upper_limit - 1]
+                elif upper_limit > len(self.inf_lines_pos_1):
+                    turns_upper_limit = self.time_vector[-1]
+
+                # set range
+                self.plot_rawbuf1.setXRange(turns_lower_limit, turns_upper_limit, padding=0)
 
         return
 
@@ -744,6 +1021,9 @@ class MyDisplay(CDisplay):
         flags_one_two = np.zeros(self.data_rawBufFlags1.shape)
         flags_one_two[idx_flags_one_two] = 1
 
+        # save bunch idx for the zooming options
+        self.idx_flags_one_two = idx_flags_one_two
+
         # get only turn flags (5 and 6) for buf1
         idx_flags_five_six = np.where((self.data_rawBufFlags1 == 5) | (self.data_rawBufFlags1 == 6))[0]
         flags_five_six = np.zeros(self.data_rawBufFlags1.shape)
@@ -789,6 +1069,17 @@ class MyDisplay(CDisplay):
         # enable buttons
         self.checkBox_bunch.setEnabled(True)
         self.checkBox_turn.setEnabled(True)
+        self.checkBox_bst.setEnabled(True)
+        self.checkBox_sync_main.setEnabled(True)
+        self.groupbox_zooming.setEnabled(True)
+
+        # set validators
+        self.lineEdit_from_microseconds.setValidator(QDoubleValidator(0, self.time_vector[-1], 4, self, notation=QDoubleValidator.StandardNotation))
+        self.lineEdit_to_microseconds.setValidator(QDoubleValidator(0, self.time_vector[-1], 4, self, notation=QDoubleValidator.StandardNotation))
+        self.lineEdit_from_turns.setValidator(QIntValidator(0, len(self.inf_lines_pos_1)-1, self))
+        self.lineEdit_to_turns.setValidator(QIntValidator(0, len(self.inf_lines_pos_1)-1, self))
+        self.lineEdit_from_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
+        self.lineEdit_to_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
 
         return
 

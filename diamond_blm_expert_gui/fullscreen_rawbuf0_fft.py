@@ -125,7 +125,7 @@ class MyDisplay(CDisplay):
         self.plot_rawbuf0_fft.getPlotItem().setAutoVisible()
         # self.plot_rawbuf0_fft.getPlotItem().setMenuEnabled(enableMenu=False)
         self.plot_rawbuf0_fft.getPlotItem().showButtons()
-        self.plot_rawbuf0_fft.getPlotItem().showGrid(x=True, y=True, alpha=0.3)
+        self.plot_rawbuf0_fft.getPlotItem().showGrid(x=False, y=False, alpha=0.3)
         self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='left', text='amplitude')
         self.plot_rawbuf0_fft.getPlotItem().setLabel(axis='bottom', text='frequency (kHz)')
         self.verticalLayout_Capture_FFT.addWidget(self.plot_rawbuf0_fft)
@@ -153,6 +153,7 @@ class MyDisplay(CDisplay):
 
         # disable buttons until reception of data
         self.checkBox_one.setEnabled(False)
+        self.checkBox_sync_main.setEnabled(False)
 
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
@@ -282,6 +283,7 @@ class MyDisplay(CDisplay):
 
         # enable buttons
         self.checkBox_one.setEnabled(True)
+        self.checkBox_sync_main.setEnabled(True)
 
         return
 
