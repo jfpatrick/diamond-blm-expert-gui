@@ -229,9 +229,9 @@ margin-right: 7px;</string>
                   </widget>
                  </item>
                  <item>
-                  <widget class="QCheckBox" name="checkBox_bst">
+                  <widget class="QCheckBox" name="checkBox_bct">
                    <property name="text">
-                    <string>Fast BST</string>
+                    <string>BCT</string>
                    </property>
                   </widget>
                  </item>

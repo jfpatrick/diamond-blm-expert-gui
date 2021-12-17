@@ -26,8 +26,6 @@ import numpy as np
 import math
 from general_utils import createCustomTempDir, getSystemTempDir
 import json
-from copy import deepcopy
-from scipy.interpolate import interp1d
 
 ########################################################
 ########################################################
@@ -1047,9 +1045,6 @@ class MyDisplay(CDisplay):
         flags_five_six[idx_flags_five_six] = 1
         self.inf_lines_pos_0 = self.time_vector[idx_flags_five_six]
 
-        # save bunch idx for the bct
-        self.idx_flags_five_six = idx_flags_five_six
-
         # line equation parameters
         offset_for_timestamps = 0
         y_1 = np.min(self.data_rawBuf0) - offset_for_timestamps
@@ -1064,107 +1059,6 @@ class MyDisplay(CDisplay):
         self.flags_turn0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
                             self.data_turn_line_eq_params_0[1]) * flags_five_six + self.data_turn_line_eq_params_0[2]
 
-
-
-
-
-
-
-
-
-        # set seed for random sequences
-        np.random.seed(0)
-
-        # init pattern for the whole sequence of data
-        x_filling_pattern_full = deepcopy(self.time_vector)
-        y_filling_pattern_full = [0] * len(self.time_vector)
-        y_filling_pattern_full = np.array(y_filling_pattern_full)
-
-        # generate random filling sequence
-        y_filling_pattern = np.random.choice(2, 3564)
-        y_filling_pattern = np.array(y_filling_pattern)
-        y_filling_pattern = np.append(y_filling_pattern, 0)
-
-        # iterate over turns to loop the pattern
-        for idx_turn in range(0, len(self.idx_flags_five_six)-1):
-
-            # get lower and upper turn limits
-            first_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn]]
-            second_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn + 1]]
-            n_samples = self.idx_flags_five_six[idx_turn + 1] - self.idx_flags_five_six[idx_turn]
-
-            # the x filling pattern
-            x_filling_pattern = np.linspace(first_turn_ms, second_turn_ms, num=3565)
-
-            # interpolate
-            interpolation_function = interp1d(x_filling_pattern, y_filling_pattern, kind='previous')
-            x_filling_pattern_interpolated = np.linspace(first_turn_ms, second_turn_ms, num=n_samples)
-            y_filling_pattern_interpolated = interpolation_function(x_filling_pattern_interpolated)
-
-            # fill the full sequence
-            y_filling_pattern_full[self.idx_flags_five_six[idx_turn]:self.idx_flags_five_six[idx_turn + 1]] = y_filling_pattern_interpolated
-
-        # scale the full sequence
-        y_filling_pattern_full = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
-                            self.data_turn_line_eq_params_0[1]) * y_filling_pattern_full + self.data_turn_line_eq_params_0[2]
-
-        # fix 1-sample error in the interpolation curve
-
-        # case 1: perfect overlapping (no error) at the start of the slope
-        # case 2: perfect overlapping (no error) at the end of the slope
-        # case 3: slope starts too early
-        # case 4: slope ends too late
-        # case 5: slope starts too late (+1)
-        # case 6: slope ends too early (-1)
-        # case 7: slope starts too late (+2)
-        # case 8: slope ends too early (-2)
-
-        # iterate over bunches
-        for idx_bunch in self.idx_flags_one_two:
-
-            # cases 1,2,3 and 4
-            if y_filling_pattern_full[idx_bunch] == self.flags_bunch0[idx_bunch]:
-
-                # cases 1 and 2 (no error)
-                pass
-
-                # possible case 3
-                if y_filling_pattern_full[idx_bunch-1] == self.flags_bunch0[idx_bunch]:
-
-                    # case 3
-                    if y_filling_pattern_full[idx_bunch - 2] != self.flags_bunch0[idx_bunch]:
-                        y_filling_pattern_full[idx_bunch - 1] = y_filling_pattern_full[idx_bunch - 2]
-                        continue
-
-                # possible case 4
-                if y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
-
-                    # case 4
-                    if y_filling_pattern_full[idx_bunch + 2] != self.flags_bunch0[idx_bunch]:
-                        y_filling_pattern_full[idx_bunch + 1] = y_filling_pattern_full[idx_bunch + 2]
-                        continue
-
-            #  case 5
-            elif y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-
-            # case 6
-            elif y_filling_pattern_full[idx_bunch - 1] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-
-            # case 7
-            elif y_filling_pattern_full[idx_bunch + 2] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-                y_filling_pattern_full[idx_bunch + 1] = self.flags_bunch0[idx_bunch]
-
-            # case 8
-            elif y_filling_pattern_full[idx_bunch - 2] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-                y_filling_pattern_full[idx_bunch - 1] = self.flags_bunch0[idx_bunch]
-
-
-
-
         # freeze condition
         if not self.freeze_everything:
 
@@ -1177,8 +1071,6 @@ class MyDisplay(CDisplay):
                 for line_pos in self.inf_lines_pos_0:
                     infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                     self.plot_rawbuf0.addItem(infinite_line)
-            self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-            self.plot_rawbuf0.plot(x=x_filling_pattern_full, y=y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
             self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
             self.plot_rawbuf0.show()
 
@@ -1203,12 +1095,6 @@ class MyDisplay(CDisplay):
         self.lineEdit_to_turns.setValidator(QIntValidator(0, len(self.inf_lines_pos_0)-1, self))
         self.lineEdit_from_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
         self.lineEdit_to_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
-
-
-
-
-
-
 
         return
 

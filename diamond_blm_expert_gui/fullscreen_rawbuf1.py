@@ -561,7 +561,7 @@ class MyDisplay(CDisplay):
         self.layout_groupbox_expert_setting.addWidget(self.table_expert_setting)
 
         # fill table
-        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH0", "SYNCDELDEPTH"]:
+        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH1", "SYNCDELDEPTH"]:
             try:
                 data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
             except Exception as xcp:
@@ -653,7 +653,7 @@ class MyDisplay(CDisplay):
         self.data_model_expert_setting = []
 
         # fill table
-        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH0", "SYNCDELDEPTH"]:
+        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH1", "SYNCDELDEPTH"]:
             try:
                 data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
             except:
@@ -783,7 +783,7 @@ class MyDisplay(CDisplay):
         # disable buttons until reception of data
         self.checkBox_bunch.setEnabled(False)
         self.checkBox_turn.setEnabled(False)
-        self.checkBox_bst.setEnabled(False)
+        self.checkBox_bct.setEnabled(False)
         self.checkBox_sync_main.setEnabled(False)
         self.groupbox_zooming.setEnabled(False)
 
@@ -1069,7 +1069,7 @@ class MyDisplay(CDisplay):
         # enable buttons
         self.checkBox_bunch.setEnabled(True)
         self.checkBox_turn.setEnabled(True)
-        self.checkBox_bst.setEnabled(True)
+        self.checkBox_bct.setEnabled(True)
         self.checkBox_sync_main.setEnabled(True)
         self.groupbox_zooming.setEnabled(True)
 
