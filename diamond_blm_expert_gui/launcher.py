@@ -24,6 +24,9 @@ SELECTOR = "SPS.USER.ALL"
 # main function
 if __name__ == "__main__":
 
+    # print
+    print("Starting...")
+
     # run the application
     os.system("comrad run --hide-log-console -s {} premain.py".format(SELECTOR))
 

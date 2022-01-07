@@ -1153,12 +1153,12 @@ class MyDisplay(CDisplay):
                         # plot the data for buf0
                         self.plot_rawbuf0.getPlotItem().clear()
                         self.plot_rawbuf0_fft.getPlotItem().clear()
+                        self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                         if self.flags_turn0.size != 0 and self.is_turn0_checked:
                             # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                             for line_pos in self.inf_lines_pos_0:
                                 infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                                 self.plot_rawbuf0.addItem(infinite_line)
-                        self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                         if self.data_peaks_freq0_xplots.size != 0 and self.is_peaks0_checked:
                             self.plot_rawbuf0_fft.plot(x=self.data_peaks_freq0_xplots[1], y=self.data_peaks_freq0_xplots[0], pen=None, symbolBrush=(255,255,0), symbol='x', symbolPen=(255,255,0), symbolSize=8, name="rawBuf0_peaks")
                         self.plot_rawbuf0_fft.plot(x=self.data_rawBuffer0_FFT[1, :], y=self.data_rawBuffer0_FFT[0, :], pen=(255, 255, 255), name="rawBuf0_FFT")
@@ -1189,12 +1189,12 @@ class MyDisplay(CDisplay):
                         # plot the data for buf1
                         self.plot_rawbuf1.getPlotItem().clear()
                         self.plot_rawbuf1_fft.getPlotItem().clear()
+                        self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                         if self.flags_turn1.size != 0 and self.is_turn1_checked:
                             # self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
                             for line_pos in self.inf_lines_pos_1:
                                 infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                                 self.plot_rawbuf1.addItem(infinite_line)
-                        self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                         if self.data_peaks_freq1_xplots.size != 0 and self.is_peaks1_checked:
                             self.plot_rawbuf1_fft.plot(x=self.data_peaks_freq1_xplots[1], y=self.data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255,255,0), symbol='x', symbolPen=(255,255,0), symbolSize=8, name="rawBuf1_peaks")
                         self.plot_rawbuf1_fft.plot(x=self.data_rawBuffer1_FFT[1, :], y=self.data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
@@ -1327,12 +1327,12 @@ class MyDisplay(CDisplay):
 
                 # plot the data for buf0
                 self.plot_rawbuf0.getPlotItem().clear()
+                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
                     # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                     for line_pos in self.inf_lines_pos_0:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color':(255, 255, 0), 'width':1.5}, label=None)
                         self.plot_rawbuf0.addItem(infinite_line)
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
                 # save current plotted data for checkbuttons
@@ -1343,12 +1343,12 @@ class MyDisplay(CDisplay):
 
                 # plot the data for buf1
                 self.plot_rawbuf1.getPlotItem().clear()
+                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 if self.flags_turn1.size != 0 and self.is_turn1_checked:
                     # self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
                     for line_pos in self.inf_lines_pos_1:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color':(255, 255, 0), 'width':1.5}, label=None)
                         self.plot_rawbuf1.addItem(infinite_line)
-                self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 self.plot_rawbuf1.show()
 
                 # save current plotted data for checkbuttons
@@ -1554,13 +1554,13 @@ class MyDisplay(CDisplay):
             self.is_turn0_checked = True
             if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf0.getPlotItem().clear()
+                if self.current_check_dict["ts0"]:
+                    self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 if self.current_flags_turn0.size != 0:
                     # self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                     for line_pos in self.inf_lines_pos_0:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf0.addItem(infinite_line)
-                if self.current_check_dict["ts0"]:
-                    self.plot_rawbuf0.plot(x=self.current_time_vector, y=self.current_data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
         # if it is not checked
@@ -1595,15 +1595,15 @@ class MyDisplay(CDisplay):
             print("{} - Turns1 button checked...".format(UI_FILENAME))
             self.current_check_dict["ts1"] = True
             self.is_turn1_checked = True
-            self.plot_rawbuf1.getPlotItem().clear()
             if self.bufferFirstPlotsPainted:
+                self.plot_rawbuf1.getPlotItem().clear()
+                if self.current_check_dict["ts1"]:
+                    self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 if self.current_flags_turn1.size != 0:
                     # self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
                     for line_pos in self.inf_lines_pos_1:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf1.addItem(infinite_line)
-                if self.current_check_dict["ts1"]:
-                    self.plot_rawbuf1.plot(x=self.current_time_vector, y=self.current_data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
                 self.plot_rawbuf1.show()
 
         # if it is not checked

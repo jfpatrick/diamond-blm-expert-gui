@@ -159,6 +159,14 @@ class MyDisplay(CDisplay):
         self.data_save = {}
         self.is_buffer_plotted_in_the_main_window = "False"
         self.sync_wrt_main = False
+        self.bct_use_random = False
+        self.bct_use_received_pattern = False
+        self.bct_random_seed = 0
+        self.bct_checked = False
+        self.y_filling_pattern_not_empty = False
+        self.data_bct_save = np.array([0])
+        self.counter_of_bct_apply = 0
+        self.plotted_bct_at_least_once = False
 
         # set current device
         self.current_device = "SP.BA2.BLMDIAMOND.2"
@@ -241,6 +249,65 @@ class MyDisplay(CDisplay):
         # add a spacer
         spacerItem_1 = QSpacerItem(40, 20, QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.verticalLayout_phasing.addItem(spacerItem_1)
+
+        # font for groupbox
+        font_for_groupbox = QFont()
+        font_for_groupbox.setBold(True)
+        font_for_groupbox.setWeight(75)
+
+        # groupbox for BCT
+        self.groupbox_bct = QGroupBox(self.frame_phasing)
+        self.groupbox_bct.setObjectName("groupbox_BCT")
+        self.groupbox_bct.setAlignment(Qt.AlignCenter)
+        self.groupbox_bct.setFlat(True)
+        self.groupbox_bct.setCheckable(False)
+        self.groupbox_bct.setTitle("BCT")
+        self.groupbox_bct.setFont(font_for_groupbox)
+        self.verticalLayout_phasing.addWidget(self.groupbox_bct)
+
+        # layout for BCT
+        self.gridLayout_bct= QGridLayout(self.groupbox_bct)
+        self.gridLayout_bct.setObjectName("gridLayout_BCT")
+
+
+        # lineedits row 1
+        self.lineEdit_bct_device_name = QLineEdit(self.groupbox_bct)
+        self.lineEdit_bct_device_name.setAlignment(Qt.AlignCenter)
+        self.lineEdit_bct_device_name.setPlaceholderText("BCT device name (e.g. LHC.BCTFR.A6R4.B1)")
+        self.lineEdit_bct_device_name.setObjectName("lineEdit_bct_device_name")
+        self.lineEdit_bct_device_name.setStyleSheet("QLineEdit{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 3px;\n"
+                                          "    padding-bottom: 3px;\n"
+                                          "    padding-left: 0px;\n"
+                                          "    padding-right: 0px;\n"
+                                          "}")
+        self.gridLayout_bct.addWidget(self.lineEdit_bct_device_name, 0, 0, 1, 1)
+        self.pushButton_bct_device_name = QPushButton(self.groupbox_bct)
+        self.pushButton_bct_device_name.setObjectName("pushButton_bct_device_name")
+        self.pushButton_bct_device_name.setText("Apply")
+        self.pushButton_bct_device_name.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "    padding-top: 4px;\n"
+                                          "    padding-bottom: 4px;\n"
+                                          "    padding-left: 6px;\n"
+                                          "    padding-right: 6px;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:focus{\n"
+                                          "    outline: none;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.gridLayout_bct.addWidget(self.pushButton_bct_device_name, 0, 1, 1, 1)
 
         # font for groupbox
         font_for_groupbox = QFont()
@@ -797,6 +864,9 @@ class MyDisplay(CDisplay):
         # checkbox for flags 5 and 6
         self.checkBox_turn.stateChanged.connect(self.updateFlags_5_6)
 
+        # checkbox for bct
+        self.checkBox_bct.stateChanged.connect(self.updateBCTPlot)
+
         # disable buttons until reception of data
         self.checkBox_bunch.setEnabled(False)
         self.checkBox_turn.setEnabled(False)
@@ -841,6 +911,222 @@ class MyDisplay(CDisplay):
         self.pushButton_microseconds.clicked.connect(self.pushButtonZoomingMicroClicked)
         self.pushButton_turns.clicked.connect(self.pushButtonZoomingTurnsClicked)
         self.pushButton_bunchs.clicked.connect(self.pushButtonZoomingBunchsClicked)
+
+        # bct
+        self.pushButton_bct_device_name.clicked.connect(self.pushButtonApplyBCT)
+
+        return
+
+    #----------------------------------------------#
+
+    # function to format the BCT pattern
+    def formatBCTPattern(self, received_pattern = None):
+
+        # set seed for random sequences
+        if self.bct_use_random:
+            np.random.seed(self.bct_random_seed)
+
+        # init pattern for the whole sequence of data
+        x_filling_pattern_full = deepcopy(self.time_vector)
+        y_filling_pattern_full = [0] * len(self.time_vector)
+        y_filling_pattern_full = np.array(y_filling_pattern_full)
+
+        # generate random filling sequence
+        if self.bct_use_random:
+            y_filling_pattern = np.random.choice(2, 3564)
+            y_filling_pattern = np.array(y_filling_pattern)
+            y_filling_pattern = np.append(y_filling_pattern, 0)
+            self.y_filling_pattern_not_empty = True
+            print("{} - Using random pattern!".format(UI_FILENAME))
+        elif self.bct_use_received_pattern:
+            y_filling_pattern = np.array(received_pattern)
+            y_filling_pattern = np.append(y_filling_pattern, 0)
+            if y_filling_pattern.any():
+                self.y_filling_pattern_not_empty = True
+                print("{} - Using BCT pattern from device!".format(UI_FILENAME))
+            else:
+                self.y_filling_pattern_not_empty = False
+                print("{} - All elements of the received BCT pattern are zero!".format(UI_FILENAME))
+        else:
+            self.y_filling_pattern_not_empty = False
+            print("{} - Pattern is empty or not found!".format(UI_FILENAME))
+
+        # if it is empty, do not plot the pattern
+        if self.y_filling_pattern_not_empty:
+
+            # iterate over turns to loop the pattern
+            for idx_turn in range(0, len(self.idx_flags_five_six)-1):
+
+                # get lower and upper turn limits
+                first_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn]]
+                second_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn + 1]]
+                n_samples = self.idx_flags_five_six[idx_turn + 1] - self.idx_flags_five_six[idx_turn]
+
+                # the x filling pattern
+                x_filling_pattern = np.linspace(first_turn_ms, second_turn_ms, num=3565)
+
+                # interpolate
+                interpolation_function = interp1d(x_filling_pattern, y_filling_pattern, kind='previous')
+                x_filling_pattern_interpolated = np.linspace(first_turn_ms, second_turn_ms, num=n_samples)
+                y_filling_pattern_interpolated = interpolation_function(x_filling_pattern_interpolated)
+
+                # fill the full sequence
+                y_filling_pattern_full[self.idx_flags_five_six[idx_turn]:self.idx_flags_five_six[idx_turn + 1]] = y_filling_pattern_interpolated
+
+            # scale the full sequence
+            y_filling_pattern_full = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
+                                self.data_turn_line_eq_params_0[1]) * y_filling_pattern_full + self.data_turn_line_eq_params_0[2]
+
+            # fix 1-sample error in the interpolation curve
+
+            # case 1: perfect overlapping (no error) at the start of the slope
+            # case 2: perfect overlapping (no error) at the end of the slope
+            # case 3: slope starts too early
+            # case 4: slope ends too late
+            # case 5: slope starts too late (+1)
+            # case 6: slope ends too early (-1)
+            # case 7: slope starts too late (+2)
+            # case 8: slope ends too early (-2)
+            # case 9: slope starts too late (+3)
+            # case 10: slope ends too early (-3)
+
+            # iterate over bunches
+            for idx_bunch in self.idx_flags_one_two:
+
+                # cases 1,2,3 and 4
+                if y_filling_pattern_full[idx_bunch] == self.flags_bunch0[idx_bunch]:
+
+                    # cases 1 and 2 (no error)
+                    pass
+
+                    # possible case 3
+                    if y_filling_pattern_full[idx_bunch-1] == self.flags_bunch0[idx_bunch]:
+
+                        # case 3
+                        if y_filling_pattern_full[idx_bunch - 2] != self.flags_bunch0[idx_bunch]:
+                            y_filling_pattern_full[idx_bunch - 1] = y_filling_pattern_full[idx_bunch - 2]
+                            continue
+                        elif y_filling_pattern_full[idx_bunch - 3] != self.flags_bunch0[idx_bunch]:
+                            y_filling_pattern_full[idx_bunch - 2] = y_filling_pattern_full[idx_bunch - 3]
+                            y_filling_pattern_full[idx_bunch - 1] = y_filling_pattern_full[idx_bunch - 2]
+                            continue
+
+                    # possible case 4
+                    if y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
+
+                        # case 4
+                        if y_filling_pattern_full[idx_bunch + 2] != self.flags_bunch0[idx_bunch]:
+                            y_filling_pattern_full[idx_bunch + 1] = y_filling_pattern_full[idx_bunch + 2]
+                            continue
+                        elif y_filling_pattern_full[idx_bunch + 3] != self.flags_bunch0[idx_bunch]:
+                            y_filling_pattern_full[idx_bunch + 2] = y_filling_pattern_full[idx_bunch + 3]
+                            y_filling_pattern_full[idx_bunch + 1] = y_filling_pattern_full[idx_bunch + 2]
+                            continue
+
+                #  case 5
+                elif y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+
+                # case 6
+                elif y_filling_pattern_full[idx_bunch - 1] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+
+                # case 7
+                elif y_filling_pattern_full[idx_bunch + 2] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch + 1] = self.flags_bunch0[idx_bunch]
+
+                # case 8
+                elif y_filling_pattern_full[idx_bunch - 2] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch - 1] = self.flags_bunch0[idx_bunch]
+
+                # case 9
+                elif y_filling_pattern_full[idx_bunch + 3] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch + 1] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch + 2] = self.flags_bunch0[idx_bunch]
+
+                # case 10
+                elif y_filling_pattern_full[idx_bunch - 3] == self.flags_bunch0[idx_bunch]:
+                    y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch - 1] = self.flags_bunch0[idx_bunch]
+                    y_filling_pattern_full[idx_bunch - 2] = self.flags_bunch0[idx_bunch]
+
+            # save variables
+            self.x_filling_pattern_full = x_filling_pattern_full
+            self.y_filling_pattern_full = y_filling_pattern_full
+
+        return
+
+    #----------------------------------------------#
+
+    # function to update the BCT pattern according to the introduced name
+    def pushButtonApplyBCT(self):
+
+        # get name
+        dev_name = self.lineEdit_bct_device_name.text()
+        dev_name = dev_name.strip()
+
+        # check it is not empty
+        if dev_name:
+
+            # use predefined random format to debug the app
+            # e.g. RANDOM.SEED.0 means use random pattern with seed 0
+            # e.g. RANDOM.SEED.567 means use random pattern with seed 567
+            if "RANDOM.SEED." in dev_name:
+
+                # update boolean
+                self.bct_use_random = True
+                self.bct_use_received_pattern = False
+
+                # get seed
+                rs = dev_name.split(".")[-1]
+
+                # if it is not a number, the format is wrong so return
+                if rs.isdecimal():
+                    self.bct_random_seed = int(rs)
+                else:
+                    print("{} - Please introduce a correct RANDOM.SEED.X string!".format(UI_FILENAME))
+                    return
+
+                # format the pattern
+                if self.bufferFirstPlotsPainted:
+                    self.formatBCTPattern()
+                    if self.bct_checked:
+                        self.updateBCTPlot(state = self.checkBox_bct.checkState())
+
+            # otherwise, get the pattern from the bct device
+            # example names: LHC.BCTFR.A6R4.B1, LHC.BCTFR.A6R4.B2
+            else:
+
+                # update boolean
+                self.bct_use_random = False
+                self.bct_use_received_pattern = True
+
+                # remove old bct
+                if self.counter_of_bct_apply >= 1:
+                    self.data_bct_save = np.array([0])
+                    self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].disconnect(self.receiveDataFromBCTDevice)
+                    self.horizontalLayout_CValueAggregators.removeWidget(self.CValueAggregator_BCT)
+                    self.CValueAggregator_BCT.deleteLater()
+                    self.CValueAggregator_BCT = None
+
+                # update counter
+                self.counter_of_bct_apply += 1
+
+                # aggregator for BCT
+                self.CValueAggregator_BCT = CValueAggregator(self)
+                self.CValueAggregator_BCT.setProperty("inputChannels", ['{}/Acquisition#bunchFillingPattern'.format(dev_name)])
+                self.CValueAggregator_BCT.setObjectName("CValueAggregator_BCT")
+                self.CValueAggregator_BCT.setValueTransformation("try:\n"
+                                                                     "    output(next(iter(values.values())))\n"
+                                                                     "except:\n"
+                                                                     "    output(0)")
+                self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_BCT)
+
+                # BCT aggregator signals
+                self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromBCTDevice)
 
         return
 
@@ -982,6 +1268,25 @@ class MyDisplay(CDisplay):
 
         return
 
+    # connect function
+    def receiveDataFromBCTDevice(self, data, verbose = False):
+
+        # check that the arrays are different with respect to the previous iteration
+        if self.bufferFirstPlotsPainted:
+            if np.array_equal(self.data_bct_save, data):
+                return
+
+        # save data to check if it is exactly the same
+        self.data_bct_save = data
+
+        # format the pattern
+        if self.bufferFirstPlotsPainted:
+            self.formatBCTPattern(received_pattern = data)
+            if self.bct_checked:
+                self.updateBCTPlot(state=self.checkBox_bct.checkState())
+
+        return
+
     #----------------------------------------------#
 
     # connect function
@@ -1064,106 +1369,8 @@ class MyDisplay(CDisplay):
         self.flags_turn0 = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
                             self.data_turn_line_eq_params_0[1]) * flags_five_six + self.data_turn_line_eq_params_0[2]
 
-
-
-
-
-
-
-
-
-        # set seed for random sequences
-        np.random.seed(0)
-
-        # init pattern for the whole sequence of data
-        x_filling_pattern_full = deepcopy(self.time_vector)
-        y_filling_pattern_full = [0] * len(self.time_vector)
-        y_filling_pattern_full = np.array(y_filling_pattern_full)
-
-        # generate random filling sequence
-        y_filling_pattern = np.random.choice(2, 3564)
-        y_filling_pattern = np.array(y_filling_pattern)
-        y_filling_pattern = np.append(y_filling_pattern, 0)
-
-        # iterate over turns to loop the pattern
-        for idx_turn in range(0, len(self.idx_flags_five_six)-1):
-
-            # get lower and upper turn limits
-            first_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn]]
-            second_turn_ms = self.time_vector[self.idx_flags_five_six[idx_turn + 1]]
-            n_samples = self.idx_flags_five_six[idx_turn + 1] - self.idx_flags_five_six[idx_turn]
-
-            # the x filling pattern
-            x_filling_pattern = np.linspace(first_turn_ms, second_turn_ms, num=3565)
-
-            # interpolate
-            interpolation_function = interp1d(x_filling_pattern, y_filling_pattern, kind='previous')
-            x_filling_pattern_interpolated = np.linspace(first_turn_ms, second_turn_ms, num=n_samples)
-            y_filling_pattern_interpolated = interpolation_function(x_filling_pattern_interpolated)
-
-            # fill the full sequence
-            y_filling_pattern_full[self.idx_flags_five_six[idx_turn]:self.idx_flags_five_six[idx_turn + 1]] = y_filling_pattern_interpolated
-
-        # scale the full sequence
-        y_filling_pattern_full = ((self.data_turn_line_eq_params_0[3] - self.data_turn_line_eq_params_0[2]) /
-                            self.data_turn_line_eq_params_0[1]) * y_filling_pattern_full + self.data_turn_line_eq_params_0[2]
-
-        # fix 1-sample error in the interpolation curve
-
-        # case 1: perfect overlapping (no error) at the start of the slope
-        # case 2: perfect overlapping (no error) at the end of the slope
-        # case 3: slope starts too early
-        # case 4: slope ends too late
-        # case 5: slope starts too late (+1)
-        # case 6: slope ends too early (-1)
-        # case 7: slope starts too late (+2)
-        # case 8: slope ends too early (-2)
-
-        # iterate over bunches
-        for idx_bunch in self.idx_flags_one_two:
-
-            # cases 1,2,3 and 4
-            if y_filling_pattern_full[idx_bunch] == self.flags_bunch0[idx_bunch]:
-
-                # cases 1 and 2 (no error)
-                pass
-
-                # possible case 3
-                if y_filling_pattern_full[idx_bunch-1] == self.flags_bunch0[idx_bunch]:
-
-                    # case 3
-                    if y_filling_pattern_full[idx_bunch - 2] != self.flags_bunch0[idx_bunch]:
-                        y_filling_pattern_full[idx_bunch - 1] = y_filling_pattern_full[idx_bunch - 2]
-                        continue
-
-                # possible case 4
-                if y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
-
-                    # case 4
-                    if y_filling_pattern_full[idx_bunch + 2] != self.flags_bunch0[idx_bunch]:
-                        y_filling_pattern_full[idx_bunch + 1] = y_filling_pattern_full[idx_bunch + 2]
-                        continue
-
-            #  case 5
-            elif y_filling_pattern_full[idx_bunch + 1] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-
-            # case 6
-            elif y_filling_pattern_full[idx_bunch - 1] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-
-            # case 7
-            elif y_filling_pattern_full[idx_bunch + 2] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-                y_filling_pattern_full[idx_bunch + 1] = self.flags_bunch0[idx_bunch]
-
-            # case 8
-            elif y_filling_pattern_full[idx_bunch - 2] == self.flags_bunch0[idx_bunch]:
-                y_filling_pattern_full[idx_bunch] = self.flags_bunch0[idx_bunch]
-                y_filling_pattern_full[idx_bunch - 1] = self.flags_bunch0[idx_bunch]
-
-
-
+        # get and format the pattern
+        self.formatBCTPattern()
 
         # freeze condition
         if not self.freeze_everything:
@@ -1172,14 +1379,15 @@ class MyDisplay(CDisplay):
             self.plot_rawbuf0.getPlotItem().clear()
             if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+            if self.y_filling_pattern_not_empty and self.bct_checked:
+                self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                self.plotted_bct_at_least_once = True
+            self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
             if self.flags_turn0.size != 0 and self.is_turn0_checked:
                 # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                 for line_pos in self.inf_lines_pos_0:
                     infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                     self.plot_rawbuf0.addItem(infinite_line)
-            self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
-            self.plot_rawbuf0.plot(x=x_filling_pattern_full, y=y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
-            self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
             self.plot_rawbuf0.show()
 
             # set cycle information
@@ -1204,12 +1412,6 @@ class MyDisplay(CDisplay):
         self.lineEdit_from_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
         self.lineEdit_to_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
 
-
-
-
-
-
-
         return
 
     #----------------------------------------------#
@@ -1226,6 +1428,62 @@ class MyDisplay(CDisplay):
         if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator.txt")):
             with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator.txt"), "r") as f:
                 self.current_accelerator = f.read()
+
+        return
+
+    #----------------------------------------------#
+
+    # function for drawing the bct plot
+    def updateBCTPlot(self, state):
+
+        # reset clip to view to avoid errors
+        if self.y_filling_pattern_not_empty or self.plotted_bct_at_least_once:
+            self.plot_rawbuf0.getPlotItem().setClipToView(False)
+
+        # if the button is checked
+        if state == Qt.Checked:
+
+            # clear plot and add the new flags
+            print("{} - BCT button checked...".format(UI_FILENAME))
+            self.bct_checked = True
+            if self.y_filling_pattern_not_empty or self.plotted_bct_at_least_once:
+                if self.bufferFirstPlotsPainted:
+                    self.plot_rawbuf0.getPlotItem().clear()
+                    if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
+                        self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+                    if self.y_filling_pattern_not_empty and self.bct_checked:
+                        self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                        self.plotted_bct_at_least_once = True
+                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                    if self.flags_turn0.size != 0 and self.is_turn0_checked:
+                        # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                        for line_pos in self.inf_lines_pos_0:
+                            infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                            self.plot_rawbuf0.addItem(infinite_line)
+                    self.plot_rawbuf0.show()
+
+        # if not
+        else:
+
+            # remove the flags
+            print("{} - BCT button unchecked...".format(UI_FILENAME))
+            self.bct_checked = False
+            if self.y_filling_pattern_not_empty or self.plotted_bct_at_least_once:
+                if self.bufferFirstPlotsPainted:
+                    self.plot_rawbuf0.getPlotItem().clear()
+                    if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
+                        self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+                    self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
+                    if self.flags_turn0.size != 0 and self.is_turn0_checked:
+                        # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
+                        for line_pos in self.inf_lines_pos_0:
+                            infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
+                            self.plot_rawbuf0.addItem(infinite_line)
+                    self.plot_rawbuf0.show()
+
+        # reset clip to view to avoid errors
+        if self.y_filling_pattern_not_empty or self.plotted_bct_at_least_once:
+            self.plot_rawbuf0.getPlotItem().setClipToView(True)
 
         return
 
@@ -1248,12 +1506,15 @@ class MyDisplay(CDisplay):
                 self.plot_rawbuf0.getPlotItem().clear()
                 if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                     self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+                if self.y_filling_pattern_not_empty and self.bct_checked:
+                    self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                    self.plotted_bct_at_least_once = True
+                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
                     # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                     for line_pos in self.inf_lines_pos_0:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf0.addItem(infinite_line)
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
         # if not
@@ -1265,12 +1526,15 @@ class MyDisplay(CDisplay):
             self.is_bunch0_checked = False
             if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf0.getPlotItem().clear()
+                if self.y_filling_pattern_not_empty and self.bct_checked:
+                    self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                    self.plotted_bct_at_least_once = True
+                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
                     # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                     for line_pos in self.inf_lines_pos_0:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf0.addItem(infinite_line)
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
         # reset clip to view to avoid errors
@@ -1297,12 +1561,15 @@ class MyDisplay(CDisplay):
                 self.plot_rawbuf0.getPlotItem().clear()
                 if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                     self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+                if self.y_filling_pattern_not_empty and self.bct_checked:
+                    self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                    self.plotted_bct_at_least_once = True
+                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 if self.flags_turn0.size != 0 and self.is_turn0_checked:
                     # self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_turn0, pen=(255, 255, 0), name="rawBuf0_turn_flags")
                     for line_pos in self.inf_lines_pos_0:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf0.addItem(infinite_line)
-                self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
         else:
@@ -1315,6 +1582,9 @@ class MyDisplay(CDisplay):
             if self.bufferFirstPlotsPainted:
                 if self.flags_bunch0.size != 0 and self.is_bunch0_checked:
                     self.plot_rawbuf0.plot(x=self.time_vector, y=self.flags_bunch0, pen=QColor("#EF476F"), name="rawBuf0_bunch_flags")
+                if self.y_filling_pattern_not_empty and self.bct_checked:
+                    self.plot_rawbuf0.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
+                    self.plotted_bct_at_least_once = True
                 self.plot_rawbuf0.plot(x=self.time_vector, y=self.data_rawBuf0, pen=(255, 255, 255), name="rawBuf0")
                 self.plot_rawbuf0.show()
 
