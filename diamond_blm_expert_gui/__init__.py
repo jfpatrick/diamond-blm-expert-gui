@@ -3,4 +3,4 @@ Documentation for the diamond_blm_expert_gui package
 
 """
 
-__version__ = "1.5.5"
+__version__ = "1.6.0"

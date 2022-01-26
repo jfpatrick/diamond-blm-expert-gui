@@ -11,8 +11,8 @@
 
 from comrad import (CContextFrame, CCommandButton, CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont, QDoubleValidator, QIntValidator)
-from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel)
-from PyQt5.QtWidgets import (QSplitter, QLineEdit, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel, QPoint)
+from PyQt5.QtWidgets import (QStyledItemDelegate, QComboBox, QSplitter, QLineEdit, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
 from PyQt5.Qt import QItemSelectionModel, QMenu
 import pyqtgraph as pg
 import pyjapc
@@ -28,6 +28,24 @@ from general_utils import createCustomTempDir, getSystemTempDir
 import json
 from copy import deepcopy
 from scipy.interpolate import interp1d
+
+########################################################
+########################################################
+
+import socket
+
+temp_system_dir = getSystemTempDir()
+with open(os.path.join(temp_system_dir, 'free_ports.txt')) as f:
+    free_port_list = f.readlines()
+
+socket_object = socket.socket()
+host = socket.gethostname()
+free_port = int(free_port_list[2])
+try:
+    socket_object.bind((host, free_port))
+except OSError as xcp:
+    print("[{}] A fullscreen window for rawbuf1 is already running on another instance. Please, make sure only one instance is running at the same time. Otherwise, it won't open properly.".format(free_port))
+    sys.exit(0)
 
 ########################################################
 ########################################################
@@ -52,18 +70,35 @@ def can_be_converted_to_float(value):
     except ValueError:
         return False
 
+# util function
+def numpy_find_nearest(array, value, side="left"):
+    idx = np.searchsorted(array, value, side="left")
+    if side=="left":
+        if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+            return array[idx-1], idx-1
+        else:
+            return array[idx], idx
+    elif side=="right":
+        if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+            return array[idx-2], idx-2
+        else:
+            return array[idx-1], idx-1
+    else:
+        return None, None
+
 ########################################################
 ########################################################
 
 class TableModel(QAbstractTableModel):
 
-    def __init__(self, data, header_labels, titles_set_window = False, three_column_window = False):
+    def __init__(self, data, header_labels, titles_set_window = False, three_column_window = False, tooltip_list = []):
 
         super(TableModel, self).__init__()
         self._data = data
         self._header_labels = header_labels
         self.titles_set_window = titles_set_window
         self.three_column_window = three_column_window
+        self.tooltip_list = tooltip_list
 
         return
 
@@ -87,8 +122,12 @@ class TableModel(QAbstractTableModel):
         elif role == Qt.BackgroundRole:
             if self.titles_set_window:
                 return QBrush(QColor("#d2d2d2"))
-            if self.three_column_window and col == 2:
+            if self.three_column_window and col == 3:
                 return QBrush(QColor("#ffffff"))
+        elif role == Qt.ToolTipRole:
+            if col == 0 or col == 1:
+                if self.tooltip_list:
+                    return self.tooltip_list[row]
 
     def rowCount(self, index):
 
@@ -100,14 +139,14 @@ class TableModel(QAbstractTableModel):
 
     def flags(self, index):
 
-        if index.column() == 2:
+        if index.column() == 3:
             return Qt.ItemIsSelectable | Qt.ItemIsEnabled | Qt.ItemIsEditable
         else:
             return Qt.ItemIsEnabled
 
     def setData(self, index, value, role):
 
-        if role == Qt.EditRole and index.column() == 2:
+        if role == Qt.EditRole and index.column() == 3:
             self._data[index.row()][index.column()] = value
             return True
 
@@ -167,6 +206,21 @@ class MyDisplay(CDisplay):
         self.data_bct_save = np.array([0])
         self.counter_of_bct_apply = 0
         self.plotted_bct_at_least_once = False
+        self.mouseHoverFirstTime = False
+        self.color_indexes_for_combobox = []
+
+        # BCT items for the combobox
+        self.items_combobox = ["LHC.BCTFR.A6R4.B1", "LHC.BCTFR.A6R4.B2", "RANDOM.SEQUENCE.0", "RANDOM.SEQUENCE.1"]
+
+        # tooltips
+        self.tooltip_list = ["FBDEPTH: it delays the data w.r.t. BST on ADC sample steps. Common to both channels.",
+                             "SYNCDELDEPTH: it delays the data w.r.t. BST on bunch slot steps. Common to both channels.",
+                             "FBEXTRADEPTH1: it allows to delay the skew between channels."]
+
+        # params
+        self.list_of_delay_params = ["FBDEPTH", "SYNCDELDEPTH", "FBEXTRADEPTH1"]
+        self.list_of_delay_params_user_friendly = ["Thin delay", "Coarse delay", "Thin skew"]
+        self.step_list = ["1.53ns", "25.0ns", "1.53ns"]
 
         # set current device
         self.current_device = "SP.BA2.BLMDIAMOND.2"
@@ -266,14 +320,72 @@ class MyDisplay(CDisplay):
         self.verticalLayout_phasing.addWidget(self.groupbox_bct)
 
         # layout for BCT
-        self.gridLayout_bct= QGridLayout(self.groupbox_bct)
+        self.gridLayout_bct = QGridLayout(self.groupbox_bct)
         self.gridLayout_bct.setObjectName("gridLayout_BCT")
 
-
         # lineedits row 1
+        self.comboBox_bct = QComboBox(self.groupbox_bct)
+        self.comboBox_bct.setObjectName("comboBox_bct")
+        self.comboBox_bct.setToolTip("Use this dropdown to select the desired BCT channel. "
+                                     "The BCT devices marked in yellow are selected by default and measure the same beam as the dBLM in question (B1 or B2).")
+        self.model_combobox = self.comboBox_bct.model()
+        for row in self.items_combobox:
+            item_to_append = QStandardItem(str(row))
+            self.model_combobox.appendRow(item_to_append)
+        self.comboBox_bct.setModel(self.model_combobox)
+        self.comboBox_bct.setEditable(True)
+        self.comboBox_bct.lineEdit().setAlignment(Qt.AlignCenter)
+        self.comboBox_bct.lineEdit().setReadOnly(True)
+        self.comboBox_bct.setItemDelegate(QStyledItemDelegate())
+        self.comboBox_bct.setStyleSheet("QComboBox{\n"
+                                                    "    background-color: rgb(255, 255, 255);\n"
+                                                    "    border: 2px solid #A6A6A6;\n"
+                                                    "    padding-top: 3px;\n"
+                                                    "    padding-bottom: 3px;\n"
+                                                    "    padding-left: 0px;\n"
+                                                    "    padding-right: 0px;\n"
+                                                    "}\n"
+                                                    "\n"
+                                        "QComboBox::down-arrow{\n"
+                                        "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                        "}\n"
+                                        "QComboBox QAbstractItemView{\n"
+                                        "    border: 2px solid #A6A6A6;\n"
+                                        "    background-color: rgb(255, 255, 255);\n"
+                                        "}\n"
+                                        "QComboBox QAbstractItemView::item{\n"
+                                        "    min-height: 20px;\n"
+                                        "}")
+        self.gridLayout_bct.addWidget(self.comboBox_bct, 0, 0, 1, 1)
+        self.pushButton_comboBox_bct = QPushButton(self.groupbox_bct)
+        self.pushButton_comboBox_bct.setObjectName("pushButton_comboBox_bct")
+        self.pushButton_comboBox_bct.setText("Apply")
+        self.pushButton_comboBox_bct.setStyleSheet("QPushButton{\n"
+                                                      "    background-color: rgb(255, 255, 255);\n"
+                                                      "    border: 2px solid #A6A6A6;\n"
+                                                      "    padding-top: 4px;\n"
+                                                      "    padding-bottom: 4px;\n"
+                                                      "    padding-left: 6px;\n"
+                                                      "    padding-right: 6px;\n"
+                                                      "}\n"
+                                                      "\n"
+                                                      "QPushButton:hover{\n"
+                                                      "    background-color: rgb(230, 230, 230);\n"
+                                                      "}\n"
+                                                      "\n"
+                                                      "QPushButton:focus{\n"
+                                                      "    outline: none;\n"
+                                                      "}\n"
+                                                      "\n"
+                                                      "QPushButton:pressed{\n"
+                                                      "    background-color: rgb(200, 200, 200);\n"
+                                                      "}")
+        self.gridLayout_bct.addWidget(self.pushButton_comboBox_bct, 0, 1, 1, 1)
+
+        # lineedits row 2
         self.lineEdit_bct_device_name = QLineEdit(self.groupbox_bct)
         self.lineEdit_bct_device_name.setAlignment(Qt.AlignCenter)
-        self.lineEdit_bct_device_name.setPlaceholderText("BCT device name (e.g. LHC.BCTFR.A6R4.B1)")
+        self.lineEdit_bct_device_name.setPlaceholderText("Insert custom BCT device name...")
         self.lineEdit_bct_device_name.setObjectName("lineEdit_bct_device_name")
         self.lineEdit_bct_device_name.setStyleSheet("QLineEdit{\n"
                                           "    background-color: rgb(255, 255, 255);\n"
@@ -283,7 +395,7 @@ class MyDisplay(CDisplay):
                                           "    padding-left: 0px;\n"
                                           "    padding-right: 0px;\n"
                                           "}")
-        self.gridLayout_bct.addWidget(self.lineEdit_bct_device_name, 0, 0, 1, 1)
+        self.gridLayout_bct.addWidget(self.lineEdit_bct_device_name, 1, 0, 1, 1)
         self.pushButton_bct_device_name = QPushButton(self.groupbox_bct)
         self.pushButton_bct_device_name.setObjectName("pushButton_bct_device_name")
         self.pushButton_bct_device_name.setText("Apply")
@@ -307,7 +419,7 @@ class MyDisplay(CDisplay):
                                           "QPushButton:pressed{\n"
                                           "    background-color: rgb(200, 200, 200);\n"
                                           "}")
-        self.gridLayout_bct.addWidget(self.pushButton_bct_device_name, 0, 1, 1, 1)
+        self.gridLayout_bct.addWidget(self.pushButton_bct_device_name, 1, 1, 1, 1)
 
         # font for groupbox
         font_for_groupbox = QFont()
@@ -394,6 +506,42 @@ class MyDisplay(CDisplay):
                                           "    background-color: rgb(200, 200, 200);\n"
                                           "}")
         self.gridLayout_zooming.addWidget(self.pushButton_microseconds, 0, 2, 1, 1)
+        self.pushButton_microseconds_lock = QPushButton(self.groupbox_zooming)
+        self.pushButton_microseconds_lock.setObjectName("pushButton_microseconds_lock")
+        self.pushButton_microseconds_lock.setText("1")
+        self.pushButton_microseconds_lock.setStyleSheet("QPushButton{\n"
+                                                   "    background-color: rgb(255, 255, 255);\n"
+                                                   "    border: 2px solid #A6A6A6;\n"
+                                                   "    padding-top: 4px;\n"
+                                                   "    padding-bottom: 4px;\n"
+                                                   "    padding-left: 6px;\n"
+                                                   "    padding-right: 6px;\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:hover{\n"
+                                                   "    background-color: rgb(230, 230, 230);\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:focus{\n"
+                                                   "    outline: none;\n"
+                                                   "}\n"
+                                                   "QPushButton:checked{\n"
+                                                   "    background-color: rgb(255, 255, 100);\n"
+                                                   "}\n"
+                                                   "QPushButton:unchecked{\n"
+                                                   "    background-color: rgb(255, 255, 255);\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:pressed{\n"
+                                                   "    background-color: rgb(200, 200, 200);\n"
+                                                   "}")
+        self.pushButton_microseconds_lock.setCheckable(True)
+        self.pushButton_microseconds_lock.setChecked(False)
+        self.pushButton_microseconds_lock.setToolTip("This button enables the combination mode on the bunch row query. "
+                                                     "By pressing it, you can combine microsecond and bunch ranges as if it was an AND operation. For example, "
+                                                     "if the microsecond range is (5,10) and the bunch range is (1,3), the resulting zoom will be "
+                                                     "a combination of both queries, so it will only show the datapoints belonging to the bunches nº 1,2 and 3, from 5 microseconds onwards.")
+        self.gridLayout_zooming.addWidget(self.pushButton_microseconds_lock, 0, 3, 1, 1)
 
         # lineedits row 2
         self.lineEdit_from_turns = QLineEdit(self.groupbox_zooming)
@@ -446,11 +594,47 @@ class MyDisplay(CDisplay):
                                           "    background-color: rgb(200, 200, 200);\n"
                                           "}")
         self.gridLayout_zooming.addWidget(self.pushButton_turns, 1, 2, 1, 1)
+        self.pushButton_turns_lock = QPushButton(self.groupbox_zooming)
+        self.pushButton_turns_lock.setObjectName("pushButton_turns_lock")
+        self.pushButton_turns_lock.setText("2")
+        self.pushButton_turns_lock.setStyleSheet("QPushButton{\n"
+                                                   "    background-color: rgb(255, 255, 255);\n"
+                                                   "    border: 2px solid #A6A6A6;\n"
+                                                   "    padding-top: 4px;\n"
+                                                   "    padding-bottom: 4px;\n"
+                                                   "    padding-left: 6px;\n"
+                                                   "    padding-right: 6px;\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:hover{\n"
+                                                   "    background-color: rgb(230, 230, 230);\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:focus{\n"
+                                                   "    outline: none;\n"
+                                                   "}\n"
+                                                   "QPushButton:checked{\n"
+                                                   "    background-color: rgb(255, 255, 100);\n"
+                                                   "}\n"
+                                                   "QPushButton:unchecked{\n"
+                                                   "    background-color: rgb(255, 255, 255);\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:pressed{\n"
+                                                   "    background-color: rgb(200, 200, 200);\n"
+                                                   "}")
+        self.pushButton_turns_lock.setCheckable(True)
+        self.pushButton_turns_lock.setChecked(True)
+        self.pushButton_turns_lock.setToolTip("This button enables the combination mode on the bunch row query. "
+                                                     "By pressing it, you can combine turn and bunch ranges as if it was an AND operation. For example, "
+                                                     "if the turn range is (5,10) and the bunch range is (1,3), the resulting zoom will be "
+                                                     "a combination of both queries, so it will only show the datapoints belonging to the bunches nº 1,2 and 3, from the fifth turn onwards.")
+        self.gridLayout_zooming.addWidget(self.pushButton_turns_lock, 1, 3, 1, 1)
 
         # lineedits row 3
         self.lineEdit_from_bunchs = QLineEdit(self.groupbox_zooming)
         self.lineEdit_from_bunchs.setAlignment(Qt.AlignCenter)
-        self.lineEdit_from_bunchs.setPlaceholderText("from (bunchs)")
+        self.lineEdit_from_bunchs.setPlaceholderText("from (bunches)")
         self.lineEdit_from_bunchs.setObjectName("lineEdit_from_bunchs")
         self.lineEdit_from_bunchs.setStyleSheet("QLineEdit{\n"
                                           "    background-color: rgb(255, 255, 255);\n"
@@ -463,7 +647,7 @@ class MyDisplay(CDisplay):
         self.gridLayout_zooming.addWidget(self.lineEdit_from_bunchs, 2, 0, 1, 1)
         self.lineEdit_to_bunchs = QLineEdit(self.groupbox_zooming)
         self.lineEdit_to_bunchs.setAlignment(Qt.AlignCenter)
-        self.lineEdit_to_bunchs.setPlaceholderText("to (bunchs)")
+        self.lineEdit_to_bunchs.setPlaceholderText("to (bunches)")
         self.lineEdit_to_bunchs.setObjectName("lineEdit_to_bunchs")
         self.lineEdit_to_bunchs.setStyleSheet("QLineEdit{\n" 
                                           "    background-color: rgb(255, 255, 255);\n"
@@ -498,6 +682,25 @@ class MyDisplay(CDisplay):
                                           "    background-color: rgb(200, 200, 200);\n"
                                           "}")
         self.gridLayout_zooming.addWidget(self.pushButton_bunchs, 2, 2, 1, 1)
+        self.pushButton_bunchs_lock = QPushButton(self.groupbox_zooming)
+        self.pushButton_bunchs_lock.setObjectName("pushButton_bunchs_lock")
+        self.pushButton_bunchs_lock.setText("2")
+        self.pushButton_bunchs_lock.setStyleSheet("QPushButton{\n"
+                                                   "    background-color: rgb(255, 255, 100);\n"
+                                                   "    border: 2px solid #A6A6A6;\n"
+                                                   "    padding-top: 4px;\n"
+                                                   "    padding-bottom: 4px;\n"
+                                                   "    padding-left: 6px;\n"
+                                                   "    padding-right: 6px;\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:focus{\n"
+                                                   "    outline: none;\n"
+                                                   "}")
+        self.pushButton_bunchs_lock.setToolTip("    <html>\n"
+                                               "    <div style=\"width: 600px;\">Combination box. If the value is 1, the microsecond range is taken into account for adjusting the zoom interval. If the value is 2, then the turn range is combined with the selected bunch range. By default, turns and bunches are combined at the panel startup.</div>"
+                                               "    </html>")
+        self.gridLayout_zooming.addWidget(self.pushButton_bunchs_lock, 2, 3, 1, 1)
 
         # context frame of the groupbox
         self.CContextFrame_Commands = CContextFrame(self.frame_phasing)
@@ -632,9 +835,9 @@ class MyDisplay(CDisplay):
         self.table_expert_setting.horizontalHeader().setStretchLastSection(True)
         self.table_expert_setting.horizontalHeader().setDefaultAlignment(Qt.AlignCenter)
         self.table_expert_setting.verticalHeader().setVisible(False)
-        self.table_expert_setting.verticalHeader().setDefaultSectionSize(30)
+        self.table_expert_setting.verticalHeader().setDefaultSectionSize(32)
         self.table_expert_setting.verticalHeader().setHighlightSections(False)
-        self.table_expert_setting.verticalHeader().setMinimumSectionSize(30)
+        self.table_expert_setting.verticalHeader().setMinimumSectionSize(32)
         self.table_expert_setting.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_expert_setting.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.table_expert_setting.setFocusPolicy(Qt.NoFocus)
@@ -645,15 +848,15 @@ class MyDisplay(CDisplay):
         self.layout_groupbox_expert_setting.addWidget(self.table_expert_setting)
 
         # fill table
-        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH1", "SYNCDELDEPTH"]:
+        for field_counter, field in enumerate(self.list_of_delay_params):
             try:
                 data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
             except Exception as xcp:
                 data_from_pyjapc = "-"
-            self.data_model_expert_setting.append([str(field), str(data_from_pyjapc), str(data_from_pyjapc)])
+            self.data_model_expert_setting.append([str(self.list_of_delay_params_user_friendly[field_counter]), self.step_list[field_counter], str(data_from_pyjapc), str(data_from_pyjapc)])
 
         # update model
-        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["Field", "Old Value", "New Value"], three_column_window=True)
+        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["BST", "Steps", "Old Value", "New Value"], three_column_window=True, tooltip_list=self.tooltip_list)
         self.table_expert_setting.setModel(self.data_table_model_expert_setting)
         self.table_expert_setting.update()
 
@@ -737,15 +940,15 @@ class MyDisplay(CDisplay):
         self.data_model_expert_setting = []
 
         # fill table
-        for field in ["FBDEPTH", "FBEXTRADEPTH0", "FBEXTRADEPTH1", "SYNCDELDEPTH"]:
+        for field_counter, field in enumerate(self.list_of_delay_params):
             try:
                 data_from_pyjapc = self.japc.getParam("{}/{}#{}".format(self.current_device, "ExpertSetting", field), timingSelectorOverride="", getHeader=False, noPyConversion=False)
             except:
                 data_from_pyjapc = "-"
-            self.data_model_expert_setting.append([str(field), str(data_from_pyjapc), str(data_from_pyjapc)])
+            self.data_model_expert_setting.append([str(self.list_of_delay_params_user_friendly[field_counter]), self.step_list[field_counter], str(data_from_pyjapc), str(data_from_pyjapc)])
 
         # update model
-        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["Field", "Old Value", "New Value"], three_column_window=True)
+        self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["BST", "Steps", "Old Value", "New Value"], three_column_window=True, tooltip_list=self.tooltip_list)
         self.table_expert_setting.setModel(self.data_table_model_expert_setting)
         self.table_expert_setting.update()
 
@@ -777,12 +980,12 @@ class MyDisplay(CDisplay):
         dict_to_inject = self.japc.getParam("{}/{}".format(self.current_device, "ExpertSetting"), timingSelectorOverride="", getHeader=False, noPyConversion=False)
 
         # iterate over table
-        for row_values in self.data_model_expert_setting:
+        for row_counter, row_values in enumerate(self.data_model_expert_setting):
 
             # retrieve values
-            field = row_values[0]
-            old_value = row_values[1]
-            new_value = row_values[2]
+            field = self.list_of_delay_params[row_counter]
+            old_value = row_values[-2]
+            new_value = row_values[-1]
 
             # check types are the same
             if can_be_converted_to_float(str(old_value)) != can_be_converted_to_float(str(new_value)) or types_are_wrong:
@@ -871,6 +1074,7 @@ class MyDisplay(CDisplay):
         self.checkBox_bunch.setEnabled(False)
         self.checkBox_turn.setEnabled(False)
         self.checkBox_bct.setEnabled(False)
+        self.checkBox_hover.setEnabled(False)
         self.checkBox_sync_main.setEnabled(False)
         self.groupbox_zooming.setEnabled(False)
 
@@ -912,8 +1116,140 @@ class MyDisplay(CDisplay):
         self.pushButton_turns.clicked.connect(self.pushButtonZoomingTurnsClicked)
         self.pushButton_bunchs.clicked.connect(self.pushButtonZoomingBunchsClicked)
 
+        # zooming locking
+        self.pushButton_microseconds_lock.clicked.connect(self.lockMicroseconds)
+        self.pushButton_turns_lock.clicked.connect(self.lockTurns)
+
         # bct
-        self.pushButton_bct_device_name.clicked.connect(self.pushButtonApplyBCT)
+        self.pushButton_bct_device_name.clicked.connect(lambda: self.pushButtonApplyBCT("lineedit"))
+        self.pushButton_comboBox_bct.clicked.connect(lambda: self.pushButtonApplyBCT("combobox"))
+        self.comboBox_bct.currentIndexChanged.connect(self.changedComboboxSelection)
+
+        # hover
+        self.checkBox_hover.clicked.connect(self.clearDatapointsFromHover)
+
+        return
+
+
+    #----------------------------------------------#
+
+    # function to solely change the colors of the combobox
+    def changedComboboxSelection(self, index):
+
+        if self.color_indexes_for_combobox:
+            if index in self.color_indexes_for_combobox:
+                self.comboBox_bct.setStyleSheet("QComboBox{\n"
+                                                "    background-color: #ffff66;\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    padding-top: 3px;\n"
+                                                "    padding-bottom: 3px;\n"
+                                                "    padding-left: 0px;\n"
+                                                "    padding-right: 0px;\n"
+                                                "}\n"
+                                                "\n"
+                                                "QComboBox::down-arrow{\n"
+                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView{\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    background-color: rgb(255, 255, 255);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView::item{\n"
+                                                "    min-height: 20px;\n"
+                                                "}")
+            else:
+                self.comboBox_bct.setStyleSheet("QComboBox{\n"
+                                                "    background-color: rgb(255, 255, 255);\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    padding-top: 3px;\n"
+                                                "    padding-bottom: 3px;\n"
+                                                "    padding-left: 0px;\n"
+                                                "    padding-right: 0px;\n"
+                                                "}\n"
+                                                "\n"
+                                                "QComboBox::down-arrow{\n"
+                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView{\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    background-color: rgb(255, 255, 255);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView::item{\n"
+                                                "    min-height: 20px;\n"
+                                                "}")
+
+        return
+
+    #----------------------------------------------#
+
+    # function to remove the hover cursor when the checkbox is unchecked
+    def clearDatapointsFromHover(self):
+
+        # remove hover when unchecked
+        if not self.checkBox_hover.isChecked():
+            if self.mouseHoverFirstTime:
+                self.plot_rawbuf1.removeItem(self.targetItem)
+                self.mouseHoverFirstTime = False
+
+    #----------------------------------------------#
+
+    # function for the microsecond locker
+    def lockMicroseconds(self):
+
+        if self.pushButton_microseconds_lock.isChecked():
+            self.pushButton_turns_lock.setChecked(False)
+            self.pushButton_bunchs_lock.setChecked(True)
+            self.pushButton_bunchs_lock.setText("1")
+            self.pushButton_bunchs_lock.setStyleSheet("QPushButton{\n"
+                                                     "    background-color: rgb(255, 255, 100);\n"
+                                                     "    border: 2px solid #A6A6A6;\n"
+                                                     "    padding-top: 4px;\n"
+                                                     "    padding-bottom: 4px;\n"
+                                                     "    padding-left: 6px;\n"
+                                                     "    padding-right: 6px;\n"
+                                                    "}")
+        else:
+            self.pushButton_bunchs_lock.setChecked(False)
+            self.pushButton_bunchs_lock.setText("-")
+            self.pushButton_bunchs_lock.setStyleSheet("QPushButton{\n"
+                                                     "    background-color: rgb(255, 255, 255);\n"
+                                                     "    border: 2px solid #A6A6A6;\n"
+                                                     "    padding-top: 4px;\n"
+                                                     "    padding-bottom: 4px;\n"
+                                                     "    padding-left: 6px;\n"
+                                                     "    padding-right: 6px;\n"
+                                                    "}")
+
+        return
+
+    #----------------------------------------------#
+
+    # function for the turn locker
+    def lockTurns(self):
+
+        if self.pushButton_turns_lock.isChecked():
+            self.pushButton_microseconds_lock.setChecked(False)
+            self.pushButton_bunchs_lock.setChecked(True)
+            self.pushButton_bunchs_lock.setText("2")
+            self.pushButton_bunchs_lock.setStyleSheet("QPushButton{\n"
+                                                     "    background-color: rgb(255, 255, 100);\n"
+                                                     "    border: 2px solid #A6A6A6;\n"
+                                                     "    padding-top: 4px;\n"
+                                                     "    padding-bottom: 4px;\n"
+                                                     "    padding-left: 6px;\n"
+                                                     "    padding-right: 6px;\n"
+                                                    "}")
+        else:
+            self.pushButton_bunchs_lock.setChecked(False)
+            self.pushButton_bunchs_lock.setText("-")
+            self.pushButton_bunchs_lock.setStyleSheet("QPushButton{\n"
+                                                     "    background-color: rgb(255, 255, 255);\n"
+                                                     "    border: 2px solid #A6A6A6;\n"
+                                                     "    padding-top: 4px;\n"
+                                                     "    padding-bottom: 4px;\n"
+                                                     "    padding-left: 6px;\n"
+                                                     "    padding-right: 6px;\n"
+                                                    "}")
 
         return
 
@@ -1062,11 +1398,15 @@ class MyDisplay(CDisplay):
     #----------------------------------------------#
 
     # function to update the BCT pattern according to the introduced name
-    def pushButtonApplyBCT(self):
+    def pushButtonApplyBCT(self, type):
 
         # get name
-        dev_name = self.lineEdit_bct_device_name.text()
-        dev_name = dev_name.strip()
+        if type == "lineedit":
+            dev_name = self.lineEdit_bct_device_name.text()
+            dev_name = dev_name.strip()
+        elif type == "combobox":
+            dev_name = str(self.comboBox_bct.currentText())
+            dev_name = dev_name.strip()
 
         # check it is not empty
         if dev_name:
@@ -1074,7 +1414,7 @@ class MyDisplay(CDisplay):
             # use predefined random format to debug the app
             # e.g. RANDOM.SEED.0 means use random pattern with seed 0
             # e.g. RANDOM.SEED.567 means use random pattern with seed 567
-            if "RANDOM.SEED." in dev_name:
+            if "RANDOM.SEED." in dev_name or "RANDOM.SEQUENCE." in dev_name:
 
                 # update boolean
                 self.bct_use_random = True
@@ -1087,7 +1427,7 @@ class MyDisplay(CDisplay):
                 if rs.isdecimal():
                     self.bct_random_seed = int(rs)
                 else:
-                    print("{} - Please introduce a correct RANDOM.SEED.X string!".format(UI_FILENAME))
+                    print("{} - Please introduce a correct RANDOM.SEED.X or RANDOM.SEQUENCE.X string!".format(UI_FILENAME))
                     return
 
                 # format the pattern
@@ -1147,12 +1487,27 @@ class MyDisplay(CDisplay):
                 lower_limit = float(lower_limit.replace(",", "."))
                 upper_limit = float(upper_limit.replace(",", "."))
 
+                # cap the limits
+                if lower_limit > self.time_vector[-1]:
+                    lower_limit = self.time_vector[-1]
+                if upper_limit > self.time_vector[-1]:
+                    upper_limit = self.time_vector[-1]
+
+                # sanity check
+                if lower_limit >= upper_limit:
+
+                    # error message
+                    message_title = "WARNING"
+                    message_text = "Please make sure that the upper limit is strictly bigger than the lower limit!"
+                    self.message_box = QMessageBox.warning(self, message_title, message_text)
+                    return
+
                 # set range
                 self.plot_rawbuf1.setXRange(lower_limit, upper_limit, padding=0)
 
         return
 
-    #----------------------------------------------#
+    # ----------------------------------------------#
 
     # function to set the axis range
     def pushButtonZoomingBunchsClicked(self):
@@ -1169,19 +1524,152 @@ class MyDisplay(CDisplay):
                 lower_limit = int(lower_limit.replace(",", "."))
                 upper_limit = int(upper_limit.replace(",", "."))
 
+                # sanity check
+                if lower_limit >= upper_limit:
+                    # error message
+                    message_title = "WARNING"
+                    message_text = "Please make sure that the upper limit is strictly bigger than the lower limit!"
+                    self.message_box = QMessageBox.warning(self, message_title, message_text)
+                    return
+
                 # get the real bunch limits
-                if lower_limit == 0:
-                    bunchs_lower_limit = 0
-                elif lower_limit >= 1 and lower_limit <= len(self.idx_flags_one_two):
-                    bunchs_lower_limit = self.time_vector[self.idx_flags_one_two[lower_limit - 1]]
-                elif lower_limit > len(self.idx_flags_one_two):
-                    bunchs_lower_limit = self.time_vector[-1]
-                if upper_limit == 0:
-                    bunchs_upper_limit = 0
-                elif upper_limit >= 1 and upper_limit <= len(self.idx_flags_one_two):
-                    bunchs_upper_limit = self.time_vector[self.idx_flags_one_two[upper_limit - 1]]
-                elif upper_limit > len(self.idx_flags_one_two):
-                    bunchs_upper_limit = self.time_vector[-1]
+                # if lower_limit == 0:
+                #     bunchs_lower_limit = 0
+                # elif lower_limit >= 1 and lower_limit <= len(self.idx_flags_one_two):
+                #     bunchs_lower_limit = self.time_vector[self.idx_flags_one_two[lower_limit - 1]]
+                # elif lower_limit > len(self.idx_flags_one_two):
+                #     bunchs_lower_limit = self.time_vector[-1]
+                # if upper_limit == 0:
+                #     bunchs_upper_limit = 0
+                # elif upper_limit >= 1 and upper_limit <= len(self.idx_flags_one_two):
+                #     bunchs_upper_limit = self.time_vector[self.idx_flags_one_two[upper_limit - 1]]
+                # elif upper_limit > len(self.idx_flags_one_two):
+                #     bunchs_upper_limit = self.time_vector[-1]
+
+                # lock mode: nothing
+                if self.pushButton_bunchs_lock.text() == "-":
+
+                    # get the real bunch limits
+                    if lower_limit >= 0 and lower_limit <= len(self.idx_flags_one_two) - 1:
+                        bunchs_lower_limit = self.time_vector[self.idx_flags_one_two[lower_limit]]
+                    elif lower_limit >= len(self.idx_flags_one_two):
+                        bunchs_lower_limit = self.time_vector[-1]
+                    if upper_limit >= 0 and upper_limit <= len(self.idx_flags_one_two) - 1:
+                        bunchs_upper_limit = self.time_vector[self.idx_flags_one_two[upper_limit]]
+                    elif upper_limit >= len(self.idx_flags_one_two):
+                        bunchs_upper_limit = self.time_vector[-1]
+
+                # lock mode: microseconds and bunches
+                elif self.pushButton_bunchs_lock.text() == "1":
+
+                    # check line edits are not empty
+                    if self.lineEdit_from_microseconds.text() and self.lineEdit_to_microseconds.text():
+
+                        # get lower and upper limit
+                        lower_limit_bunchs = lower_limit
+                        upper_limit_bunchs = upper_limit
+                        lower_limit_microseconds = self.lineEdit_from_microseconds.text()
+                        upper_limit_microseconds = self.lineEdit_to_microseconds.text()
+                        lower_limit_microseconds = float(lower_limit_microseconds.replace(",", "."))
+                        upper_limit_microseconds = float(upper_limit_microseconds.replace(",", "."))
+
+                        # get time
+                        time_1 = lower_limit_microseconds
+                        time_2 = upper_limit_microseconds
+
+                        # get idx time
+                        _, idx_time_1 = numpy_find_nearest(self.time_vector, time_1, side="left")
+                        _, idx_time_2 = numpy_find_nearest(self.time_vector, time_2, side="left")
+
+                        # reverse engineering idx flags
+                        val_flag_1, idx_flag_1 = numpy_find_nearest(self.idx_flags_one_two, idx_time_1, side="left")
+                        val_flag_2, idx_flag_2 = numpy_find_nearest(self.idx_flags_one_two, idx_time_2, side="right")
+
+                        # calculate and cap values
+                        if lower_limit_bunchs >= 0 and lower_limit_bunchs <= np.abs(idx_flag_2 - idx_flag_1):
+                            bunchs_lower_limit = self.time_vector[
+                                self.idx_flags_one_two[lower_limit_bunchs + idx_flag_1]]
+                        else:
+                            bunchs_lower_limit = self.time_vector[val_flag_2]
+                        if upper_limit_bunchs >= 0 and upper_limit_bunchs <= np.abs(idx_flag_2 - idx_flag_1):
+                            bunchs_upper_limit = self.time_vector[
+                                self.idx_flags_one_two[upper_limit_bunchs + idx_flag_1]]
+                        else:
+                            bunchs_upper_limit = self.time_vector[val_flag_2]
+
+                    # sanity check
+                    else:
+
+                        # error message
+                        message_title = "WARNING"
+                        message_text = "Please, specify a valid turn range first. If you desire to introduce only bunches, just disable the lock button (the yellow button at the right)."
+                        self.message_box = QMessageBox.warning(self, message_title, message_text)
+                        return
+
+                # lock mode: turns and bunches
+                elif self.pushButton_bunchs_lock.text() == "2":
+
+                    # check line edits are not empty
+                    if self.lineEdit_from_turns.text() and self.lineEdit_to_turns.text():
+
+                        # get lower and upper limit
+                        lower_limit_bunchs = lower_limit
+                        upper_limit_bunchs = upper_limit
+                        lower_limit_turns = self.lineEdit_from_turns.text()
+                        upper_limit_turns = self.lineEdit_to_turns.text()
+                        lower_limit_turns = int(lower_limit_turns.replace(",", "."))
+                        upper_limit_turns = int(upper_limit_turns.replace(",", "."))
+
+                        # cap turns
+                        if lower_limit_turns >= len(self.inf_lines_pos_1):
+                            lower_limit_turns = len(self.inf_lines_pos_1)-1
+                        if upper_limit_turns >= len(self.inf_lines_pos_1):
+                            upper_limit_turns = len(self.inf_lines_pos_1)-1
+
+                        # get time
+                        time_1 = self.inf_lines_pos_1[lower_limit_turns]
+                        time_2 = self.inf_lines_pos_1[upper_limit_turns]
+
+                        # get idx time
+                        idx_time_1 = np.where(self.time_vector == time_1)[0]
+                        idx_time_2 = np.where(self.time_vector == time_2)[0]
+
+                        # reverse engineering idx flags
+                        val_flag_1, idx_flag_1 = numpy_find_nearest(self.idx_flags_one_two, idx_time_1, side="left")
+                        val_flag_2, idx_flag_2 = numpy_find_nearest(self.idx_flags_one_two, idx_time_2, side="right")
+
+                        # calculate and cap values
+                        if lower_limit_bunchs == 0:
+                            bunchs_lower_limit = self.inf_lines_pos_1[lower_limit_turns]
+                        elif lower_limit_bunchs >= 1 and lower_limit_bunchs < np.abs(idx_flag_2 - idx_flag_1):
+                            bunchs_lower_limit = self.time_vector[
+                                self.idx_flags_one_two[lower_limit_bunchs + idx_flag_1 - 1]]
+                        else:
+                            bunchs_lower_limit = self.inf_lines_pos_1[upper_limit_turns]
+                        if upper_limit_bunchs == 0:
+                            bunchs_upper_limit = self.inf_lines_pos_1[lower_limit_turns]
+                        elif upper_limit_bunchs >= 1 and upper_limit_bunchs < np.abs(idx_flag_2 - idx_flag_1):
+                            bunchs_upper_limit = self.time_vector[
+                                self.idx_flags_one_two[upper_limit_bunchs + idx_flag_1 - 1]]
+                        else:
+                            bunchs_upper_limit = self.inf_lines_pos_1[upper_limit_turns]
+
+                    # sanity check
+                    else:
+
+                        # error message
+                        message_title = "WARNING"
+                        message_text = "Please, specify a valid turn range first. If you desire to introduce only bunches, just disable the lock button (the yellow button at the right)."
+                        self.message_box = QMessageBox.warning(self, message_title, message_text)
+                        return
+
+                # some debugging prints
+                # print(time_1, time_2)
+                # print(idx_time_1, idx_time_2)
+                # print(val_flag_1, idx_flag_1, self.time_vector[val_flag_1])
+                # print(val_flag_2, idx_flag_2, self.time_vector[val_flag_2])
+                # print(bunchs_lower_limit)
+                # print(bunchs_upper_limit)
 
                 # set range
                 self.plot_rawbuf1.setXRange(bunchs_lower_limit, bunchs_upper_limit, padding=0)
@@ -1205,18 +1693,36 @@ class MyDisplay(CDisplay):
                 lower_limit = int(lower_limit.replace(",", "."))
                 upper_limit = int(upper_limit.replace(",", "."))
 
+                # sanity check
+                if lower_limit >= upper_limit:
+                    # error message
+                    message_title = "WARNING"
+                    message_text = "Please make sure that the upper limit is strictly bigger than the lower limit!"
+                    self.message_box = QMessageBox.warning(self, message_title, message_text)
+                    return
+
                 # get the real turn limits
-                if lower_limit == 0:
-                    turns_lower_limit = 0
-                elif lower_limit >= 1 and lower_limit <= len(self.inf_lines_pos_1):
-                    turns_lower_limit = self.inf_lines_pos_1[lower_limit - 1]
-                elif lower_limit > len(self.inf_lines_pos_1):
+                # if lower_limit == 0:
+                #     turns_lower_limit = 0
+                # elif lower_limit >= 1 and lower_limit <= len(self.inf_lines_pos_1):
+                #     turns_lower_limit = self.inf_lines_pos_1[lower_limit - 1]
+                # elif lower_limit > len(self.inf_lines_pos_1):
+                #     turns_lower_limit = self.time_vector[-1]
+                # if upper_limit == 0:
+                #     turns_upper_limit = 0
+                # elif upper_limit >= 1 and upper_limit <= len(self.inf_lines_pos_1):
+                #     turns_upper_limit = self.inf_lines_pos_1[upper_limit - 1]
+                # elif upper_limit > len(self.inf_lines_pos_1):
+                #     turns_upper_limit = self.time_vector[-1]
+
+                # get the real turn limits
+                if lower_limit >= 0 and lower_limit <= len(self.inf_lines_pos_1) - 1:
+                    turns_lower_limit = self.inf_lines_pos_1[lower_limit]
+                elif lower_limit >= len(self.inf_lines_pos_1):
                     turns_lower_limit = self.time_vector[-1]
-                if upper_limit == 0:
-                    turns_upper_limit = 0
-                elif upper_limit >= 1 and upper_limit <= len(self.inf_lines_pos_1):
-                    turns_upper_limit = self.inf_lines_pos_1[upper_limit - 1]
-                elif upper_limit > len(self.inf_lines_pos_1):
+                if upper_limit >= 0 and upper_limit <= len(self.inf_lines_pos_1) - 1:
+                    turns_upper_limit = self.inf_lines_pos_1[upper_limit]
+                elif upper_limit >= len(self.inf_lines_pos_1):
                     turns_upper_limit = self.time_vector[-1]
 
                 # set range
@@ -1382,12 +1888,14 @@ class MyDisplay(CDisplay):
             if self.y_filling_pattern_not_empty and self.bct_checked:
                 self.plot_rawbuf1.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
                 self.plotted_bct_at_least_once = True
-            self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+            self.curve = self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
             if self.flags_turn1.size != 0 and self.is_turn1_checked:
                 # self.plot_rawbuf1.plot(x=self.time_vector, y=self.flags_turn1, pen=(255, 255, 0), name="rawBuf1_turn_flags")
                 for line_pos in self.inf_lines_pos_1:
                     infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                     self.plot_rawbuf1.addItem(infinite_line)
+            self.mouseHoverFirstTime = False
+            self.curve.scene().sigMouseMoved.connect(self.onMouseMoved)
             self.plot_rawbuf1.show()
 
             # set cycle information
@@ -1401,6 +1909,7 @@ class MyDisplay(CDisplay):
         self.checkBox_bunch.setEnabled(True)
         self.checkBox_turn.setEnabled(True)
         self.checkBox_bct.setEnabled(True)
+        self.checkBox_hover.setEnabled(True)
         self.checkBox_sync_main.setEnabled(True)
         self.groupbox_zooming.setEnabled(True)
 
@@ -1411,6 +1920,48 @@ class MyDisplay(CDisplay):
         self.lineEdit_to_turns.setValidator(QIntValidator(0, len(self.inf_lines_pos_1)-1, self))
         self.lineEdit_from_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
         self.lineEdit_to_bunchs.setValidator(QIntValidator(0, len(self.idx_flags_one_two)-1, self))
+
+        return
+
+    #----------------------------------------------#
+
+    # function that gets the hover event of pyqtgraph
+    def onMouseMoved(self, point):
+
+        # only if checkbox is enabled
+        if self.checkBox_hover.isChecked():
+
+            # set label opts
+            label_opts = {'fill': '#000000', 'border': '#00FF00', 'color': '#00FF00', 'offset': QPoint(0, 20)}
+
+            # get the cursor
+            p = self.plot_rawbuf1.plotItem.vb.mapSceneToView(point)
+
+            # get closest time value
+            closest_val, closest_idx = numpy_find_nearest(self.time_vector, p.x(), side="left")
+
+            # interpolated values
+            x_val = closest_val
+            y_val = self.data_rawBuf1[closest_idx]
+
+            # format the point
+            x_formatted = "%.3f" % x_val
+            y_formatted = "%.3f" % y_val
+
+            # first time check
+            if not self.mouseHoverFirstTime:
+
+                # add to the plot
+                self.mouseHoverFirstTime = True
+                self.targetItem = pg.TargetItem(movable=False, pos=(x_val, y_val), label="({}, {})".format(x_formatted, y_formatted), symbol="o", size=8, pen="#00FF00", labelOpts=label_opts)
+                self.plot_rawbuf1.addItem(self.targetItem)
+
+            # if it is not the first time
+            else:
+
+                # update the cursor
+                self.targetItem.setPos((x_val, y_val))
+                self.targetItem.setLabel("({}, {})".format(x_formatted, y_formatted), labelOpts=label_opts)
 
         return
 
@@ -1460,6 +2011,7 @@ class MyDisplay(CDisplay):
                         for line_pos in self.inf_lines_pos_1:
                             infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                             self.plot_rawbuf1.addItem(infinite_line)
+                    self.mouseHoverFirstTime = False
                     self.plot_rawbuf1.show()
 
         # if not
@@ -1479,6 +2031,7 @@ class MyDisplay(CDisplay):
                         for line_pos in self.inf_lines_pos_1:
                             infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                             self.plot_rawbuf1.addItem(infinite_line)
+                    self.mouseHoverFirstTime = False
                     self.plot_rawbuf1.show()
 
         # reset clip to view to avoid errors
@@ -1515,6 +2068,7 @@ class MyDisplay(CDisplay):
                     for line_pos in self.inf_lines_pos_1:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf1.addItem(infinite_line)
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1.show()
 
         # if not
@@ -1535,6 +2089,7 @@ class MyDisplay(CDisplay):
                     for line_pos in self.inf_lines_pos_1:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf1.addItem(infinite_line)
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1.show()
 
         # reset clip to view to avoid errors
@@ -1570,6 +2125,7 @@ class MyDisplay(CDisplay):
                     for line_pos in self.inf_lines_pos_1:
                         infinite_line = pg.InfiniteLine(pos=line_pos, movable=False, angle=90, pen={'color': (255, 255, 0), 'width': 1.5}, label=None)
                         self.plot_rawbuf1.addItem(infinite_line)
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1.show()
 
         else:
@@ -1586,6 +2142,7 @@ class MyDisplay(CDisplay):
                     self.plot_rawbuf1.plot(x=self.x_filling_pattern_full, y=self.y_filling_pattern_full, pen=(0, 0, 255), name="filling_pattern_full")
                     self.plotted_bct_at_least_once = True
                 self.plot_rawbuf1.plot(x=self.time_vector, y=self.data_rawBuf1, pen=(255, 255, 255), name="rawBuf1")
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1.show()
 
         # reset clip to view to avoid errors
@@ -1646,6 +2203,60 @@ class MyDisplay(CDisplay):
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()
+
+            # try to know if it is B1 or B2 beam
+            self.beam_string = ""
+            try:
+                monitor_names = self.japc.getParam("{}/{}#{}".format(self.current_device, "GeneralInformation", "monitorNames"), timingSelectorOverride="", getHeader=False, noPyConversion=False)
+                last_string = monitor_names[0].split(".")[-1]
+                if last_string == "B1":
+                    self.beam_string = "B1"
+                elif last_string == "B2":
+                    self.beam_string = "B2"
+            except:
+                pass
+
+            # set main combobox item based on the beam string
+            if self.beam_string:
+
+                # draw the dropdown
+                selected_index = 0
+                self.color_indexes_for_combobox = []
+                self.comboBox_bct.clear()
+                self.model_combobox = self.comboBox_bct.model()
+                for row_idx, row in enumerate(self.items_combobox):
+                    item_to_append = QStandardItem(str(row))
+                    if row.find(self.beam_string) != -1:
+                        item_to_append.setBackground(QColor('#ffff66'))
+                        if selected_index == 0:
+                            selected_index = row_idx
+                        self.color_indexes_for_combobox.append(row_idx)
+                    self.model_combobox.appendRow(item_to_append)
+                self.comboBox_bct.setModel(self.model_combobox)
+
+                # draw the combo
+                self.comboBox_bct.setStyleSheet("QComboBox{\n"
+                                                "    background-color: #ffff66;\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    padding-top: 3px;\n"
+                                                "    padding-bottom: 3px;\n"
+                                                "    padding-left: 0px;\n"
+                                                "    padding-right: 0px;\n"
+                                                "}\n"
+                                                "\n"
+                                                "QComboBox::down-arrow{\n"
+                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView{\n"
+                                                "    border: 2px solid #A6A6A6;\n"
+                                                "    background-color: rgb(255, 255, 255);\n"
+                                                "}\n"
+                                                "QComboBox QAbstractItemView::item{\n"
+                                                "    min-height: 20px;\n"
+                                                "}")
+
+                # select the first valid index
+                self.comboBox_bct.setCurrentIndex(selected_index)
 
             # finally stop the timer
             self.timer_hack_operations_after_comrad_is_fully_loaded.stop()

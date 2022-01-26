@@ -11,7 +11,7 @@
 
 from comrad import (CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData)
 from PyQt5.QtGui import (QIcon, QColor)
-from PyQt5.QtCore import (QSize, Qt, QTimer)
+from PyQt5.QtCore import (QSize, Qt, QTimer, QPoint)
 import pyqtgraph as pg
 
 # OTHER IMPORTS
@@ -26,6 +26,24 @@ from general_utils import createCustomTempDir, getSystemTempDir
 ########################################################
 ########################################################
 
+import socket
+
+temp_system_dir = getSystemTempDir()
+with open(os.path.join(temp_system_dir, 'free_ports.txt')) as f:
+    free_port_list = f.readlines()
+
+socket_object = socket.socket()
+host = socket.gethostname()
+free_port = int(free_port_list[4])
+try:
+    socket_object.bind((host, free_port))
+except OSError as xcp:
+    print("[{}] A fullscreen window for rawbuf1_fft is already running on another instance. Please, make sure only one instance is running at the same time. Otherwise, it won't open properly.".format(free_port))
+    sys.exit(0)
+
+########################################################
+########################################################
+
 # GLOBALS
 
 # ui file
@@ -34,6 +52,33 @@ UI_FILENAME = "fullscreen_rawbuf1_fft.ui"
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
+
+########################################################
+########################################################
+
+# util function
+def can_be_converted_to_float(value):
+    try:
+        float(value)
+        return True
+    except ValueError:
+        return False
+
+# util function
+def numpy_find_nearest(array, value, side="left"):
+    idx = np.searchsorted(array, value, side="left")
+    if side=="left":
+        if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+            return array[idx-1], idx-1
+        else:
+            return array[idx], idx
+    elif side=="right":
+        if idx > 0 and (idx == len(array) or math.fabs(value - array[idx-1]) < math.fabs(value - array[idx])):
+            return array[idx-2], idx-2
+        else:
+            return array[idx-1], idx-1
+    else:
+        return None, None
 
 ########################################################
 ########################################################
@@ -80,6 +125,7 @@ class MyDisplay(CDisplay):
         self.data_save = {}
         self.is_fft_plotted_in_the_main_window = "False"
         self.sync_wrt_main = True
+        self.mouseHoverFirstTime = False
 
         # set current device
         self.current_device = "SP.BA1.BLMDIAMOND.2"
@@ -154,6 +200,7 @@ class MyDisplay(CDisplay):
         # disable buttons until reception of data
         self.checkBox_one.setEnabled(False)
         self.checkBox_sync_main.setEnabled(False)
+        self.checkBox_hover.setEnabled(False)
 
         # checkbox for sync signal
         self.checkBox_sync_main.stateChanged.connect(self.syncWithMainWindowFunction)
@@ -178,7 +225,21 @@ class MyDisplay(CDisplay):
         self.timer_hack_operations_after_comrad_is_fully_loaded.timeout.connect(self.doOperationsAfterComradIsFullyLoaded)
         self.timer_hack_operations_after_comrad_is_fully_loaded.start()
 
+        # hover
+        self.checkBox_hover.clicked.connect(self.clearDatapointsFromHover)
+
         return
+
+    #----------------------------------------------#
+
+    # function to remove the hover cursor when the checkbox is unchecked
+    def clearDatapointsFromHover(self):
+
+        # remove hover when unchecked
+        if not self.checkBox_hover.isChecked():
+            if self.mouseHoverFirstTime:
+                self.plot_rawbuf1_fft.removeItem(self.targetItem)
+                self.mouseHoverFirstTime = False
 
     #----------------------------------------------#
 
@@ -271,7 +332,9 @@ class MyDisplay(CDisplay):
             self.plot_rawbuf1_fft.getPlotItem().clear()
             if self.data_peaks_freq1_xplots.size != 0 and self.is_peaks1_checked:
                 self.plot_rawbuf1_fft.plot(x=self.data_peaks_freq1_xplots[1], y=self.data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
-            self.plot_rawbuf1_fft.plot(x=self.data_rawBuffer1_FFT[1, :], y=self.data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+            self.curve = self.plot_rawbuf1_fft.plot(x=self.data_rawBuffer1_FFT[1, :], y=self.data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+            self.mouseHoverFirstTime = False
+            self.curve.scene().sigMouseMoved.connect(self.onMouseMoved)
             self.plot_rawbuf1_fft.show()
 
             # set cycle information
@@ -284,6 +347,49 @@ class MyDisplay(CDisplay):
         # enable buttons
         self.checkBox_one.setEnabled(True)
         self.checkBox_sync_main.setEnabled(True)
+        self.checkBox_hover.setEnabled(True)
+
+        return
+
+    #----------------------------------------------#
+
+    # function that gets the hover event of pyqtgraph
+    def onMouseMoved(self, point):
+
+        # only if checkbox is enabled
+        if self.checkBox_hover.isChecked():
+
+            # set label opts
+            label_opts = {'fill': '#000000', 'border': '#00FF00', 'color': '#00FF00', 'offset': QPoint(0, 20)}
+
+            # get the cursor
+            p = self.plot_rawbuf1_fft.plotItem.vb.mapSceneToView(point)
+
+            # get closest time value
+            closest_val, closest_idx = numpy_find_nearest(self.data_rawBuffer1_FFT[1, :], p.x(), side="left")
+
+            # interpolated values
+            x_val = closest_val
+            y_val = self.data_rawBuffer1_FFT[0, :][closest_idx]
+
+            # format the point
+            x_formatted = "%.3f" % x_val
+            y_formatted = "%.3f" % y_val
+
+            # first time check
+            if not self.mouseHoverFirstTime:
+
+                # add to the plot
+                self.mouseHoverFirstTime = True
+                self.targetItem = pg.TargetItem(movable=False, pos=(x_val, y_val), label="({}, {})".format(x_formatted, y_formatted), symbol="o", size=8, pen="#00FF00", labelOpts=label_opts)
+                self.plot_rawbuf1_fft.addItem(self.targetItem)
+
+            # if it is not the first time
+            else:
+
+                # update the cursor
+                self.targetItem.setPos((x_val, y_val))
+                self.targetItem.setLabel("({}, {})".format(x_formatted, y_formatted), labelOpts=label_opts)
 
         return
 
@@ -316,6 +422,7 @@ class MyDisplay(CDisplay):
                     self.plot_rawbuf1_fft.plot(x=self.current_data_peaks_freq1_xplots[1], y=self.current_data_peaks_freq1_xplots[0], pen=None, symbolBrush=(255, 255, 0), symbol='x', symbolPen=(255, 255, 0), symbolSize=8, name="rawBuf1_peaks")
                 if self.current_check_dict["peaks1"]:
                     self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1_fft.show()
 
         # if not
@@ -328,6 +435,7 @@ class MyDisplay(CDisplay):
             if self.bufferFirstPlotsPainted:
                 self.plot_rawbuf1_fft.getPlotItem().clear()
                 self.plot_rawbuf1_fft.plot(x=self.current_data_rawBuffer1_FFT[1, :], y=self.current_data_rawBuffer1_FFT[0, :], pen=(255, 255, 255), name="rawBuf1_FFT")
+                self.mouseHoverFirstTime = False
                 self.plot_rawbuf1_fft.show()
 
         return

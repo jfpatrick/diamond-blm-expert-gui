@@ -32,6 +32,52 @@ from general_utils import createCustomTempDir, getSystemTempDir, removeAppDir, r
 from datetime import datetime, timedelta, timezone
 import collections
 import random
+import signal
+
+########################################################
+########################################################
+
+# THIS IS TO MAKE SURE WE ONLY HAVE ONE INSTANCE OF THE APPLICATION RUNNING AT THE SAME TIME!
+
+# from tendo import singleton
+
+# try:
+#     current_instance = singleton.SingleInstance()
+# except singleton.SingleInstanceException as xcp:
+#     print("Application is already running on another instance. Please, make sure only one instance is running at the same time. Otherwise, it won't open properly.")
+#     sys.exit(0)
+
+import socket
+from contextlib import closing
+
+def find_free_port():
+    with closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as s:
+        s.bind(('', 0))
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        return s.getsockname()[1]
+
+temp_system_dir = getSystemTempDir()
+if not os.path.exists(os.path.join(temp_system_dir, 'free_ports.txt')):
+    free_port_list = []
+    for i in range(0, 50):
+        free_port = find_free_port()
+        free_port_list.append(free_port)
+    free_port_list.sort()
+    with open(os.path.join(temp_system_dir, 'free_ports.txt'), 'w') as f:
+        for item in free_port_list:
+            f.write("%s\n" % item)
+else:
+    with open(os.path.join(temp_system_dir, 'free_ports.txt')) as f:
+        free_port_list = f.readlines()
+
+socket_object = socket.socket()
+host = socket.gethostname()
+free_port = int(free_port_list[0])
+try:
+    socket_object.bind((host, free_port))
+except OSError as xcp:
+    print("[{}] Application is already running on another instance. Please, make sure only one instance is running at the same time. Otherwise, it won't open properly.".format(free_port))
+    sys.exit(0)
 
 ########################################################
 ########################################################
@@ -145,6 +191,8 @@ class DialogThreeColumnSet(QDialog):
     #----------------------------------------------#
 
     def __init__(self, parent = None):
+
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
 
         # save the parent
         self.dialog_parent = parent
