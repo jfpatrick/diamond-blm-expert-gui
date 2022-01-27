@@ -57,7 +57,6 @@ UI_FILENAME = "fullscreen_rawbuf1.ui"
 
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
-SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 
 ########################################################
 ########################################################
@@ -347,7 +346,7 @@ class MyDisplay(CDisplay):
                                                     "}\n"
                                                     "\n"
                                         "QComboBox::down-arrow{\n"
-                                        "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                        "    image: url(icons/down-arrow.png);\n"
                                         "}\n"
                                         "QComboBox QAbstractItemView{\n"
                                         "    border: 2px solid #A6A6A6;\n"
@@ -736,7 +735,7 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_1 = CCommandButton(self.groupbox_commands)
         icon = QIcon()
-        # icon.addPixmap(QPixmap(SAVING_PATH + "/icons/command.png"), QIcon.Normal, QIcon.Off)
+        # icon.addPixmap(QPixmap("icons/command.png"), QIcon.Normal, QIcon.Off)
         self.ccommandbutton_1.setIcon(icon)
         self.ccommandbutton_1.setAutoDefault(False)
         self.ccommandbutton_1.setDefault(False)
@@ -764,7 +763,7 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_2 = CCommandButton(self.groupbox_commands)
         icon = QIcon()
-        # icon.addPixmap(QPixmap(SAVING_PATH + "/icons/command.png"), QIcon.Normal, QIcon.Off)
+        # icon.addPixmap(QPixmap("icons/command.png"), QIcon.Normal, QIcon.Off)
         self.ccommandbutton_2.setIcon(icon)
         self.ccommandbutton_2.setAutoDefault(False)
         self.ccommandbutton_2.setDefault(False)
@@ -1148,7 +1147,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "    image: url(icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"
@@ -1168,7 +1167,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "    image: url(icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"
@@ -2196,7 +2195,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf1 - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon("icons/diamond_2.png"))
 
             # init GET
             self.getFunction(show_message=False)
@@ -2245,7 +2244,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/down-arrow.png);\n"
+                                                "    image: url(icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"

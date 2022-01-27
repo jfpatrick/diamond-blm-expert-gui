@@ -89,10 +89,9 @@ UI_FILENAME = "premain.ui"
 
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
-SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 
 # constants
-JSON_CONFIG_DICT = readJSONConfigFile(SAVING_PATH)
+JSON_CONFIG_DICT = readJSONConfigFile("")
 RECHECK_DEVICES_PERIOD = float(JSON_CONFIG_DICT["RECHECK_DEVICES_PERIOD"]) # each 1 minute
 ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
 TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
@@ -379,11 +378,11 @@ class DialogThreeColumnSet(QDialog):
         self.vertical_layout_main_dialog.setStretch(1, 5)
 
         # read and apply the qss files
-        with open(SAVING_PATH + "/qss/scrollArea_properties.qss", "r") as fh:
+        with open("qss/scrollArea_properties.qss", "r") as fh:
             self.scrollArea_properties.setStyleSheet(fh.read())
-        with open(SAVING_PATH + "/qss/scrollingContents_properties.qss", "r") as fh:
+        with open("qss/scrollingContents_properties.qss", "r") as fh:
             self.scrollingContents_properties.setStyleSheet(fh.read())
-        with open(SAVING_PATH + "/qss/pushButton_set.qss", "r") as fh:
+        with open("qss/pushButton_set.qss", "r") as fh:
             self.pushButton_set.setStyleSheet(fh.read())
 
         # set groupbox for the titles of the labels
@@ -1031,7 +1030,7 @@ class SettingsDialogAuto(QDialog):
                 sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format("Commands", command)].sizePolicy().hasHeightForWidth())
                 self.commandButtonDict["{}_{}".format("Commands", command)].setSizePolicy(sizePolicy)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setText("{}".format(" Run"))
-                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon(SAVING_PATH + "/icons/command.png"))
+                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon("icons/command.png"))
                 self.commandButtonDict["{}_{}".format("Commands", command)].channel = "{}/{}".format(self.current_device, command)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setMinimumSize(QSize(120, 24))
                 self.layoutDict["groupBox_{}".format("Commands")].addWidget(self.commandButtonDict["{}_{}".format("Commands", command)], row, column, 1, 1)
@@ -3171,6 +3170,12 @@ class MyDisplay(CDisplay):
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
 
+        # set icons
+        self.toolButton_freeze.setIcon(QIcon("icons/freezing_1.png"))
+        self.toolButton_main_settings.setIcon(QIcon("icons/settings.png"))
+        self.toolButton_main_close.setIcon(QIcon("icons/close.png"))
+        self.toolButton_main_back.setIcon(QIcon("icons/back.png"))
+
         # splitter to separate both panels
         self.splitter = QSplitter(Qt.Horizontal)
         self.splitter.addWidget(self.frame_device_selection)
@@ -3283,7 +3288,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
-        self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+        self.progress_dialog_all_commands.setWindowIcon(QIcon("icons/diamond_2.png"))
         self.progress_dialog_all_commands.show()
         self.progress_dialog_all_commands.repaint()
 
@@ -3360,7 +3365,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
-        self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+        self.progress_dialog_all_commands.setWindowIcon(QIcon("icons/diamond_2.png"))
         self.progress_dialog_all_commands.show()
         self.progress_dialog_all_commands.repaint()
 
@@ -3442,7 +3447,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_all_commands.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_all_commands.setAutoClose(False)
         self.progress_dialog_all_commands.setWindowTitle("Progress")
-        self.progress_dialog_all_commands.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+        self.progress_dialog_all_commands.setWindowIcon(QIcon("icons/diamond_2.png"))
         self.progress_dialog_all_commands.show()
         self.progress_dialog_all_commands.repaint()
 
@@ -3753,10 +3758,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
+                item.setIcon(QIcon("icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+                item.setIcon(QIcon("icons/red_cross.png"))
 
         # update UI
         if self.current_window == "preview" or self.current_window == "summary" or self.current_window == "premain":
@@ -3778,7 +3783,7 @@ class MyDisplay(CDisplay):
         self.progress_dialog_after_rbac.setWindowModality(Qt.ApplicationModal)
         self.progress_dialog_after_rbac.setAutoClose(False)
         self.progress_dialog_after_rbac.setWindowTitle("Progress")
-        self.progress_dialog_after_rbac.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+        self.progress_dialog_after_rbac.setWindowIcon(QIcon("icons/diamond_2.png"))
         self.progress_dialog_after_rbac.show()
         self.progress_dialog_after_rbac.repaint()
 
@@ -3816,10 +3821,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
+                item.setIcon(QIcon("icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+                item.setIcon(QIcon("icons/red_cross.png"))
 
         # close progress bar
         self.progress_dialog_after_rbac_want_to_close = True
@@ -3935,10 +3940,10 @@ class MyDisplay(CDisplay):
         for item in self.iterItems(self.model.invisibleRootItem()):
             if str(item.data(role=Qt.DisplayRole)) in self.working_devices:
                 item.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
+                item.setIcon(QIcon("icons/green_tick.png"))
             else:
                 item.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                item.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+                item.setIcon(QIcon("icons/red_cross.png"))
 
         # update UI (the preview panels)
         # if self.current_window == "preview" or self.current_window == "premain":
@@ -3974,10 +3979,10 @@ class MyDisplay(CDisplay):
                 # determine the icon (working or not)
                 if device in self.working_devices:
                     itemToAppend.setForeground(QBrush(Qt.black, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon(SAVING_PATH + "/icons/green_tick.png"))
+                    itemToAppend.setIcon(QIcon("icons/green_tick.png"))
                 else:
                     itemToAppend.setForeground(QBrush(Qt.red, Qt.SolidPattern))
-                    itemToAppend.setIcon(QIcon(SAVING_PATH + "/icons/red_cross.png"))
+                    itemToAppend.setIcon(QIcon("icons/red_cross.png"))
 
                 # append it to the tree
                 root.appendRow(itemToAppend)
@@ -4202,7 +4207,7 @@ class MyDisplay(CDisplay):
             self.progress_dialog_1_show_up.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog_1_show_up.setAutoClose(False)
             self.progress_dialog_1_show_up.setWindowTitle("Progress")
-            self.progress_dialog_1_show_up.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.progress_dialog_1_show_up.setWindowIcon(QIcon("icons/diamond_2.png"))
             self.progress_dialog_1_show_up.setValue(0)
             self.progress_dialog_1_show_up.show()
             self.progress_dialog_1_show_up.repaint()
@@ -4811,12 +4816,18 @@ class MyDisplay(CDisplay):
         # if it is pressed
         if self.toolButton_freeze.isChecked():
 
+            # change icon
+            self.toolButton_freeze.setIcon(QIcon("icons/freezing_2.png"))
+
             # write the file
             with open(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt"), "w") as f:
                 f.write("True")
 
         # if it is not pressed
         else:
+
+            # change icon
+            self.toolButton_freeze.setIcon(QIcon("icons/freezing_1.png"))
 
             # remove the freeze txt
             if os.path.exists(os.path.join(self.app_temp_dir, "aux_txts", "freeze.txt")):
@@ -4877,7 +4888,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("DIAMOND BLM EXPERT GUI")
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon("icons/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

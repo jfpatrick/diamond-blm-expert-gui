@@ -39,7 +39,6 @@ UI_FILENAME = "main_auto.ui"
 
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
-SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 
 # others
 CAPTURE_TAB = True
@@ -223,6 +222,12 @@ class MyDisplay(CDisplay):
 
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
+
+        # set icons
+        self.CRelatedDisplayButton_rawBuf0.setIcon(QIcon("icons/fullscreen.png"))
+        self.CRelatedDisplayButton_rawBuf1.setIcon(QIcon("icons/fullscreen.png"))
+        self.CRelatedDisplayButton_rawBuf0_FFT.setIcon(QIcon("icons/fullscreen.png"))
+        self.CRelatedDisplayButton_rawBuf1_FFT.setIcon(QIcon("icons/fullscreen.png"))
 
         # initialize widget dicts
         self.tabDict = {}

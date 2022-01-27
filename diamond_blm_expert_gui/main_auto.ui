@@ -120,27 +120,27 @@ CCommandButton:pressed{
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_yellow_2.png);
+    image: url(icons/checkbox_true_yellow_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -171,10 +171,6 @@ QCheckBox::indicator:unchecked:disabled {
                    </property>
                    <property name="text">
                     <string> Fullscreen</string>
-                   </property>
-                   <property name="icon">
-                    <iconset>
-                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -276,27 +272,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_yellow_2.png);
+    image: url(icons/checkbox_true_yellow_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -324,10 +320,6 @@ QCheckBox::indicator:unchecked:disabled {
                   <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf1_FFT">
                    <property name="text">
                     <string> Fullscreen</string>
-                   </property>
-                   <property name="icon">
-                    <iconset>
-                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -442,27 +434,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_yellow_2.png);
+    image: url(icons/checkbox_true_yellow_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -490,10 +482,6 @@ QCheckBox::indicator:unchecked:disabled {
                   <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf1">
                    <property name="text">
                     <string> Fullscreen</string>
-                   </property>
-                   <property name="icon">
-                    <iconset>
-                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>
@@ -664,27 +652,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_yellow_2.png);
+    image: url(icons/checkbox_true_yellow_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -712,10 +700,6 @@ QCheckBox::indicator:unchecked:disabled {
                   <widget class="CRelatedDisplayButton" name="CRelatedDisplayButton_rawBuf0_FFT">
                    <property name="text">
                     <string> Fullscreen</string>
-                   </property>
-                   <property name="icon">
-                    <iconset>
-                     <normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</normaloff>../../../../../../user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/fullscreen.png</iconset>
                    </property>
                    <property name="filenames" stdset="0">
                     <stringlist>

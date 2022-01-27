@@ -51,7 +51,6 @@ UI_FILENAME = "fullscreen_rawbuf0_fft.ui"
 
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
-SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 
 ########################################################
 ########################################################
@@ -487,7 +486,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon("icons/diamond_2.png"))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

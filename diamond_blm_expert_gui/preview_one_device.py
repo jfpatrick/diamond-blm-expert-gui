@@ -36,10 +36,9 @@ UI_FILENAME = "preview_one_device.ui"
 
 # paths
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
-SAVING_PATH = "/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui"
 
 # constants
-JSON_CONFIG_DICT = readJSONConfigFile(SAVING_PATH)
+JSON_CONFIG_DICT = readJSONConfigFile("")
 ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
 TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
 TURN_TIME_SPS = float(JSON_CONFIG_DICT["TURN_TIME_SPS"]) # microseconds
@@ -182,7 +181,7 @@ class MyDisplay(CDisplay):
             self.progress_dialog.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog.setAutoClose(False)
             self.progress_dialog.setWindowTitle("Progress")
-            self.progress_dialog.setWindowIcon(QIcon(SAVING_PATH + "/icons/diamond_2.png"))
+            self.progress_dialog.setWindowIcon(QIcon("icons/diamond_2.png"))
             self.progress_dialog.setValue(0)
             self.progress_dialog.show()
             self.progress_dialog.repaint()

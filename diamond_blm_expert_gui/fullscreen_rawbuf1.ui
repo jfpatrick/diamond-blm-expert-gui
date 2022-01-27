@@ -213,27 +213,27 @@ margin-right: 7px;</string>
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_yellow_2.png);
+    image: url(icons/checkbox_true_yellow_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -252,27 +252,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_magenta_2.png);
+    image: url(icons/checkbox_true_magenta_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -291,27 +291,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_blue_2.png);
+    image: url(icons/checkbox_true_blue_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -327,27 +327,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_green_2.png);
+    image: url(icons/checkbox_true_green_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
@@ -363,27 +363,27 @@ QCheckBox::indicator:unchecked:disabled {
 }
 
 QCheckBox::indicator:checked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_white_2.png);
+    image: url(icons/checkbox_true_white_2.png);
 }
 
 QCheckBox::indicator:unchecked {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_2.png);
+    image: url(icons/checkbox_false_2.png);
 }
 
 QCheckBox::indicator:checked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_pressed_2.png);
+    image: url(icons/checkbox_true_pressed_2.png);
 }
 
 QCheckBox::indicator:unchecked:pressed {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_pressed_2.png);
+    image: url(icons/checkbox_false_pressed_2.png);
 }
 
 QCheckBox::indicator:checked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_true_disabled_2.png);
+    image: url(icons/checkbox_true_disabled_2.png);
 }
 
 QCheckBox::indicator:unchecked:disabled {
-    image: url(/user/bdisoft/development/python/gui/deployments-martinja/diamond-blm-expert-gui/icons/checkbox_false_disabled_2.png);
+    image: url(icons/checkbox_false_disabled_2.png);
 }</string>
                    </property>
                    <property name="text">
