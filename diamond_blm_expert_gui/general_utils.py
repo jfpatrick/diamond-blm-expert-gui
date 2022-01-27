@@ -47,11 +47,13 @@ def getSystemTempDir():
 
     return tmp_dir
 
-def readJSONConfigFile(dir_name):
+def readJSONConfigFile(name_of_file = "config_file.json"):
 
-    if os.path.exists(os.path.join(dir_name, "config_file.json")):
-        with open(os.path.join(dir_name, "config_file.json")) as f:
+    if os.path.exists(name_of_file):
+        with open(name_of_file) as f:
             json_config_file = json.load(f)
+    else:
+        json_config_file = {}
 
     return json_config_file
 

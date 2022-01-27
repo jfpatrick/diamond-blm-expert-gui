@@ -91,7 +91,7 @@ UI_FILENAME = "premain.ui"
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 
 # constants
-JSON_CONFIG_DICT = readJSONConfigFile("")
+JSON_CONFIG_DICT = readJSONConfigFile(name_of_file = "config_file.json")
 RECHECK_DEVICES_PERIOD = float(JSON_CONFIG_DICT["RECHECK_DEVICES_PERIOD"]) # each 1 minute
 ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
 TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
