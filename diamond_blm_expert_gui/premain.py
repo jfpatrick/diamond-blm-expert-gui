@@ -66,9 +66,9 @@ if not os.path.exists(os.path.join(temp_system_dir, 'free_ports.txt')):
     with open(os.path.join(temp_system_dir, 'free_ports.txt'), 'w') as f:
         for item in free_port_list:
             f.write("%s\n" % item)
-else:
-    with open(os.path.join(temp_system_dir, 'free_ports.txt')) as f:
-        free_port_list = f.readlines()
+sleep(1)
+with open(os.path.join(temp_system_dir, 'free_ports.txt')) as f:
+    free_port_list = f.readlines()
 
 socket_object = socket.socket()
 host = socket.gethostname()
