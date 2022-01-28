@@ -28,6 +28,9 @@ from general_utils import createCustomTempDir, getSystemTempDir
 
 # GLOBALS
 
+# get real path
+REAL_PATH = os.path.realpath(os.path.dirname(__file__))
+
 # ui file
 UI_FILENAME = "settings_dialog_auto.ui"
 
@@ -303,11 +306,11 @@ class DialogThreeColumnSet(QDialog):
         self.vertical_layout_main_dialog.setStretch(1, 5)
 
         # read and apply the qss files
-        with open("qss/scrollArea_properties.qss", "r") as fh:
+        with open(os.path.join(REAL_PATH, "qss/scrollArea_properties.qss"), "r") as fh:
             self.scrollArea_properties.setStyleSheet(fh.read())
-        with open("qss/scrollingContents_properties.qss", "r") as fh:
+        with open(os.path.join(REAL_PATH, "qss/scrollingContents_properties.qss"), "r") as fh:
             self.scrollingContents_properties.setStyleSheet(fh.read())
-        with open("qss/pushButton_set.qss", "r") as fh:
+        with open(os.path.join(REAL_PATH, "qss/pushButton_set.qss"), "r") as fh:
             self.pushButton_set.setStyleSheet(fh.read())
 
         # set groupbox for the titles of the labels
@@ -779,7 +782,7 @@ class MyDisplay(CDisplay):
                 sizePolicy.setHeightForWidth(self.commandButtonDict["{}_{}".format("Commands", command)].sizePolicy().hasHeightForWidth())
                 self.commandButtonDict["{}_{}".format("Commands", command)].setSizePolicy(sizePolicy)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setText("{}".format(" Run"))
-                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon("icons/command.png"))
+                self.commandButtonDict["{}_{}".format("Commands", command)].setIcon(QIcon(os.path.join(REAL_PATH, "icons/command.png")))
                 self.commandButtonDict["{}_{}".format("Commands", command)].channel = "{}/{}".format(self.current_device, command)
                 self.commandButtonDict["{}_{}".format("Commands", command)].setMinimumSize(QSize(120, 24))
                 self.layoutDict["groupBox_{}".format("Commands")].addWidget(self.commandButtonDict["{}_{}".format("Commands", command)], row, column, 1, 1)

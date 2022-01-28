@@ -115,33 +115,7 @@ CCommandButton:pressed{
                  <item>
                   <widget class="QCheckBox" name="checkBox_turns_0">
                    <property name="styleSheet">
-                    <string notr="true">QCheckBox::indicator {
-    width: 18px; height: 18px;
-}
-
-QCheckBox::indicator:checked {
-    image: url(icons/checkbox_true_yellow_2.png);
-}
-
-QCheckBox::indicator:unchecked {
-    image: url(icons/checkbox_false_2.png);
-}
-
-QCheckBox::indicator:checked:pressed {
-    image: url(icons/checkbox_true_pressed_2.png);
-}
-
-QCheckBox::indicator:unchecked:pressed {
-    image: url(icons/checkbox_false_pressed_2.png);
-}
-
-QCheckBox::indicator:checked:disabled {
-    image: url(icons/checkbox_true_disabled_2.png);
-}
-
-QCheckBox::indicator:unchecked:disabled {
-    image: url(icons/checkbox_false_disabled_2.png);
-}</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>Turns</string>
@@ -267,33 +241,7 @@ QCheckBox::indicator:unchecked:disabled {
                  <item>
                   <widget class="QCheckBox" name="checkBox_peaks_1">
                    <property name="styleSheet">
-                    <string notr="true">QCheckBox::indicator {
-    width: 18px; height: 18px;
-}
-
-QCheckBox::indicator:checked {
-    image: url(icons/checkbox_true_yellow_2.png);
-}
-
-QCheckBox::indicator:unchecked {
-    image: url(icons/checkbox_false_2.png);
-}
-
-QCheckBox::indicator:checked:pressed {
-    image: url(icons/checkbox_true_pressed_2.png);
-}
-
-QCheckBox::indicator:unchecked:pressed {
-    image: url(icons/checkbox_false_pressed_2.png);
-}
-
-QCheckBox::indicator:checked:disabled {
-    image: url(icons/checkbox_true_disabled_2.png);
-}
-
-QCheckBox::indicator:unchecked:disabled {
-    image: url(icons/checkbox_false_disabled_2.png);
-}</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>Peaks</string>
@@ -429,33 +377,7 @@ QCheckBox::indicator:unchecked:disabled {
                  <item>
                   <widget class="QCheckBox" name="checkBox_turns_1">
                    <property name="styleSheet">
-                    <string notr="true">QCheckBox::indicator {
-    width: 18px; height: 18px;
-}
-
-QCheckBox::indicator:checked {
-    image: url(icons/checkbox_true_yellow_2.png);
-}
-
-QCheckBox::indicator:unchecked {
-    image: url(icons/checkbox_false_2.png);
-}
-
-QCheckBox::indicator:checked:pressed {
-    image: url(icons/checkbox_true_pressed_2.png);
-}
-
-QCheckBox::indicator:unchecked:pressed {
-    image: url(icons/checkbox_false_pressed_2.png);
-}
-
-QCheckBox::indicator:checked:disabled {
-    image: url(icons/checkbox_true_disabled_2.png);
-}
-
-QCheckBox::indicator:unchecked:disabled {
-    image: url(icons/checkbox_false_disabled_2.png);
-}</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>Turns</string>
@@ -647,33 +569,7 @@ QCheckBox::indicator:unchecked:disabled {
                  <item>
                   <widget class="QCheckBox" name="checkBox_peaks_0">
                    <property name="styleSheet">
-                    <string notr="true">QCheckBox::indicator {
-    width: 18px; height: 18px;
-}
-
-QCheckBox::indicator:checked {
-    image: url(icons/checkbox_true_yellow_2.png);
-}
-
-QCheckBox::indicator:unchecked {
-    image: url(icons/checkbox_false_2.png);
-}
-
-QCheckBox::indicator:checked:pressed {
-    image: url(icons/checkbox_true_pressed_2.png);
-}
-
-QCheckBox::indicator:unchecked:pressed {
-    image: url(icons/checkbox_false_pressed_2.png);
-}
-
-QCheckBox::indicator:checked:disabled {
-    image: url(icons/checkbox_true_disabled_2.png);
-}
-
-QCheckBox::indicator:unchecked:disabled {
-    image: url(icons/checkbox_false_disabled_2.png);
-}</string>
+                    <string notr="true"/>
                    </property>
                    <property name="text">
                     <string>Peaks</string>

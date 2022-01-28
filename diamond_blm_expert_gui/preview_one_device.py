@@ -31,6 +31,9 @@ from datetime import datetime, timedelta, timezone
 
 # GLOBALS
 
+# get real path
+REAL_PATH = os.path.realpath(os.path.dirname(__file__))
+
 # ui file
 UI_FILENAME = "preview_one_device.ui"
 
@@ -38,7 +41,7 @@ UI_FILENAME = "preview_one_device.ui"
 TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 
 # constants
-JSON_CONFIG_DICT = readJSONConfigFile("")
+JSON_CONFIG_DICT = readJSONConfigFile(os.path.join(REAL_PATH, "config_file.json"))
 ACCEPTANCE_FACTOR = float(JSON_CONFIG_DICT["ACCEPTANCE_FACTOR"]) # larger than 1
 TURN_TIME_LHC = float(JSON_CONFIG_DICT["TURN_TIME_LHC"]) # microseconds
 TURN_TIME_SPS = float(JSON_CONFIG_DICT["TURN_TIME_SPS"]) # microseconds
@@ -181,7 +184,7 @@ class MyDisplay(CDisplay):
             self.progress_dialog.setWindowModality(Qt.ApplicationModal)
             self.progress_dialog.setAutoClose(False)
             self.progress_dialog.setWindowTitle("Progress")
-            self.progress_dialog.setWindowIcon(QIcon("icons/diamond_2.png"))
+            self.progress_dialog.setWindowIcon(QIcon(os.path.join(REAL_PATH, "icons/diamond_2.png")))
             self.progress_dialog.setValue(0)
             self.progress_dialog.show()
             self.progress_dialog.repaint()

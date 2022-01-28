@@ -34,6 +34,9 @@ from general_utils import createCustomTempDir, getSystemTempDir
 
 # GLOBALS
 
+# get real path
+REAL_PATH = os.path.realpath(os.path.dirname(__file__))
+
 # ui file
 UI_FILENAME = "main_auto.ui"
 
@@ -224,10 +227,96 @@ class MyDisplay(CDisplay):
     def buildCodeWidgets(self):
 
         # set icons
-        self.CRelatedDisplayButton_rawBuf0.setIcon(QIcon("icons/fullscreen.png"))
-        self.CRelatedDisplayButton_rawBuf1.setIcon(QIcon("icons/fullscreen.png"))
-        self.CRelatedDisplayButton_rawBuf0_FFT.setIcon(QIcon("icons/fullscreen.png"))
-        self.CRelatedDisplayButton_rawBuf1_FFT.setIcon(QIcon("icons/fullscreen.png"))
+        self.CRelatedDisplayButton_rawBuf0.setIcon(QIcon(os.path.join(REAL_PATH, "icons/fullscreen.png")))
+        self.CRelatedDisplayButton_rawBuf1.setIcon(QIcon(os.path.join(REAL_PATH, "icons/fullscreen.png")))
+        self.CRelatedDisplayButton_rawBuf0_FFT.setIcon(QIcon(os.path.join(REAL_PATH, "icons/fullscreen.png")))
+        self.CRelatedDisplayButton_rawBuf1_FFT.setIcon(QIcon(os.path.join(REAL_PATH, "icons/fullscreen.png")))
+
+        # set icon stylesheets for checkboxes
+        self.checkBox_turns_0.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_turns_1.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_peaks_0.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_peaks_1.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
 
         # initialize widget dicts
         self.tabDict = {}
@@ -1520,6 +1609,9 @@ class MyDisplay(CDisplay):
         # write the file
         with open(os.path.join(self.app_temp_dir, "aux_txts", "current_device.txt"), "w") as f:
             f.write(str(self.current_device))
+
+        with open(os.path.join(self.app_temp_dir, "aux_txts", "current_accelerator.txt"), "w") as f:
+            f.write(str(self.current_accelerator))
 
         # write aux files to check if data is plotted in the main window
         if self.bufferFirstPlotsPainted:

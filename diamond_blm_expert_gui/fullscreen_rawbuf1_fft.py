@@ -46,6 +46,9 @@ except OSError as xcp:
 
 # GLOBALS
 
+# get real path
+REAL_PATH = os.path.realpath(os.path.dirname(__file__))
+
 # ui file
 UI_FILENAME = "fullscreen_rawbuf1_fft.ui"
 
@@ -162,6 +165,71 @@ class MyDisplay(CDisplay):
 
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
+
+        # set icon stylesheets for checkboxes
+        self.checkBox_one.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_hover.setStyleSheet("QCheckBox::indicator {\n"
+                                          "width: 18px; height: 18px;\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_green_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                          "}")
+        self.checkBox_sync_main.setStyleSheet("QCheckBox::indicator {\n"
+                                          "width: 18px; height: 18px;\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_white_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                          "}")
 
         # pyqtgraph plot for rabuf1_fft
         self.verticalLayout_Capture_FFT.removeItem(self.horizontalLayout)

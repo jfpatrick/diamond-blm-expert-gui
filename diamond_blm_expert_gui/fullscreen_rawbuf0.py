@@ -52,6 +52,9 @@ except OSError as xcp:
 
 # GLOBALS
 
+# get real path
+REAL_PATH = os.path.realpath(os.path.dirname(__file__))
+
 # ui file
 UI_FILENAME = "fullscreen_rawbuf0.ui"
 
@@ -198,6 +201,8 @@ class MyDisplay(CDisplay):
         self.is_buffer_plotted_in_the_main_window = "False"
         self.sync_wrt_main = False
         self.bct_use_random = False
+        self.bct_use_custom = False
+        self.bct_from_sps = False
         self.bct_use_received_pattern = False
         self.bct_random_seed = 0
         self.bct_checked = False
@@ -209,7 +214,7 @@ class MyDisplay(CDisplay):
         self.color_indexes_for_combobox = []
 
         # BCT items for the combobox
-        self.items_combobox = ["LHC.BCTFR.A6R4.B1", "LHC.BCTFR.A6R4.B2", "RANDOM.SEQUENCE.0", "RANDOM.SEQUENCE.1"]
+        self.items_combobox = ["LHC.BCTFR.A6R4.B1", "LHC.BCTFR.A6R4.B2", "RANDOM.SEQUENCE.0", "RANDOM.SEQUENCE.1", "CUSTOM.SEQUENCE.0"]
 
         # tooltips
         self.tooltip_list = ["FBDEPTH: it delays the data w.r.t. BST on ADC sample steps. Common to both channels.",
@@ -263,6 +268,113 @@ class MyDisplay(CDisplay):
 
     # function that builds the widgets that weren't initialized using the UI qt designer file
     def buildCodeWidgets(self):
+
+        # set icon stylesheets for checkboxes
+        self.checkBox_turn.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_yellow_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_bunch.setStyleSheet("QCheckBox::indicator {\n"
+                                            "width: 18px; height: 18px;\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_magenta_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:pressed {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:checked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                            "}\n"
+                                            "QCheckBox::indicator:unchecked:disabled {\n"
+                                            rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                            "}")
+        self.checkBox_bct.setStyleSheet("QCheckBox::indicator {\n"
+                                          "width: 18px; height: 18px;\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_blue_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                          "}")
+        self.checkBox_hover.setStyleSheet("QCheckBox::indicator {\n"
+                                          "width: 18px; height: 18px;\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_green_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                          "}")
+        self.checkBox_sync_main.setStyleSheet("QCheckBox::indicator {\n"
+                                          "width: 18px; height: 18px;\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_white_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:pressed {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_pressed_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:checked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_true_disabled_2.png);\n"
+                                          "}\n"
+                                          "QCheckBox::indicator:unchecked:disabled {\n"
+                                          rf"image: url({REAL_PATH}/icons/checkbox_false_disabled_2.png);\n"
+                                          "}")
 
         # pyqtgraph plot for rabuf0
         self.verticalLayout_Capture.removeItem(self.horizontalLayout)
@@ -347,7 +459,7 @@ class MyDisplay(CDisplay):
                                                     "}\n"
                                                     "\n"
                                         "QComboBox::down-arrow{\n"
-                                        "    image: url(icons/down-arrow.png);\n"
+                                        rf"    image: url({REAL_PATH}/icons/down-arrow.png);\n"
                                         "}\n"
                                         "QComboBox QAbstractItemView{\n"
                                         "    border: 2px solid #A6A6A6;\n"
@@ -739,7 +851,7 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_1 = CCommandButton(self.groupbox_commands)
         icon = QIcon()
-        # icon.addPixmap(QPixmap("icons/command.png"), QIcon.Normal, QIcon.Off)
+        # icon.addPixmap(QPixmap(os.path.join(REAL_PATH, "icons/command.png")), QIcon.Normal, QIcon.Off)
         self.ccommandbutton_1.setIcon(icon)
         self.ccommandbutton_1.setAutoDefault(False)
         self.ccommandbutton_1.setDefault(False)
@@ -767,7 +879,7 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_2 = CCommandButton(self.groupbox_commands)
         icon = QIcon()
-        # icon.addPixmap(QPixmap("icons/command.png"), QIcon.Normal, QIcon.Off)
+        # icon.addPixmap(QPixmap(os.path.join(REAL_PATH, "icons/command.png")), QIcon.Normal, QIcon.Off)
         self.ccommandbutton_2.setIcon(icon)
         self.ccommandbutton_2.setAutoDefault(False)
         self.ccommandbutton_2.setDefault(False)
@@ -1150,7 +1262,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(icons/down-arrow.png);\n"
+                                                rf"    image: url({REAL_PATH}/icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"
@@ -1170,7 +1282,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(icons/down-arrow.png);\n"
+                                                rf"    image: url({REAL_PATH}/icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"
@@ -1276,6 +1388,18 @@ class MyDisplay(CDisplay):
             y_filling_pattern = np.append(y_filling_pattern, 0)
             self.y_filling_pattern_not_empty = True
             print("{} - Using random pattern!".format(UI_FILENAME))
+        elif self.bct_use_custom:
+            y_filling_pattern = np.zeros(3564)
+            y_filling_pattern[5:45] = 1
+            y_filling_pattern = np.array(y_filling_pattern)
+            y_filling_pattern = np.append(y_filling_pattern, 0)
+            self.y_filling_pattern_not_empty = True
+            print("{} - Using custom pattern!".format(UI_FILENAME))
+        elif self.bct_from_sps:
+            y_filling_pattern = np.zeros(3564)
+            y_filling_pattern = np.array(y_filling_pattern)
+            self.y_filling_pattern_not_empty = False
+            print("{} - Empty BCT array from SPS!".format(UI_FILENAME))
         elif self.bct_use_received_pattern:
             y_filling_pattern = np.array(received_pattern)
             y_filling_pattern = np.append(y_filling_pattern, 0)
@@ -1330,6 +1454,12 @@ class MyDisplay(CDisplay):
 
             # iterate over bunches
             for idx_bunch in self.idx_flags_one_two:
+
+                # skip over limits
+                if idx_bunch - 3 < 0:
+                    continue
+                elif idx_bunch + 3 >= len(self.flags_bunch0):
+                    continue
 
                 # cases 1,2,3 and 4
                 if y_filling_pattern_full[idx_bunch] == self.flags_bunch0[idx_bunch]:
@@ -1420,7 +1550,9 @@ class MyDisplay(CDisplay):
 
                 # update boolean
                 self.bct_use_random = True
+                self.bct_use_custom = False
                 self.bct_use_received_pattern = False
+                self.bct_from_sps = False
 
                 # get seed
                 rs = dev_name.split(".")[-1]
@@ -1438,37 +1570,72 @@ class MyDisplay(CDisplay):
                     if self.bct_checked:
                         self.updateBCTPlot(state = self.checkBox_bct.checkState())
 
+            # use other type of custom array
+            elif "CUSTOM.SEQUENCE.0" in dev_name:
+
+                # update boolean
+                self.bct_use_random = False
+                self.bct_use_custom = True
+                self.bct_use_received_pattern = False
+                self.bct_from_sps = False
+
+                # format the pattern
+                if self.bufferFirstPlotsPainted:
+                    self.formatBCTPattern()
+                    if self.bct_checked:
+                        self.updateBCTPlot(state=self.checkBox_bct.checkState())
+
             # otherwise, get the pattern from the bct device
             # example names: LHC.BCTFR.A6R4.B1, LHC.BCTFR.A6R4.B2
             else:
 
-                # update boolean
-                self.bct_use_random = False
-                self.bct_use_received_pattern = True
+                # trying to access to LHC.BCTFR.A6R4.B1 will give RBAC error since the device is inside LHC
+                if self.current_accelerator == "SPS":
 
-                # remove old bct
-                if self.counter_of_bct_apply >= 1:
-                    self.data_bct_save = np.array([0])
-                    self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].disconnect(self.receiveDataFromBCTDevice)
-                    self.horizontalLayout_CValueAggregators.removeWidget(self.CValueAggregator_BCT)
-                    self.CValueAggregator_BCT.deleteLater()
-                    self.CValueAggregator_BCT = None
+                    # update boolean
+                    self.bct_use_random = False
+                    self.bct_use_custom = False
+                    self.bct_use_received_pattern = False
+                    self.bct_from_sps = True
 
-                # update counter
-                self.counter_of_bct_apply += 1
+                    # format the pattern
+                    if self.bufferFirstPlotsPainted:
+                        self.formatBCTPattern()
+                        if self.bct_checked:
+                            self.updateBCTPlot(state=self.checkBox_bct.checkState())
 
-                # aggregator for BCT
-                self.CValueAggregator_BCT = CValueAggregator(self)
-                self.CValueAggregator_BCT.setProperty("inputChannels", ['{}/Acquisition#bunchFillingPattern'.format(dev_name)])
-                self.CValueAggregator_BCT.setObjectName("CValueAggregator_BCT")
-                self.CValueAggregator_BCT.setValueTransformation("try:\n"
-                                                                     "    output(next(iter(values.values())))\n"
-                                                                     "except:\n"
-                                                                     "    output(0)")
-                self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_BCT)
+                # normal procedure for LHC
+                else:
 
-                # BCT aggregator signals
-                self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromBCTDevice)
+                    # update boolean
+                    self.bct_use_random = False
+                    self.bct_use_custom = False
+                    self.bct_use_received_pattern = True
+                    self.bct_from_sps = False
+
+                    # remove old bct
+                    if self.counter_of_bct_apply >= 1:
+                        self.data_bct_save = np.array([0])
+                        self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].disconnect(self.receiveDataFromBCTDevice)
+                        self.horizontalLayout_CValueAggregators.removeWidget(self.CValueAggregator_BCT)
+                        self.CValueAggregator_BCT.deleteLater()
+                        self.CValueAggregator_BCT = None
+
+                    # update counter
+                    self.counter_of_bct_apply += 1
+
+                    # aggregator for BCT
+                    self.CValueAggregator_BCT = CValueAggregator(self)
+                    self.CValueAggregator_BCT.setProperty("inputChannels", ['{}/Acquisition#bunchFillingPattern'.format(dev_name)])
+                    self.CValueAggregator_BCT.setObjectName("CValueAggregator_BCT")
+                    self.CValueAggregator_BCT.setValueTransformation("try:\n"
+                                                                         "    output(next(iter(values.values())))\n"
+                                                                         "except:\n"
+                                                                         "    output(0)")
+                    self.horizontalLayout_CValueAggregators.addWidget(self.CValueAggregator_BCT)
+
+                    # BCT aggregator signals
+                    self.CValueAggregator_BCT.updateTriggered['PyQt_PyObject'].connect(self.receiveDataFromBCTDevice)
 
         return
 
@@ -2196,7 +2363,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf0 - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon("icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(os.path.join(REAL_PATH, "icons/diamond_2.png")))
 
             # init GET
             self.getFunction(show_message=False)
@@ -2245,7 +2412,7 @@ class MyDisplay(CDisplay):
                                                 "}\n"
                                                 "\n"
                                                 "QComboBox::down-arrow{\n"
-                                                "    image: url(icons/down-arrow.png);\n"
+                                                rf"    image: url({REAL_PATH}/icons/down-arrow.png);\n"
                                                 "}\n"
                                                 "QComboBox QAbstractItemView{\n"
                                                 "    border: 2px solid #A6A6A6;\n"
