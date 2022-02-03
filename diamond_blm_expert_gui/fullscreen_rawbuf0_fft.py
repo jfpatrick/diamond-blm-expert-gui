@@ -554,7 +554,7 @@ class MyDisplay(CDisplay):
             self.app.main_window.setWindowTitle("rawBuf0_FFT - {}".format(self.current_device))
 
             # change the logo
-            self.app.main_window.setWindowIcon(QIcon("icons/diamond_2.png"))
+            self.app.main_window.setWindowIcon(QIcon(os.path.join(REAL_PATH, "icons/diamond_2.png")))
 
             # hide the log console (not needed when using launcher.py)
             # self.app.main_window.hide_log_console()

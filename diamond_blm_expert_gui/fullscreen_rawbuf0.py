@@ -12,7 +12,7 @@
 from comrad import (CContextFrame, CCommandButton, CApplication, CValueAggregator, CDisplay, PyDMChannelDataSource, CurveData, PointData, PlottingItemData, TimestampMarkerData, TimestampMarkerCollectionData, rbac)
 from PyQt5.QtGui import (QIcon, QColor, QGuiApplication, QCursor, QStandardItemModel, QStandardItem, QBrush, QPixmap, QFont, QDoubleValidator, QIntValidator)
 from PyQt5.QtCore import (QSize, Qt, QTimer, QThread, pyqtSignal, QObject, QEventLoop, QCoreApplication, QRect, QAbstractTableModel, QPoint)
-from PyQt5.QtWidgets import (QStyledItemDelegate, QComboBox, QSplitter, QLineEdit, QHeaderView, QTableView, QGroupBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
+from PyQt5.QtWidgets import (QStyledItemDelegate, QComboBox, QSplitter, QLineEdit, QHeaderView, QTableView, QGroupBox, QDialogButtonBox, QSpacerItem, QFrame, QSizePolicy, QMessageBox, QDialog, QVBoxLayout, QHBoxLayout, QGridLayout, QLabel, QWidget, QProgressDialog, QScrollArea, QPushButton, QAbstractItemView, QAbstractScrollArea)
 from PyQt5.Qt import QItemSelectionModel, QMenu, QPalette
 import pyqtgraph as pg
 import pyjapc
@@ -64,6 +64,40 @@ TEMP_DIR_NAME = "temp_diamond_blm_expert_gui"
 ########################################################
 ########################################################
 
+# peak detector
+def thresholding_algo(y, lag, threshold, influence):
+
+    signals = np.zeros(len(y))
+    filteredY = np.array(y)
+    avgFilter = [0] * len(y)
+    stdFilter = [0] * len(y)
+    avgFilter[lag - 1] = np.mean(y[0:lag])
+    stdFilter[lag - 1] = np.std(y[0:lag])
+
+    for i in range(lag, len(y)):
+
+        if abs(y[i] - avgFilter[i - 1]) > threshold * stdFilter[i - 1]:
+
+            if y[i] > avgFilter[i - 1]:
+                signals[i] = 1
+            else:
+                signals[i] = -1
+
+            filteredY[i] = influence * y[i] + (1 - influence) * filteredY[i - 1]
+            avgFilter[i] = np.mean(filteredY[(i - lag + 1):i + 1])
+            stdFilter[i] = np.std(filteredY[(i - lag + 1):i + 1])
+
+        else:
+
+            signals[i] = 0
+            filteredY[i] = y[i]
+            avgFilter[i] = np.mean(filteredY[(i - lag + 1):i + 1])
+            stdFilter[i] = np.std(filteredY[(i - lag + 1):i + 1])
+
+    return dict(signals=np.asarray(signals),
+                avgFilter=np.asarray(avgFilter),
+                stdFilter=np.asarray(stdFilter))
+
 # util function
 def can_be_converted_to_float(value):
     try:
@@ -87,6 +121,109 @@ def numpy_find_nearest(array, value, side="left"):
             return array[idx-1], idx-1
     else:
         return None, None
+
+########################################################
+########################################################
+
+class DialogWithLineEdit(QDialog):
+
+    #----------------------------------------------#
+
+    # signals
+    accepted_boolean = pyqtSignal(bool)
+
+    #----------------------------------------------#
+
+    def __init__(self, parent = None):
+
+        # save the parent
+        self.dialog_parent = parent
+
+        # inherit from QDialog
+        QDialog.__init__(self, parent)
+
+        # set the window title and build the GUI
+        self.setWindowTitle("PhaseAutoTuning Wizard")
+        self.buildCodeWidgets()
+        self.bindWidgets()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that builds the widgets that weren't initialized using the UI qt designer file
+    def buildCodeWidgets(self):
+
+        self.setWindowIcon(QIcon(os.path.join(REAL_PATH, "icons/diamond_2.png")))
+
+        self.resize(420, 160)
+        self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(-1, 0, -1, 0)
+        self.verticalLayout.setSpacing(0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.label = QLabel(self)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy)
+        self.label.setMinimumSize(QSize(0, 26))
+        self.label.setStyleSheet("")
+        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setObjectName("label")
+        self.verticalLayout.addWidget(self.label)
+        self.lineEdit = QLineEdit(self)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lineEdit.sizePolicy().hasHeightForWidth())
+        self.lineEdit.setSizePolicy(sizePolicy)
+        self.lineEdit.setMinimumSize(QSize(0, 26))
+        self.lineEdit.setStyleSheet("QLineEdit{\n"
+                                    "    margin-left: 80px;\n"
+                                    "    margin-right: 80px;\n"
+                                    "}")
+        self.lineEdit.setAlignment(Qt.AlignCenter)
+        self.lineEdit.setObjectName("lineEdit")
+        self.verticalLayout.addWidget(self.lineEdit)
+        self.buttonBox = QDialogButtonBox(self)
+        self.buttonBox.setMinimumSize(QSize(0, 26))
+        self.buttonBox.setOrientation(Qt.Horizontal)
+        self.buttonBox.setStandardButtons(QDialogButtonBox.Cancel | QDialogButtonBox.Ok)
+        self.buttonBox.setCenterButtons(True)
+        self.buttonBox.setObjectName("buttonBox")
+        self.verticalLayout.addWidget(self.buttonBox)
+
+        self.label.setText("Please, insert the desired bunch slot in the field below.")
+        self.lineEdit.setText("0")
+
+        return
+
+    #----------------------------------------------#
+
+    # function that initializes signal-slot dependencies
+    def bindWidgets(self):
+
+        # buttonbox
+        self.buttonBox.accepted.connect(self.accept_function)
+        self.buttonBox.rejected.connect(self.reject_function)
+
+        # validator for lineedit
+        self.lineEdit.setValidator(QIntValidator(0, 9999999, self))
+
+        return
+
+    #----------------------------------------------#
+
+    def accept_function(self):
+        self.accepted_boolean.emit(True)
+        return
+
+    def reject_function(self):
+        self.accepted_boolean.emit(False)
+        return
+
+    #----------------------------------------------#
 
 ########################################################
 ########################################################
@@ -212,6 +349,7 @@ class MyDisplay(CDisplay):
         self.plotted_bct_at_least_once = False
         self.mouseHoverFirstTime = False
         self.color_indexes_for_combobox = []
+        self.old_data_for_autophasing = np.array([])
 
         # BCT items for the combobox
         self.items_combobox = ["LHC.BCTFR.A6R4.B1", "LHC.BCTFR.A6R4.B2", "RANDOM.SEQUENCE.0", "RANDOM.SEQUENCE.1", "CUSTOM.SEQUENCE.0"]
@@ -224,7 +362,7 @@ class MyDisplay(CDisplay):
         # params
         self.list_of_delay_params = ["FBDEPTH", "SYNCDELDEPTH", "FBEXTRADEPTH0"]
         self.list_of_delay_params_user_friendly = ["Thin delay", "Coarse delay", "Thin skew"]
-        self.step_list = ["1.53ns", "25.0ns", "1.53ns"]
+        self.step_list = ["+1.53ns", "-25.0ns", "+1.53ns"]
 
         # set current device
         self.current_device = "SP.BA2.BLMDIAMOND.2"
@@ -904,6 +1042,33 @@ class MyDisplay(CDisplay):
                                           "}")
         self.layout_groupbox_commands.addWidget(self.ccommandbutton_2)
 
+        # commands
+        self.ccommandbutton_3 = QPushButton(self.groupbox_commands)
+        icon = QIcon()
+        # icon.addPixmap(QPixmap(os.path.join(REAL_PATH, "icons/command.png")), QIcon.Normal, QIcon.Off)
+        self.ccommandbutton_3.setIcon(icon)
+        self.ccommandbutton_3.setAutoDefault(False)
+        self.ccommandbutton_3.setDefault(False)
+        self.ccommandbutton_3.setFlat(False)
+        self.ccommandbutton_3.setObjectName("ccommandbutton_3")
+        self.ccommandbutton_3.setText("PhaseAutoTuning")
+        self.ccommandbutton_3.setMinimumSize(QSize(0, 25))
+        self.ccommandbutton_3.setStyleSheet("QPushButton{\n"
+                                          "    background-color: rgb(255, 255, 255);\n"
+                                          "    margin-left: 12px;\n"
+                                          "    margin-right: 12px;\n"
+                                          "    border: 2px solid #A6A6A6;\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:hover{\n"
+                                          "    background-color: rgb(230, 230, 230);\n"
+                                          "}\n"
+                                          "\n"
+                                          "QPushButton:pressed{\n"
+                                          "    background-color: rgb(200, 200, 200);\n"
+                                          "}")
+        self.layout_groupbox_commands.addWidget(self.ccommandbutton_3)
+
         # update groupbox size in function of the number of rows
         # self.groupbox_commands.setFixedHeight(int(20 * (2 + 2)))
 
@@ -1225,6 +1390,7 @@ class MyDisplay(CDisplay):
         # commands
         self.ccommandbutton_1.clicked.connect(self.commandClicked)
         self.ccommandbutton_2.clicked.connect(self.commandClicked)
+        self.ccommandbutton_3.clicked.connect(self.phaseAutoTuning)
 
         # zooming
         self.pushButton_microseconds.clicked.connect(self.pushButtonZoomingMicroClicked)
@@ -1905,6 +2071,320 @@ class MyDisplay(CDisplay):
         # status bar message
         self.app.main_window.statusBar().showMessage("Command clicked!", 3*1000)
         self.app.main_window.statusBar().repaint()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that performs the autophasing
+    def phaseAutoTuning(self):
+
+        # status bar message
+        self.app.main_window.statusBar().showMessage("Command clicked!", 3*1000)
+        self.app.main_window.statusBar().repaint()
+
+        # do not repeat autophasing for the same data
+        if np.array_equal(self.old_data_for_autophasing, self.data_rawBuf0):
+            message_title = "WARNING"
+            message_text = "You have already auto-tuned the parameters. Wait until the reception of new data in order to run this command again. " \
+                           "You can try running the TriggerCapture command to check the results (even though it should have already been run after the previous PhaseAutoTuning iteration)."
+            self.reply = QMessageBox.warning(self, message_title, message_text)
+            return
+
+        self.box_bct_or_slot = QMessageBox()
+        self.box_bct_or_slot.setIcon(QMessageBox.Question)
+        self.box_bct_or_slot.setWindowTitle('PhaseAutoTuning Wizard')
+        self.box_bct_or_slot.setText("You are about to run the PhaseAutoTuning command. This command will automatically change and set the ExpertSetting parameters. Remember that it is usually a good idea to manually set the delay params to 0 and perform a trigger before running this command. There are two available modes:\n\n"
+                    "1. BCT mode. Adjust the loss signal with respect to the BCT received signal. Make sure a valid BCT source is selected and applied beforehand.\n\n"
+                    "2. Bunch slot mode. Adjust the loss signal so that it aligns with respect to the bunch slot selected by the user.\n")
+        self.box_bct_or_slot.addButton("BCT mode", QMessageBox.NoRole)
+        self.box_bct_or_slot.addButton("Bunch slot mode", QMessageBox.YesRole)
+        self.box_bct_or_slot.addButton("Cancel", QMessageBox.RejectRole)
+        self.box_bct_or_slot.setWindowIcon(QIcon(os.path.join(REAL_PATH, "icons/diamond_2.png")))
+        self.reply = self.box_bct_or_slot.exec_()
+
+        # CANCEL
+        if self.reply == 2:
+
+            # just quit the wizard
+            return
+
+        # BCT MODE
+        elif self.reply == 0:
+
+            # first check if bct exists, otherwise stop running the command
+            if not self.y_filling_pattern_not_empty:
+                message_title = "WARNING"
+                message_text = "BCT signal is empty or not being found. Please, select a valid BCT device and press the \"Apply\" button on the panel above."
+                self.reply = QMessageBox.warning(self, message_title, message_text)
+                return
+
+            # 0. do a GET beforehand
+            self.getFunction()
+
+            # 1. crop the signal and the BCT around the first turn to get a short and good interval
+
+            # get idx time of first turn
+            idx_time = int(np.where(self.time_vector == self.inf_lines_pos_0[0])[0])
+
+            # get amount of samples between turns
+            n_samples_between_turns = int(np.where(self.time_vector == self.inf_lines_pos_0[1])[0] - idx_time)
+
+            # crop the signals
+            decim = 3
+            x_bct_cropped = self.x_filling_pattern_full[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+            y_bct_cropped = self.y_filling_pattern_full[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+            x_signal_cropped = self.time_vector[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+            y_signal_cropped = self.data_rawBuf0[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+
+            # 2. get BCT first 1-bunch peak index
+            first_bct_peak_index = y_bct_cropped.argmax()
+
+            # 3. get loss signal first peak
+
+            # hyperparams
+            lag = 1000
+            threshold = 20
+            influence = 0.2
+
+            # run algorithm
+            result = thresholding_algo(y_signal_cropped, lag=lag, threshold=threshold, influence=influence)
+
+            # get first peak
+            first_signal_peak_index = result["signals"].argmax()
+
+            # debug plot
+            # import pylab
+            # y = y_signal_cropped
+            # pylab.subplot(211)
+            # pylab.plot(np.arange(1, len(y) + 1), y)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"], color="cyan", lw=2)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"] + threshold * result["stdFilter"], color="green", lw=2)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"] - threshold * result["stdFilter"], color="green", lw=2)
+            # pylab.subplot(212)
+            # pylab.step(np.arange(1, len(y) + 1), result["signals"], color="red", lw=2)
+            # pylab.ylim(-1.5, 1.5)
+            # pylab.show()
+            # print(first_bct_peak_index, first_signal_peak_index, x_signal_cropped[first_bct_peak_index], x_signal_cropped[first_signal_peak_index])
+
+            # 4. calculate the difference to set the params (distance between samples is 1.53ns or 650MHz)
+            difference_in_samples = first_signal_peak_index - first_bct_peak_index
+            difference_in_nanoseconds = (1000/650) * difference_in_samples
+
+            # if the difference is positive, the loss signal is to the right of the BCT
+            if difference_in_nanoseconds > 0:
+
+                # 5. calculate the tuning of the parameters (delay = coarse*n_coarse + thin*n_thin)
+                coarse_delay = int(round(difference_in_nanoseconds / 25) + 2)
+                thin_delay = int(round(((coarse_delay * 25) - difference_in_nanoseconds) / (1000/650)))
+
+                # use this to get the peak in the middle of the bunch slot
+                thin_delay += int(round((25 / (1000/650)) / 3))
+
+            # if the difference is negative, the loss signal is to the left of the BCT
+            else:
+
+                # 5. calculate the tuning of the parameters (delay = coarse*n_coarse + thin*n_thin)
+                coarse_delay = 0
+                thin_delay = int(round(-1*difference_in_nanoseconds / (1000 / 650)))
+
+                # use this to get the peak in the middle of the bunch slot
+                thin_delay += int(round((25 / (1000 / 650)) / 3))
+
+            # do the settings
+            self.delaySet(difference_in_nanoseconds, coarse_delay, thin_delay)
+
+        # BUNCH SLOT MODE
+        elif self.reply == 1:
+
+            self.dialog_lineedit = DialogWithLineEdit()
+            self.dialog_lineedit.setModal(True)
+            self.dialog_lineedit.accepted_boolean.connect(self.closeDialogWithLineEdit)
+            self.dialog_lineedit.show()
+
+            return
+
+        return
+
+    #----------------------------------------------#
+
+    # function that sets the estimated delay
+    def delaySet(self, difference_in_nanoseconds, coarse_delay, thin_delay):
+
+        # just a print
+        print("{} - Estimated phasing difference: {}ns".format(UI_FILENAME, difference_in_nanoseconds))
+        print("{} - Factors: {} (Coarse) and {} (Thin)".format(UI_FILENAME, coarse_delay, thin_delay))
+
+        # 6. update table and press SET
+
+        # show result message to inform the user
+        message_title = "PhaseAutoTuning Wizard"
+        message_text = "The estimated delay between signals is {:.2f}ns. Do you want to perform the following changes in the parameters?\n\n" \
+                       "FBDEPTH (Thin delay) = {} ---> {}\nSYNCDELDEPTH (Coarse delay) = {} ---> {}".format(difference_in_nanoseconds,
+                         int(self.data_model_expert_setting[0][-2]), int(self.data_model_expert_setting[0][-2]) + thin_delay,
+                         int(self.data_model_expert_setting[1][-2]), int(self.data_model_expert_setting[1][-2]) + coarse_delay)
+        self.reply = QMessageBox.question(self, message_title, message_text)
+
+        # if user clicked yes, do the setting
+        if self.reply == QMessageBox.Yes:
+
+            # init data list
+            new_data_model_expert_setting = []
+
+            # iterate over table
+            for row_counter, row_values in enumerate(self.data_model_expert_setting):
+
+                # retrieve values
+                field = self.list_of_delay_params[row_counter]
+                old_value = row_values[-2]
+                new_value = row_values[-1]
+
+                # adjust the thin delay
+                if row_counter == 0:
+                    new_value = str(int(old_value) + thin_delay)
+
+                # adjust the thin delay
+                elif row_counter == 1:
+                    new_value = str(int(old_value) + coarse_delay)
+
+                # do not update skew
+                else:
+                    pass
+
+                # append the estimated new values
+                new_data_model_expert_setting.append([str(self.list_of_delay_params_user_friendly[row_counter]), self.step_list[row_counter], str(old_value), str(new_value)])
+
+            # update data model
+            self.data_model_expert_setting = new_data_model_expert_setting
+
+            # update model
+            self.data_table_model_expert_setting = TableModel(data=self.data_model_expert_setting, header_labels=["BST", "Steps", "Old Value", "New Value"], three_column_window=True, tooltip_list=self.tooltip_list)
+            self.table_expert_setting.setModel(self.data_table_model_expert_setting)
+            self.table_expert_setting.update()
+
+            # update groupbox size in function of the number of rows
+            self.groupbox_expert_setting.setFixedHeight(int(36 * (len(self.data_model_expert_setting) + 2)))
+
+            # apply set
+            self.setFunction()
+
+            # save data rawbuf so that auto phasing is not repeated with the same data
+            self.old_data_for_autophasing = deepcopy(self.data_rawBuf0)
+
+            # ask for trigger
+            message_title = "PhaseAutoTuning Wizard"
+            message_text = "Do you also want to perform a TriggerCapture to check the results?"
+            self.reply = QMessageBox.question(self, message_title, message_text)
+
+            # if user clicked yes, run the TriggerCapture
+            if self.reply == QMessageBox.Yes:
+
+                # click trigger
+                self.ccommandbutton_1.click()
+
+        return
+
+    #----------------------------------------------#
+
+    # function that continues the autotuning wizard when the bunch slot is selected
+    def closeDialogWithLineEdit(self, accepted):
+
+        # retrieve bunch number
+        bunch_number = int(self.dialog_lineedit.lineEdit.text())
+
+        # close the dialog
+        self.dialog_lineedit.close()
+
+        # proceed to calculate the delay if the user accepted
+        if accepted:
+
+            # 0. do a GET beforehand
+            self.getFunction()
+
+            # 1. crop the signal and the BCT around the first turn to get a short and good interval
+
+            # get idx time of first turn
+            idx_time = int(np.where(self.time_vector == self.inf_lines_pos_0[0])[0])
+
+            # get amount of samples between turns
+            n_samples_between_turns = int(np.where(self.time_vector == self.inf_lines_pos_0[1])[0] - idx_time)
+
+            # crop the signals
+            decim = 3
+            x_signal_cropped = self.time_vector[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+            y_signal_cropped = self.data_rawBuf0[idx_time-int(n_samples_between_turns/decim):idx_time+int(n_samples_between_turns/decim)]
+
+            # 2. get BCT first 1-bunch peak index
+
+            time_1 = self.inf_lines_pos_0[0]
+            time_2 = self.inf_lines_pos_0[1]
+            idx_time_1 = np.where(self.time_vector == time_1)[0]
+            idx_time_2 = np.where(self.time_vector == time_2)[0]
+            val_flag_1, idx_flag_1 = numpy_find_nearest(self.idx_flags_one_two, idx_time_1, side="left")
+            val_flag_2, idx_flag_2 = numpy_find_nearest(self.idx_flags_one_two, idx_time_2, side="right")
+            if bunch_number == 0:
+                first_bct_peak_index = idx_time_1[0]
+            elif bunch_number >=1 and bunch_number < np.abs(idx_flag_2 - idx_flag_1) - 1:
+                first_bct_peak_index = self.idx_flags_one_two[bunch_number + idx_flag_1 - 1][0]
+            else:
+                first_bct_peak_index = idx_time_2[0]
+
+            # offset due to the cropping
+            first_bct_peak_index -= (idx_time - int(n_samples_between_turns / decim))
+
+            # 3. get loss signal first peak
+
+            # hyperparams
+            lag = 1000
+            threshold = 20
+            influence = 0.2
+
+            # run algorithm
+            result = thresholding_algo(y_signal_cropped, lag=lag, threshold=threshold, influence=influence)
+
+            # get first peak
+            first_signal_peak_index = result["signals"].argmax()
+
+            # debug plot
+            # import pylab
+            # y = y_signal_cropped
+            # pylab.subplot(211)
+            # pylab.plot(np.arange(1, len(y) + 1), y)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"], color="cyan", lw=2)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"] + threshold * result["stdFilter"], color="green", lw=2)
+            # pylab.plot(np.arange(1, len(y) + 1), result["avgFilter"] - threshold * result["stdFilter"], color="green", lw=2)
+            # pylab.subplot(212)
+            # pylab.step(np.arange(1, len(y) + 1), result["signals"], color="red", lw=2)
+            # pylab.ylim(-1.5, 1.5)
+            # pylab.show()
+            # print(first_bct_peak_index, first_signal_peak_index, x_signal_cropped[first_bct_peak_index], x_signal_cropped[first_signal_peak_index])
+
+            # 4. calculate the difference to set the params (distance between samples is 1.53ns or 650MHz)
+            difference_in_samples = first_signal_peak_index - first_bct_peak_index
+            difference_in_nanoseconds = (1000/650) * difference_in_samples
+
+            # if the difference is positive, the loss signal is to the right of the BCT
+            if difference_in_nanoseconds > 0:
+
+                # 5. calculate the tuning of the parameters (delay = coarse*n_coarse + thin*n_thin)
+                coarse_delay = int(round(difference_in_nanoseconds / 25) + 2)
+                thin_delay = int(round(((coarse_delay * 25) - difference_in_nanoseconds) / (1000/650)))
+
+                # use this to get the peak in the middle of the bunch slot
+                thin_delay += int(round((25 / (1000 / 650)) / 3))
+
+            # if the difference is negative, the loss signal is to the left of the BCT
+            else:
+
+                # 5. calculate the tuning of the parameters (delay = coarse*n_coarse + thin*n_thin)
+                coarse_delay = 0
+                thin_delay = int(round(-1*difference_in_nanoseconds / (1000 / 650)))
+
+                # use this to get the peak in the middle of the bunch slot
+                thin_delay += int(round((25 / (1000 / 650)) / 3))
+
+            # do the settings
+            self.delaySet(difference_in_nanoseconds, coarse_delay, thin_delay)
 
         return
 
